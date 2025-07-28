@@ -42,14 +42,13 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   console.log('🔥 Fetching real SHIB transactions from Etherscan...');
   
   const communityAddress = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
-  const allTransactions: EtherscanTx[] = [];
   
   try {
     console.log(`🔥 Fetching SHIB transactions involving Community Address`);
     
     // Get all SHIB transactions involving the community address
     const response = await fetch(
-      `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=30&sort=desc&apikey=${apiKey}`,
+      `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=20&sort=desc&apikey=${apiKey}`,
       {
         method: 'GET',
         headers: {
@@ -63,16 +62,12 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
     }
 
     const data = await response.json();
+    console.log(`📊 Etherscan response status: ${data.status}, message: ${data.message}, results: ${data.result ? data.result.length : 0}`);
     
     if (data.status === '1' && data.result && Array.isArray(data.result)) {
-      // Get significant transactions (both inbound and outbound)
+      // Process all transactions and return the most recent ones
       const transactions = data.result
-        .filter((tx: EtherscanTx) => {
-          const value = parseInt(tx.value);
-          // Filter for significant transactions (> 1 billion SHIB)
-          return value > 1000000000000000000000;
-        })
-        .slice(0, 15) // Take top 15 significant transactions
+        .slice(0, 20) // Take top 20 most recent transactions
         .map((tx: EtherscanTx) => ({
           hash: tx.hash,
           from: tx.from,
@@ -80,44 +75,17 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
           value: tx.value,
           timeStamp: tx.timeStamp,
           blockNumber: tx.blockNumber,
-          tokenName: tx.tokenName || 'SHIB',
+          tokenName: tx.tokenName || 'SHIBA INU',
           tokenSymbol: tx.tokenSymbol || 'SHIB',
           tokenDecimal: tx.tokenDecimal || '18'
         }));
       
-      allTransactions.push(...transactions);
-      console.log(`✅ Found ${transactions.length} significant SHIB transactions`);
+      console.log(`✅ Successfully processed ${transactions.length} SHIB transactions`);
+      return transactions;
       
-      // If we don't have enough significant transactions, add some regular ones
-      if (transactions.length < 10) {
-        const regularTransactions = data.result
-          .filter((tx: EtherscanTx) => {
-            const value = parseInt(tx.value);
-            return value > 100000000000000000000; // > 100 million SHIB
-          })
-          .slice(0, 15)
-          .map((tx: EtherscanTx) => ({
-            hash: tx.hash,
-            from: tx.from,
-            to: tx.to,
-            value: tx.value,
-            timeStamp: tx.timeStamp,
-            blockNumber: tx.blockNumber,
-            tokenName: tx.tokenName || 'SHIB',
-            tokenSymbol: tx.tokenSymbol || 'SHIB',
-            tokenDecimal: tx.tokenDecimal || '18'
-          }));
-        
-        // Add unique transactions only
-        const existingHashes = new Set(allTransactions.map((tx: EtherscanTx) => tx.hash));
-        const newTransactions = regularTransactions.filter((tx: EtherscanTx) => !existingHashes.has(tx.hash));
-        
-        allTransactions.push(...newTransactions);
-        console.log(`✅ Added ${newTransactions.length} additional SHIB transactions`);
-      }
     } else {
-      console.log(`⚠️ No valid data from Etherscan: ${data.message || 'Unknown error'}`);
-      throw new Error(`Etherscan API error: ${data.message || 'Unknown error'}`);
+      console.log(`⚠️ Etherscan API returned: ${data.status} - ${data.message || 'Unknown error'}`);
+      throw new Error(`Etherscan API error: ${data.message || data.status || 'Unknown error'}`);
     }
     
   } catch (error) {
@@ -125,12 +93,6 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
     console.error(`❌ Error fetching SHIB transactions:`, errorMessage);
     throw error;
   }
-
-  // Sort by timestamp (most recent first)
-  allTransactions.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp));
-  
-  // Return top 50 most recent
-  return allTransactions.slice(0, 50);
 }
 
 export async function GET() {
