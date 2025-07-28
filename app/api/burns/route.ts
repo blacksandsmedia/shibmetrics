@@ -38,7 +38,8 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   const burnAddresses = [
     { name: 'BA-1 (Vitalik Burn Alt)', address: '0xdead000000000000000042069420694206942069' },
     { name: 'BA-2 (Dead Address 1)', address: '0x000000000000000000000000000000000000dead' },
-    { name: 'BA-3 (Null Address)', address: '0x0000000000000000000000000000000000000000' }
+    { name: 'BA-3 (Null Address)', address: '0x0000000000000000000000000000000000000000' },
+    { name: 'CA (Community Address)', address: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce' }
   ];
   
   const allTransactions: EtherscanTx[] = [];
@@ -83,7 +84,9 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
           }));
         
         allTransactions.push(...transactions);
-        console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name}`);
+        console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total)`);
+      } else {
+        console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
       }
       
       // Rate limiting delay
