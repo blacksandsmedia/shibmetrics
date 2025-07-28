@@ -109,15 +109,21 @@ export default function BurnHistoryPage() {
         },
       });
       
+      console.log('📊 Response status:', response.status, response.statusText);
+      console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ API Response Error:', errorText);
+        throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
       
       const data = await response.json();
       console.log('📊 API Response:', {
         hasTransactions: !!(data.transactions),
         transactionCount: data.transactions?.length || 0,
-        fullResponse: data
+        sampleData: data.transactions?.slice(0, 2) || [],
+        fullKeys: Object.keys(data)
       });
       
       if (data.transactions && Array.isArray(data.transactions)) {
@@ -134,17 +140,23 @@ export default function BurnHistoryPage() {
         
         console.log(`✅ Loaded ${validTransactions.length} valid burn transactions (filtered out ${data.transactions.length - validTransactions.length} zero/invalid value transactions)`);
         setAllTransactions(validTransactions);
+        
+        if (validTransactions.length === 0) {
+          console.warn('⚠️ No valid transactions after filtering!');
+        }
       } else {
-        console.log('⚠️ No transactions in API response, data structure:', data);
+        console.error('⚠️ No transactions in API response, data structure:', data);
         setAllTransactions([]);
       }
       
       setLastUpdated(new Date());
     } catch (error) {
       console.error('❌ Error fetching burn history:', error);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
       // Set empty array but don't fail silently
       setAllTransactions([]);
     } finally {
+      console.log('🏁 Fetch completed, setting loading to false');
       setLoading(false);
     }
   };
