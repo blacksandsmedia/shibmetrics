@@ -261,7 +261,7 @@ export default function Home() {
           ) : (
             <StatCard
               title="Total SHIB Burned"
-              value={`${formatBurnedAmount(totalBurnedState.data.totalBurned)} SHIB`}
+              value={`${formatBurnedAmount(totalBurnedState.data!.totalBurned)} SHIB`}
               change={`${burnPercentage.toFixed(4)}% of total supply`}
               icon={Flame}
               changeType="neutral"
@@ -309,10 +309,10 @@ export default function Home() {
            ) : (
              <StatCard
                title="SHIB Price"
-               value={`$${priceState.data.price.toFixed(8)}`}
-               change={`${priceState.data.priceChange24h >= 0 ? '+' : ''}${priceState.data.priceChange24h.toFixed(2)}% (24h)`}
+               value={`$${priceState.data!.price.toFixed(8)}`}
+               change={`${priceState.data!.priceChange24h >= 0 ? '+' : ''}${priceState.data!.priceChange24h.toFixed(2)}% (24h)`}
                icon={DollarSign}
-               changeType={priceState.data.priceChange24h >= 0 ? "positive" : "negative"}
+               changeType={priceState.data!.priceChange24h >= 0 ? "positive" : "negative"}
              />
            )}
          </div>
@@ -431,7 +431,7 @@ export default function Home() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-lg font-medium text-gray-300">Progress to Next Milestone</span>
-                  <span className="text-lg text-orange-400 font-bold">{formatBurnedAmount(totalBurnedState.data.totalBurned)}T SHIB</span>
+                                     <span className="text-lg text-orange-400 font-bold">{formatBurnedAmount(totalBurnedState.data!.totalBurned)}T SHIB</span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-6 shadow-inner">
                   <div 
