@@ -1,0 +1,131 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [
+      {
+        "source": "/api/:path*",
+        "destination": "/api/:path*",
+        "regex": "^/api(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
+      }
+    ],
+    "fallback": []
+  },
+  "dynamicRoutes": [],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/api-status",
+      "regex": "^/api\\-status(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api\\-status(?:/)?$"
+    },
+    {
+      "page": "/burn-tracker",
+      "regex": "^/burn\\-tracker(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/burn\\-tracker(?:/)?$"
+    },
+    {
+      "page": "/contact",
+      "regex": "^/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contact(?:/)?$"
+    },
+    {
+      "page": "/exchanges",
+      "regex": "^/exchanges(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/exchanges(?:/)?$"
+    },
+    {
+      "page": "/history",
+      "regex": "^/history(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/history(?:/)?$"
+    },
+    {
+      "page": "/privacy",
+      "regex": "^/privacy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy(?:/)?$"
+    },
+    {
+      "page": "/referrals",
+      "regex": "^/referrals(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/referrals(?:/)?$"
+    },
+    {
+      "page": "/referrals/blofin",
+      "regex": "^/referrals/blofin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/referrals/blofin(?:/)?$"
+    },
+    {
+      "page": "/referrals/lbank",
+      "regex": "^/referrals/lbank(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/referrals/lbank(?:/)?$"
+    },
+    {
+      "page": "/referrals/mexc",
+      "regex": "^/referrals/mexc(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/referrals/mexc(?:/)?$"
+    },
+    {
+      "page": "/referrals/weex",
+      "regex": "^/referrals/weex(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/referrals/weex(?:/)?$"
+    },
+    {
+      "page": "/terms",
+      "regex": "^/terms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "RSC",
+    "varyHeader": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch",
+    "prefetchHeader": "Next-Router-Prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "Next-Router-Segment-Prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

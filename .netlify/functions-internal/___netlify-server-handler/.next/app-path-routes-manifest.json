@@ -1,0 +1,20 @@
+{
+  "/api/burns/route": "/api/burns",
+  "/api/total-burned/route": "/api/total-burned",
+  "/api/price/route": "/api/price",
+  "/_not-found/page": "/_not-found",
+  "/api/test/route": "/api/test",
+  "/api-status/page": "/api-status",
+  "/contact/page": "/contact",
+  "/burn-tracker/page": "/burn-tracker",
+  "/history/page": "/history",
+  "/page": "/",
+  "/referrals/lbank/page": "/referrals/lbank",
+  "/exchanges/page": "/exchanges",
+  "/privacy/page": "/privacy",
+  "/referrals/page": "/referrals",
+  "/referrals/weex/page": "/referrals/weex",
+  "/referrals/blofin/page": "/referrals/blofin",
+  "/referrals/mexc/page": "/referrals/mexc",
+  "/terms/page": "/terms"
+}
