@@ -41,7 +41,8 @@ function formatNumber(num: number): string {
 }
 
 function formatBurnedAmount(amount: number): string {
-  return formatNumber(amount / 1e12); // Convert to trillions
+  // API already returns SHIB amounts, just format them
+  return formatNumber(amount);
 }
 
 function formatMarketCap(marketCap: number): string {
@@ -122,19 +123,18 @@ export default async function Home() {
   // Show either last 10 burns or all 24h burns (whichever is greater)
   const burnsToShow = last24HourBurns.length > 10 ? last24HourBurns : burns.slice(0, 10);
   
-  // For stats, use recent burns (top 5 for calculations)
-  const recentBurns = burns.slice(0, 5);
-  
-  const recentBurnAmount = recentBurns.reduce((total: number, tx: BurnTransaction) => 
+  // Calculate 24H burn activity from actual 24H burns
+  const twentyFourHourBurnAmount = last24HourBurns.reduce((total: number, tx: BurnTransaction) => 
     total + (parseInt(tx.value) / 1e18), 0);
   
-  const burnRate = recentBurnAmount / 24; // SHIB per hour (approximate)
+  const burnRate = twentyFourHourBurnAmount / 24; // SHIB per hour
   const mostRecentBurn = burns[0];
 
-  // Calculate market cap
+  // Calculate market cap and burn percentage
   const circulatingSupply = 589246853017681; // Current circulating supply
+  const totalSupply = 1000000000000000; // Original total supply: 1 quadrillion SHIB
   const marketCap = priceData?.price ? priceData.price * circulatingSupply : 0;
-  const burnPercentage = totalBurnedData?.totalBurned ? (totalBurnedData.totalBurned / 1e15) * 100 : 0;
+  const burnPercentage = totalBurnedData?.totalBurned ? (totalBurnedData.totalBurned / totalSupply) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -178,8 +178,8 @@ export default async function Home() {
           {burnsData ? (
             <StatCard
               title="24H Burn Activity"
-              value={`${formatBurnedAmount(recentBurnAmount)} SHIB`}
-              change={`${recentBurns.length} recent burns`}
+              value={`${formatBurnedAmount(twentyFourHourBurnAmount)} SHIB`}
+              change={`${last24HourBurns.length} recent burns`}
               icon={TrendingDown}
               changeType="neutral"
             />
@@ -248,7 +248,7 @@ export default async function Home() {
             <StatCard
               title="Burn Rate"
               value={`${formatBurnedAmount(burnRate)} SHIB/hr`}
-              change={`${formatBurnedAmount(recentBurnAmount)} SHIB/day`}
+              change={`${formatBurnedAmount(twentyFourHourBurnAmount)} SHIB/day`}
               icon={Flame}
               changeType="neutral"
             />
