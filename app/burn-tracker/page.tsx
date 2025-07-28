@@ -35,38 +35,31 @@ export default function BurnTrackerPage() {
 
   const fetchAllBurns = async () => {
     setLoading(true);
-    console.log('🔥 Burn Tracker: Starting to fetch burns...');
+    console.log('🔥 Burn Tracker: Starting to fetch burns from API...');
     try {
-      const allBurnTransactions: BurnTransaction[] = [];
-
-      // Fetch burns from all addresses with more robust error handling
-      const fetchPromises = Object.entries(BURN_ADDRESSES).map(async ([name, address]) => {
-        console.log(`🔥 Fetching burns for ${name} (${address})...`);
-        try {
-          const burns = await fetchBurnTransactions(address, 1, 50);
-          console.log(`🔥 Got ${burns.length} burns for ${name}`);
-          return burns;
-        } catch (error) {
-          console.error(`🔥 Error fetching burns for ${name}:`, error);
-          return []; // Return empty array on error
-        }
-      });
-
-      // Wait for all fetches to complete
-      const results = await Promise.all(fetchPromises);
-      results.forEach((burns: BurnTransaction[]) => allBurnTransactions.push(...burns));
-
-      console.log(`🔥 Total burns fetched: ${allBurnTransactions.length}`);
+      // Fetch from our internal API endpoint instead of direct Etherscan calls
+      const response = await fetch('/api/burns');
       
-      if (allBurnTransactions.length === 0) {
-        console.log('⚠️  No burn data available from APIs');
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
       }
       
-      setAllBurns(allBurnTransactions);
+      const data = await response.json();
+      console.log('🔥 API Response:', data);
+      
+      if (data.transactions && Array.isArray(data.transactions)) {
+        console.log(`🔥 Got ${data.transactions.length} burns from API`);
+        setAllBurns(data.transactions);
+      } else {
+        console.log('⚠️  No transactions in API response');
+        setAllBurns([]);
+      }
+      
       setLastUpdated(new Date());
       
     } catch (error) {
-      console.error('🔥 Error in fetchAllBurns:', error);
+      console.error('🔥 Error fetching burns:', error);
+      setAllBurns([]);
     } finally {
       setLoading(false);
     }
