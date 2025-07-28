@@ -74,7 +74,7 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
             </tr>
           </thead>
           <tbody className="bg-gray-800 divide-y divide-gray-700">
-            {uniqueTransactions.slice(0, 10).map((tx, index) => (
+            {uniqueTransactions.map((tx, index) => (
               <tr key={`${tx.hash}-${index}`} className="hover:bg-gray-750 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm font-medium text-white">

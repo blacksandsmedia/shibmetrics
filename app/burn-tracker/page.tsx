@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Flame, Filter, Download, RefreshCw, ExternalLink } from 'lucide-react';
+import { Flame, Filter, Download, RefreshCw, ExternalLink, History } from 'lucide-react';
+import Link from 'next/link';
 import { 
   fetchBurnTransactions, 
   BurnTransaction, 
@@ -16,10 +17,10 @@ export default function BurnTrackerPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAddress, setSelectedAddress] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'time' | 'amount'>('time');
-  const [page, setPage] = useState(1);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  const itemsPerPage = 25;
+  // Show latest 25 burns only
+  const latestBurns = filteredBurns.slice(0, 25);
 
   // Initialize with immediate data fetch
   useEffect(() => {
@@ -95,7 +96,6 @@ export default function BurnTrackerPage() {
 
     console.log(`🔥 Final filtered burns: ${filtered.length}`);
     setFilteredBurns(filtered);
-    setPage(1); // Reset to first page when filtering
   };
 
   // Get friendly name for burn address  
@@ -128,10 +128,7 @@ export default function BurnTrackerPage() {
     }
   };
 
-  const totalPages = Math.ceil(filteredBurns.length / itemsPerPage);
-  const paginatedBurns = filteredBurns.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
-  const totalBurnedAmount = filteredBurns.reduce((total, burn) => {
+  const totalBurnedAmount = latestBurns.reduce((total, burn) => {
     return total + (parseInt(burn.value) / Math.pow(10, 18));
   }, 0);
 
@@ -147,7 +144,7 @@ export default function BurnTrackerPage() {
                 Live SHIB Burn Tracker
               </h1>
               <p className="text-gray-400 mt-2">
-                Real-time tracking of all Shiba Inu token burn transactions
+                Real-time tracking of the latest 25 Shiba Inu token burn transactions
               </p>
             </div>
             <button
@@ -163,9 +160,9 @@ export default function BurnTrackerPage() {
           <div className="mt-4 flex items-center text-sm text-gray-400">
             <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
             <span className="mx-2">•</span>
-            <span>{filteredBurns.length} transactions</span>
+            <span>Latest 25 transactions</span>
             <span className="mx-2">•</span>
-            <span>{formatNumber(totalBurnedAmount)} SHIB burned</span>
+            <span>{formatNumber(totalBurnedAmount)} SHIB shown</span>
           </div>
         </div>
 
@@ -210,12 +207,21 @@ export default function BurnTrackerPage() {
         <div className="bg-gray-800 rounded-lg border border-gray-700">
           <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
             <h2 className="text-xl font-semibold text-white">
-              Burn Transactions
+              Latest 25 Burn Transactions
             </h2>
-            <button className="flex items-center text-gray-400 hover:text-white text-sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </button>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/history"
+                className="flex items-center text-orange-400 hover:text-orange-300 text-sm font-medium transition-colors"
+              >
+                <History className="h-4 w-4 mr-2" />
+                View Full History
+              </Link>
+              <button className="flex items-center text-gray-400 hover:text-white text-sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -224,97 +230,80 @@ export default function BurnTrackerPage() {
               <p className="text-gray-400">Loading burn transactions...</p>
             </div>
           ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-750">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Amount Burned
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        From Address
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Burn Address
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Transaction
-                      </th>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-700">
+                <thead className="bg-gray-750">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Amount Burned
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      From Address
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Burn Address
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Transaction
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-gray-800 divide-y divide-gray-700">
+                  {latestBurns.map((tx) => (
+                    <tr key={tx.hash} className="hover:bg-gray-750 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-lg font-bold text-orange-400">
+                          🔥 {formatNumber(parseInt(tx.value) / Math.pow(10, 18))}
+                        </span>
+                        <span className="text-gray-400 ml-2">SHIB</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-300 font-mono">
+                          {tx.from.slice(0, 10)}...{tx.from.slice(-8)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-medium text-orange-400">
+                          {getAddressName(tx.to)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-300">
+                          {formatTimeAgo(tx.timeStamp)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <a
+                          href={`https://etherscan.io/tx/${tx.hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 transition-colors flex items-center"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          View
+                        </a>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {paginatedBurns.map((tx) => (
-                      <tr key={tx.hash} className="hover:bg-gray-750 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-lg font-bold text-orange-400">
-                            🔥 {formatNumber(parseInt(tx.value) / Math.pow(10, 18))}
-                          </span>
-                          <span className="text-gray-400 ml-2">SHIB</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-300 font-mono">
-                            {tx.from.slice(0, 10)}...{tx.from.slice(-8)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-orange-400">
-                            {getAddressName(tx.to)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-300">
-                            {formatTimeAgo(tx.timeStamp)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <a
-                            href={`https://etherscan.io/tx/${tx.hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 transition-colors flex items-center"
-                          >
-                            <ExternalLink className="h-4 w-4 mr-1" />
-                            View
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-700 flex justify-between items-center">
-                  <div className="text-sm text-gray-400">
-                    Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredBurns.length)} of {filteredBurns.length} transactions
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setPage(Math.max(1, page - 1))}
-                      disabled={page === 1}
-                      className="px-3 py-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white rounded text-sm transition-colors"
-                    >
-                      Previous
-                    </button>
-                    <span className="px-3 py-1 text-gray-400 text-sm">
-                      Page {page} of {totalPages}
-                    </span>
-                    <button
-                      onClick={() => setPage(Math.min(totalPages, page + 1))}
-                      disabled={page === totalPages}
-                      className="px-3 py-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white rounded text-sm transition-colors"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+          {/* View Full History Button */}
+          {!loading && latestBurns.length > 0 && (
+            <div className="px-6 py-4 border-t border-gray-700 text-center">
+              <Link
+                href="/history"
+                className="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <History className="h-5 w-5 mr-2" />
+                View Full Burn History
+              </Link>
+            </div>
           )}
         </div>
       </div>

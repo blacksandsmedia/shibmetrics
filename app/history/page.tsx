@@ -87,7 +87,7 @@ export default function BurnHistoryPage() {
   const [sortBy, setSortBy] = useState<'time' | 'amount'>('time');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   
-  const itemsPerPage = 20;
+  const itemsPerPage = 50;
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;

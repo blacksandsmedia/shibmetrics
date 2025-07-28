@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Flame, Twitter, Github, ExternalLink } from 'lucide-react';
+import { Flame, Twitter, ExternalLink } from 'lucide-react';
 
 interface FooterLink {
   name: string;
@@ -46,14 +46,6 @@ export default function Footer() {
                 rel="noopener noreferrer"
               >
                 <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="https://github.com/shibmetrics"
-                className="text-gray-400 hover:text-white transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Github className="h-5 w-5" />
               </a>
             </div>
           </div>
