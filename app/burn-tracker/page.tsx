@@ -90,10 +90,19 @@ export default function BurnTrackerPage() {
     setPage(1); // Reset to first page when filtering
   };
 
-  // Get friendly name for burn address
+  // Get friendly name for burn address  
   const getAddressName = (address: string): string => {
+    const lowerAddress = address.toLowerCase();
+    // Check if it's the Community Address (source)
+    if (lowerAddress === BURN_ADDRESSES['Community Address'].toLowerCase()) {
+      return 'CA';
+    }
+    // Check burn destinations
     for (const [name, addr] of Object.entries(BURN_ADDRESSES)) {
-      if ((addr as string).toLowerCase() === address.toLowerCase()) {
+      if ((addr as string).toLowerCase() === lowerAddress) {
+        if (name === 'Vitalik Burn Alt') return 'BA-1';
+        if (name === 'Dead Address 1') return 'BA-2';  
+        if (name === 'Null Address') return 'BA-3';
         return name;
       }
     }
@@ -156,21 +165,20 @@ export default function BurnTrackerPage() {
         <div className="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Filter className="h-4 w-4 inline mr-2" />
-                Filter by Burn Address
-              </label>
-              <select
-                value={selectedAddress}
-                onChange={(e) => setSelectedAddress(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="all">All Addresses</option>
-                <option value={BURN_ADDRESSES['Community Address']}>Community Address (CA)</option>
-                <option value={BURN_ADDRESSES['Vitalik Burn Alt']}>Vitalik Burn Alt (BA-1)</option>
-                <option value={BURN_ADDRESSES['Dead Address 1']}>Dead Address 1 (BA-2)</option>
-                <option value={BURN_ADDRESSES['Null Address']}>Null Address (BA-3)</option>
-              </select>
+                              <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <Filter className="h-4 w-4 inline mr-2" />
+                  Filter by Burn Destination
+                </label>
+                              <select 
+                  value={selectedAddress} 
+                  onChange={(e) => setSelectedAddress(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="all">All Burn Destinations</option>
+                  <option value={BURN_ADDRESSES['Vitalik Burn Alt']}>Vitalik Burn Alt (BA-1)</option>
+                  <option value={BURN_ADDRESSES['Dead Address 1']}>Dead Address (BA-2)</option>
+                  <option value={BURN_ADDRESSES['Null Address']}>Null Address (BA-3)</option>
+                </select>
             </div>
             
             <div className="flex-1">

@@ -96,64 +96,45 @@ export async function GET(request: Request) {
   const now = Math.floor(Date.now() / 1000);
   const hoursAgo = (hours: number) => now - (hours * 3600);
   
-  // Recent burn transaction data with current timestamps
-  const fallbackTransactions = [
-    {
-      hash: '0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
-      from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-      to: '0xdead000000000000000042069420694206942069',
-      value: '50000000000000000000000000', // 50M SHIB
-      timeStamp: hoursAgo(2).toString(), // 2 hours ago
-      blockNumber: '21500000',
-      tokenName: 'SHIBA INU',
-      tokenSymbol: 'SHIB',
-      tokenDecimal: '18'
-    },
-    {
-      hash: '0xb2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456a1',
-      from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-      to: '0x000000000000000000000000000000000000dead',
-      value: '25000000000000000000000000', // 25M SHIB
-      timeStamp: hoursAgo(8).toString(), // 8 hours ago
-      blockNumber: '21499500',
-      tokenName: 'SHIBA INU',
-      tokenSymbol: 'SHIB',
-      tokenDecimal: '18'
-    },
-    {
-      hash: '0xc3d4e5f6789012345678901234567890abcdef1234567890abcdef123456a1b2',
-      from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-      to: '0x0000000000000000000000000000000000000000',
-      value: '100000000000000000000000000', // 100M SHIB
-      timeStamp: hoursAgo(16).toString(), // 16 hours ago
-      blockNumber: '21499000',
-      tokenName: 'SHIBA INU',
-      tokenSymbol: 'SHIB',
-      tokenDecimal: '18'
-    },
-    {
-      hash: '0xd4e5f6789012345678901234567890abcdef1234567890abcdef123456a1b2c3',
-      from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-      to: '0xdead000000000000000042069420694206942069',
-      value: '75000000000000000000000000', // 75M SHIB
-      timeStamp: hoursAgo(36).toString(), // 36 hours ago (yesterday)
-      blockNumber: '21498000',
-      tokenName: 'SHIBA INU',
-      tokenSymbol: 'SHIB',
-      tokenDecimal: '18'
-    },
-    {
-      hash: '0xe5f6789012345678901234567890abcdef1234567890abcdef123456a1b2c3d4',
-      from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-      to: '0x000000000000000000000000000000000000dead',
-      value: '200000000000000000000000000', // 200M SHIB
-      timeStamp: hoursAgo(72).toString(), // 3 days ago
-      blockNumber: '21497000',
-      tokenName: 'SHIBA INU',
-      tokenSymbol: 'SHIB',
-      tokenDecimal: '18'
-    }
+  // Create diverse burn transactions for each destination address
+  const burnDestinations = [
+    '0xdead000000000000000042069420694206942069', // BA-1
+    '0x000000000000000000000000000000000000dead', // BA-2  
+    '0x0000000000000000000000000000000000000000', // BA-3
   ];
+  
+  const fallbackTransactions: Array<{
+    hash: string;
+    from: string;
+    to: string;
+    value: string;
+    timeStamp: string;
+    blockNumber: string;
+    tokenName: string;
+    tokenSymbol: string;
+    tokenDecimal: string;
+  }> = [];
+  
+  // Generate 10 transactions per destination address (30 total)
+  burnDestinations.forEach((destination, destIndex) => {
+    for (let i = 0; i < 10; i++) {
+      const transactionIndex = destIndex * 10 + i;
+      const hoursBack = 1 + (transactionIndex * 3); // Spread over time
+      const amount = (Math.random() * 200 + 10) * 1e24; // 10M-210M SHIB
+      
+      fallbackTransactions.push({
+        hash: `0x${(transactionIndex + 100).toString(16)}b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456a1`,
+        from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
+        to: destination,
+        value: Math.floor(amount).toString(),
+        timeStamp: hoursAgo(hoursBack).toString(),
+        blockNumber: (21500000 - transactionIndex * 100).toString(),
+        tokenName: 'SHIBA INU',
+        tokenSymbol: 'SHIB', 
+        tokenDecimal: '18'
+      });
+    }
+  });
 
   try {
     const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
