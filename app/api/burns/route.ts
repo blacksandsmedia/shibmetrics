@@ -32,59 +32,80 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
     throw new Error('No valid Etherscan API key configured');
   }
 
-  console.log('🔥 Fetching REAL burn transactions...');
+  console.log('🔥 Fetching REAL burn transactions from ALL burn addresses...');
   
-  // Fetch transactions TO the main burn address
-  const burnAddress = '0xdead000000000000000042069420694206942069';
-  const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddress}&page=1&offset=10&sort=desc&apikey=${apiKey}`;
+  // All burn addresses to check
+  const burnAddresses = [
+    { name: 'BA-1 (Vitalik Burn Alt)', address: '0xdead000000000000000042069420694206942069' },
+    { name: 'BA-2 (Dead Address 1)', address: '0x000000000000000000000000000000000000dead' },
+    { name: 'BA-3 (Null Address)', address: '0x0000000000000000000000000000000000000000' }
+  ];
   
-  console.log(`🔥 Requesting: ${requestUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
+  const allTransactions: EtherscanTx[] = [];
   
-  const response = await fetch(requestUrl, {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-    },
-  });
+  // Fetch from each burn address
+  for (const burnAddr of burnAddresses) {
+    try {
+      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=8&sort=desc&apikey=${apiKey}`;
+      
+      console.log(`🔥 Fetching from ${burnAddr.name}...`);
+      
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  }
+      if (!response.ok) {
+        console.log(`⚠️ HTTP ${response.status} for ${burnAddr.name}`);
+        continue; // Try next address
+      }
 
-  const data = await response.json();
-  console.log(`📊 Etherscan response: status=${data.status}, message=${data.message || 'OK'}, results=${data.result?.length || 0}`);
-  
-  if (data.status !== '1') {
-    throw new Error(`Etherscan API error: ${data.message || data.status}`);
+      const data = await response.json();
+      console.log(`📊 ${burnAddr.name}: status=${data.status}, results=${data.result?.length || 0}`);
+      
+      if (data.status === '1' && data.result && Array.isArray(data.result)) {
+        // Take transactions TO this burn address
+        const transactions = data.result
+          .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddr.address.toLowerCase())
+          .slice(0, 8)
+          .map((tx: EtherscanTx) => ({
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to,
+            value: tx.value,
+            timeStamp: tx.timeStamp,
+            blockNumber: tx.blockNumber,
+            tokenName: tx.tokenName || 'SHIBA INU',
+            tokenSymbol: tx.tokenSymbol || 'SHIB',
+            tokenDecimal: tx.tokenDecimal || '18'
+          }));
+        
+        allTransactions.push(...transactions);
+        console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name}`);
+      }
+      
+      // Rate limiting delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+    } catch (error) {
+      console.error(`❌ Error fetching from ${burnAddr.name}:`, error);
+      continue; // Try next address
+    }
   }
-
-  if (!data.result || !Array.isArray(data.result) || data.result.length === 0) {
-    throw new Error('No burn transactions found');
-  }
-
-  // Take transactions and ensure they're TO the burn address
-  const transactions = data.result
-    .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddress.toLowerCase())
-    .slice(0, 10)
-    .map((tx: EtherscanTx) => ({
-      hash: tx.hash,
-      from: tx.from,
-      to: tx.to,
-      value: tx.value,
-      timeStamp: tx.timeStamp,
-      blockNumber: tx.blockNumber,
-      tokenName: tx.tokenName || 'SHIBA INU',
-      tokenSymbol: tx.tokenSymbol || 'SHIB',
-      tokenDecimal: tx.tokenDecimal || '18'
-    }));
   
-  console.log(`✅ Found ${transactions.length} REAL burn transactions, first value: ${transactions[0]?.value}`);
-  
-  if (transactions.length === 0) {
-    throw new Error('No valid burn transactions found after filtering');
+  if (allTransactions.length === 0) {
+    throw new Error('No burn transactions found from any burn address');
   }
   
-  return transactions;
+  // Sort all transactions by timestamp (most recent first) and take top 15
+  allTransactions.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp));
+  const finalTransactions = allTransactions.slice(0, 15);
+  
+  console.log(`✅ Combined ${finalTransactions.length} REAL burn transactions from all addresses`);
+  
+  return finalTransactions;
 }
 
 export async function GET() {
