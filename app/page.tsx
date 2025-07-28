@@ -207,8 +207,21 @@ export default function Home() {
   // Calculate derived data
   const burns = burnsState.data?.transactions || [];
   
-  // For demo purposes, treat recent burns as "24-hour activity" since our data has future timestamps
-  const recentBurns = burns.slice(0, 5); // Take most recent 5 transactions as "24h activity"
+  // Calculate burns to display: either last 10 OR all burns in last 24 hours (whichever is greater)
+  const now = Date.now();
+  const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
+  
+  // Filter burns from last 24 hours
+  const last24HourBurns = burns.filter(tx => {
+    const txTime = parseInt(tx.timeStamp) * 1000;
+    return txTime >= twentyFourHoursAgo;
+  });
+  
+  // Show either last 10 burns or all 24h burns (whichever is greater)
+  const burnsToShow = last24HourBurns.length > 10 ? last24HourBurns : burns.slice(0, 10);
+  
+  // For stats, use recent burns (top 5 for calculations)
+  const recentBurns = burns.slice(0, 5);
   
   const recentBurnAmount = recentBurns.reduce((total: number, tx: BurnTransaction) => 
     total + (parseInt(tx.value) / 1e18), 0);
@@ -451,7 +464,11 @@ export default function Home() {
         {/* Latest Burn Transactions */}
         <div className="bg-gray-800 rounded-lg border border-gray-700">
           <div className="px-6 py-4 border-b border-gray-700">
-            <h3 className="text-lg font-semibold text-white">Latest Burn Transactions</h3>
+            <h3 className="text-lg font-semibold text-white">
+              {last24HourBurns.length > 10 
+                ? `Recent Burn Transactions (${last24HourBurns.length} in last 24h)` 
+                : 'Latest Burn Transactions (Last 10)'}
+            </h3>
           </div>
           {burnsState.loading ? (
             <div className="p-8 text-center">
@@ -465,7 +482,7 @@ export default function Home() {
               <p className="text-red-300 text-sm mt-2">{burnsState.error}</p>
             </div>
           ) : (
-            <BurnTransactionTable transactions={burns.slice(0, 5)} loading={false} />
+            <BurnTransactionTable transactions={burnsToShow} loading={false} />
           )}
         </div>
       </div>
