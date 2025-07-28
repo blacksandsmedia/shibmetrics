@@ -44,10 +44,14 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   
   console.log('🔥 Making PARALLEL API calls to all burn addresses...');
   
-  // Make all API calls in parallel for better performance
+  // Make all API calls in parallel with timeout protection
   const fetchPromises = burnAddresses.map(async (burnAddr) => {
-    try {
-      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=6&sort=desc&apikey=${apiKey}`;
+    const timeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 8000) // 8 second timeout
+    );
+    
+    const apiCall = async () => {
+      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=5&sort=desc&apikey=${apiKey}`;
       
       console.log(`🔥 Fetching from ${burnAddr.name}...`);
       
@@ -59,8 +63,7 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
       });
 
       if (!response.ok) {
-        console.log(`⚠️ HTTP ${response.status} for ${burnAddr.name}`);
-        return { burnAddr, transactions: [] };
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -70,7 +73,7 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
         // Take transactions TO this burn address
         const transactions = data.result
           .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddr.address.toLowerCase())
-          .slice(0, 6)
+          .slice(0, 5)
           .map((tx: EtherscanTx) => ({
             hash: tx.hash,
             from: tx.from,
@@ -86,13 +89,16 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
         console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total)`);
         return { burnAddr, transactions };
       } else {
-        console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
-        return { burnAddr, transactions: [] };
+        throw new Error(`Etherscan API returned status: ${data.status}, message: ${data.message || 'No message'}`);
       }
-      
+    };
+    
+    try {
+      const result = await Promise.race([apiCall(), timeout]);
+      return result as { burnAddr: typeof burnAddr; transactions: EtherscanTx[] };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Error fetching from ${burnAddr.name}: ${errorMessage}`);
+      console.error(`❌ ${burnAddr.name} failed: ${errorMessage}`);
       return { burnAddr, transactions: [] };
     }
   });
