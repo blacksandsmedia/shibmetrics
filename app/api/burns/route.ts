@@ -89,11 +89,12 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
         console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
       }
       
-      // Rate limiting delay
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Rate limiting delay - increased for better reliability
+      await new Promise(resolve => setTimeout(resolve, 500));
       
     } catch (error) {
-      console.error(`❌ Error fetching from ${burnAddr.name}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`❌ Error fetching from ${burnAddr.name}: ${errorMessage}`);
       continue; // Try next address
     }
   }
