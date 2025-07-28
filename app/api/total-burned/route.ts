@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import axios from 'axios';
+// API route for total burned calculation
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 

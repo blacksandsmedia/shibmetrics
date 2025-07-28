@@ -1,5 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
+// API route for burn transactions
 
 interface EtherscanTx {
   hash: string;
@@ -71,8 +70,8 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
       
       if (data.status === '1' && data.result && Array.isArray(data.result)) {
         const transactions = data.result
-          .filter((tx: any) => tx.to && tx.to.toLowerCase() === address.toLowerCase())
-          .map((tx: any) => ({
+          .filter((tx: EtherscanTx) => tx.to && tx.to.toLowerCase() === address.toLowerCase())
+          .map((tx: EtherscanTx) => ({
             hash: tx.hash,
             from: tx.from,
             to: tx.to,
@@ -106,7 +105,7 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   return allTransactions.slice(0, 50);
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const now = Date.now();
     

@@ -27,8 +27,14 @@ interface TotalBurnedData {
   cached?: boolean;
 }
 
-interface ApiState {
-  data: any | null;
+interface BurnsData {
+  transactions: BurnTransaction[];
+  cached?: boolean;
+  source?: string;
+}
+
+interface ApiState<T = unknown> {
+  data: T | null;
   loading: boolean;
   error: string | null;
 }
@@ -97,9 +103,9 @@ function LoadingCard({ title, icon }: { title: string; icon: React.ReactNode }) 
 }
 
 export default function Home() {
-  const [priceState, setPriceState] = useState<ApiState>({ data: null, loading: true, error: null });
-  const [totalBurnedState, setTotalBurnedState] = useState<ApiState>({ data: null, loading: true, error: null });
-  const [burnsState, setBurnsState] = useState<ApiState>({ data: null, loading: true, error: null });
+  const [priceState, setPriceState] = useState<ApiState<ShibPriceData>>({ data: null, loading: true, error: null });
+  const [totalBurnedState, setTotalBurnedState] = useState<ApiState<TotalBurnedData>>({ data: null, loading: true, error: null });
+  const [burnsState, setBurnsState] = useState<ApiState<BurnsData>>({ data: null, loading: true, error: null });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch SHIB price
@@ -212,8 +218,8 @@ export default function Home() {
 
   // Calculate market cap
   const circulatingSupply = 589246853017681; // Current circulating supply
-  const marketCap = priceState.data ? priceState.data.price * circulatingSupply : 0;
-  const burnPercentage = totalBurnedState.data ? (totalBurnedState.data.totalBurned / 1e15) * 100 : 0;
+  const marketCap = priceState.data?.price ? priceState.data.price * circulatingSupply : 0;
+  const burnPercentage = totalBurnedState.data?.totalBurned ? (totalBurnedState.data.totalBurned / 1e15) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gray-900">
