@@ -32,107 +32,90 @@ let cache: {
 
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
 
-// Fallback sample data for when Etherscan API is unavailable
-const SAMPLE_TRANSACTIONS: EtherscanTx[] = [
-  {
-    hash: "0x4d25b1474a0072ccd0f52ef9c9f78625b3089afefd579850e9d8cfb12b8dcb52",
-    from: "0x0181518cd7867efc60b0af623e2d56e1c386f990",
-    to: "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
-    value: "5348000000000000000000000",
-    timeStamp: "1753361015",
-    blockNumber: "22989088",
-    tokenName: "SHIBA INU",
-    tokenSymbol: "SHIB",
-    tokenDecimal: "18"
-  },
-  {
-    hash: "0x71749431589bdb699ec21b2a435949247f1b68b49fdb31de775944a4a4c91639",
-    from: "0x944dfdf1862b3097daac41e66c3d31769692b53d",
-    to: "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
-    value: "149463609898107700000000",
-    timeStamp: "1753332131",
-    blockNumber: "22986699",
-    tokenName: "SHIBA INU",
-    tokenSymbol: "SHIB",
-    tokenDecimal: "18"
-  },
-  {
-    hash: "0x3baa077f512960c843285a9edf0f5bd30ba904968e9b408d74062d7ea86e78b9",
-    from: "0x1ef3bdcad5ddafc20c1503ab0ec37398e5dbff6e",
-    to: "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
-    value: "2319549012200418849010012",
-    timeStamp: "1753228175",
-    blockNumber: "22978097",
-    tokenName: "SHIBA INU",
-    tokenSymbol: "SHIB",
-    tokenDecimal: "18"
-  }
-];
+// NO DUMMY DATA - Only use real cached data from last 2 minutes
 
 async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   
   if (!apiKey || apiKey === 'YourEtherscanApiKeyHere') {
-    console.log('⚠️ No Etherscan API key - using sample data');
-    return SAMPLE_TRANSACTIONS;
+    throw new Error('No valid Etherscan API key configured');
   }
 
-  console.log('🔥 Fetching real SHIB transactions from Etherscan...');
+  console.log('🔥 Fetching real SHIB burn transactions from Etherscan...');
   
-  const communityAddress = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
+  // Look for burn transactions TO burn addresses, not FROM community address
+  const burnAddresses = [
+    '0xdead000000000000000042069420694206942069', // Vitalik Burn Alt
+    '0x000000000000000000000000000000000000dead', // Dead Address 1  
+    '0x0000000000000000000000000000000000000000', // Null Address
+  ];
   
-  try {
-    const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=10&sort=desc&apikey=${apiKey}`;
-    
-    // Get all SHIB transactions involving the community address
-    const response = await fetch(requestUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.log(`⚠️ HTTP error ${response.status} - falling back to sample data`);
-      return SAMPLE_TRANSACTIONS;
-    }
-
-    const data = await response.json();
-    
-    if (data.status === '1' && data.result && Array.isArray(data.result)) {
-      // Process all transactions and return the most recent ones
-      const transactions = data.result
-        .slice(0, 10) // Take top 10 most recent transactions
-        .map((tx: EtherscanTx) => ({
-          hash: tx.hash,
-          from: tx.from,
-          to: tx.to,
-          value: tx.value,
-          timeStamp: tx.timeStamp,
-          blockNumber: tx.blockNumber,
-          tokenName: tx.tokenName || 'SHIBA INU',
-          tokenSymbol: tx.tokenSymbol || 'SHIB',
-          tokenDecimal: tx.tokenDecimal || '18'
-        }));
+  const allTransactions: EtherscanTx[] = [];
+  
+  // Fetch transactions TO burn addresses (actual burns)
+  for (const burnAddress of burnAddresses) {
+    try {
+      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddress}&page=1&offset=20&sort=desc&apikey=${apiKey}`;
       
-      console.log(`✅ Successfully processed ${transactions.length} real SHIB transactions`);
-      return transactions;
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.log(`⚠️ HTTP error ${response.status} for ${burnAddress}`);
+        continue; // Try next address
+      }
+
+      const data = await response.json();
       
-    } else {
-      console.log(`⚠️ Etherscan API returned: ${data.status} - ${data.message || 'Unknown error'} - falling back to sample data`);
-      return SAMPLE_TRANSACTIONS;
+      if (data.status === '1' && data.result && Array.isArray(data.result)) {
+        // Filter for actual burn transactions (incoming to burn address)
+        const transactions = data.result
+          .filter((tx: EtherscanTx) => tx.to && tx.to.toLowerCase() === burnAddress.toLowerCase())
+          .slice(0, 10) // Take top 10 most recent
+          .map((tx: EtherscanTx) => ({
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to,
+            value: tx.value,
+            timeStamp: tx.timeStamp,
+            blockNumber: tx.blockNumber,
+            tokenName: tx.tokenName || 'SHIBA INU',
+            tokenSymbol: tx.tokenSymbol || 'SHIB',
+            tokenDecimal: tx.tokenDecimal || '18'
+          }));
+        
+        allTransactions.push(...transactions);
+        console.log(`✅ Found ${transactions.length} burn transactions to ${burnAddress}`);
+      }
+      
+      // Rate limiting delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+    } catch (error) {
+      console.error(`❌ Error fetching burns to ${burnAddress}:`, error);
+      continue; // Try next address
     }
-    
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`❌ Error fetching SHIB transactions: ${errorMessage} - falling back to sample data`);
-    return SAMPLE_TRANSACTIONS;
   }
+  
+  if (allTransactions.length === 0) {
+    throw new Error('No burn transactions found from Etherscan API');
+  }
+  
+  // Sort by timestamp (most recent first) and return top 20
+  allTransactions.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp));
+  
+  console.log(`✅ Successfully processed ${allTransactions.length} real burn transactions`);
+  return allTransactions.slice(0, 20);
 }
 
 export async function GET() {
+  const now = Date.now();
+  
   try {
-    const now = Date.now();
     
     // Check cache first (2-minute cache)
     if (cache.data && (now - cache.timestamp) < CACHE_DURATION) {
@@ -150,7 +133,7 @@ export async function GET() {
       });
     }
 
-    // Fetch fresh data (now with built-in fallback)
+    // Fetch fresh data 
     const transactions = await fetchRealBurnTransactions();
 
     // Update cache
@@ -159,16 +142,13 @@ export async function GET() {
       timestamp: now
     };
 
-    const isRealData = transactions.length > 3; // If we got more than 3, likely real data
-    const source = isRealData ? 'etherscan-live' : 'fallback-sample';
-    
-    console.log(`✅ Successfully returned ${transactions.length} burn transactions (${source})`);
+    console.log(`✅ Successfully returned ${transactions.length} real burn transactions`);
     
     return new Response(JSON.stringify({
       transactions: transactions,
       cached: false,
       timestamp: new Date().toISOString(),
-      source: source
+      source: 'etherscan-live'
     }), {
       status: 200,
       headers: {
@@ -179,18 +159,35 @@ export async function GET() {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('❌ Burns API unexpected error:', errorMessage);
+    console.error('❌ Burns API error:', errorMessage);
     
-    // This should rarely happen now since fetchRealBurnTransactions has fallback
+    // NO DUMMY DATA - Only return cached data if within 2 minutes, otherwise error
+    if (cache.data && (now - cache.timestamp) < CACHE_DURATION) {
+      console.log('⚠️ Using cached data due to API error');
+      return new Response(JSON.stringify({
+        transactions: cache.data,
+        cached: true,
+        timestamp: new Date().toISOString(),
+        source: 'etherscan-cached-fallback'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=30'
+        },
+      });
+    }
+    
+    // No recent cached data available - return error
     return new Response(JSON.stringify({
-      transactions: SAMPLE_TRANSACTIONS,
-      timestamp: new Date().toISOString(),
-      source: 'emergency-fallback'
+      error: 'Unable to fetch burn transactions',
+      message: errorMessage,
+      timestamp: new Date().toISOString()
     }), {
-      status: 200, // Return 200 with fallback data instead of 503 error
+      status: 503, // Service Unavailable
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=30'
+        'Cache-Control': 'no-store'
       },
     });
   }
