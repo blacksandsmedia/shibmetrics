@@ -1,24 +1,14 @@
+functionsDirectory = "/Users/alanphillips/Downloads/shibmetrics/netlify/functions"
+functionsDirectoryOrigin = "default"
 headersOrigin = "inline"
 redirectsOrigin = "inline"
-
-[images]
-remote_images = ["^(?:http(?:s)?:\\/\\/images\\.unsplash\\.com(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)|$))$", "^(?:http(?:s)?:\\/\\/assets\\.coingecko\\.com(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)|$))$"]
-
-[functions]
-
-[functions."*"]
-
-[[plugins]]
-origin = "default"
-package = "@netlify/plugin-nextjs"
-
-[plugins.inputs]
 
 [build]
 publish = "/Users/alanphillips/Downloads/shibmetrics/.next"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
+functions = "/Users/alanphillips/Downloads/shibmetrics/netlify/functions"
 
 [build.environment]
 NODE_VERSION = "18"
@@ -34,6 +24,19 @@ NODE_VERSION = "18"
 [build.processing.js]
 
 [build.services]
+
+[images]
+remote_images = ["^(?:http(?:s)?:\\/\\/images\\.unsplash\\.com(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)|$))$", "^(?:http(?:s)?:\\/\\/assets\\.coingecko\\.com(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)|$))$"]
+
+[functions]
+
+[functions."*"]
+
+[[plugins]]
+origin = "default"
+package = "@netlify/plugin-nextjs"
+
+[plugins.inputs]
 
 [[headers]]
 for = "/*"

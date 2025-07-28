@@ -22,7 +22,8 @@ export interface BurnDataCache {
   totalAddressesAttempted: number;
 }
 
-const CACHE_FILE_PATH = path.join(process.cwd(), '.cache', 'burn-data.json');
+// Use /tmp directory in serverless environments (Netlify Functions)
+const CACHE_FILE_PATH = path.join('/tmp', 'burn-data.json');
 
 // Ensure cache directory exists
 function ensureCacheDir() {

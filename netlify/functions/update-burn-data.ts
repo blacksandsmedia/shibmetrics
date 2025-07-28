@@ -4,7 +4,7 @@ import { saveBurnCache, EtherscanTx, BurnDataCache } from "../../lib/burn-cache"
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 
 // This will run every 3 minutes
-const scheduledHandler: Handler = async (event, context) => {
+const scheduledHandler: Handler = async (event: any, context: any) => {
   console.log('🔥 Starting scheduled burn data update...');
   
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
