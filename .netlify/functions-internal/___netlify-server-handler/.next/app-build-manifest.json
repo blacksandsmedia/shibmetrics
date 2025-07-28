@@ -66,19 +66,19 @@
       "static/chunks/main-app-855b139ed7583bd5.js",
       "static/chunks/app/contact/page-eee463e328f45d1d.js"
     ],
-    "/exchanges/page": [
-      "static/chunks/webpack-663e1d4d1aa841ca.js",
-      "static/chunks/4bd1b696-2385f465b218746f.js",
-      "static/chunks/964-caec2b4b91393445.js",
-      "static/chunks/main-app-855b139ed7583bd5.js",
-      "static/chunks/app/exchanges/page-4a0f1591fdbac535.js"
-    ],
     "/history/page": [
       "static/chunks/webpack-663e1d4d1aa841ca.js",
       "static/chunks/4bd1b696-2385f465b218746f.js",
       "static/chunks/964-caec2b4b91393445.js",
       "static/chunks/main-app-855b139ed7583bd5.js",
       "static/chunks/app/history/page-447d7233725535a4.js"
+    ],
+    "/exchanges/page": [
+      "static/chunks/webpack-663e1d4d1aa841ca.js",
+      "static/chunks/4bd1b696-2385f465b218746f.js",
+      "static/chunks/964-caec2b4b91393445.js",
+      "static/chunks/main-app-855b139ed7583bd5.js",
+      "static/chunks/app/exchanges/page-4a0f1591fdbac535.js"
     ],
     "/referrals/lbank/page": [
       "static/chunks/webpack-663e1d4d1aa841ca.js",
@@ -88,14 +88,6 @@
       "static/chunks/874-437a265a67d6cfee.js",
       "static/chunks/app/referrals/lbank/page-c461f030a97b162f.js"
     ],
-    "/page": [
-      "static/chunks/webpack-663e1d4d1aa841ca.js",
-      "static/chunks/4bd1b696-2385f465b218746f.js",
-      "static/chunks/964-caec2b4b91393445.js",
-      "static/chunks/main-app-855b139ed7583bd5.js",
-      "static/chunks/560-75c7f556a3d16ec6.js",
-      "static/chunks/app/page-2a7b05a0923cea85.js"
-    ],
     "/referrals/page": [
       "static/chunks/webpack-663e1d4d1aa841ca.js",
       "static/chunks/4bd1b696-2385f465b218746f.js",
@@ -103,6 +95,14 @@
       "static/chunks/main-app-855b139ed7583bd5.js",
       "static/chunks/874-437a265a67d6cfee.js",
       "static/chunks/app/referrals/page-c461f030a97b162f.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-663e1d4d1aa841ca.js",
+      "static/chunks/4bd1b696-2385f465b218746f.js",
+      "static/chunks/964-caec2b4b91393445.js",
+      "static/chunks/main-app-855b139ed7583bd5.js",
+      "static/chunks/560-75c7f556a3d16ec6.js",
+      "static/chunks/app/page-2a7b05a0923cea85.js"
     ],
     "/referrals/weex/page": [
       "static/chunks/webpack-663e1d4d1aa841ca.js",
