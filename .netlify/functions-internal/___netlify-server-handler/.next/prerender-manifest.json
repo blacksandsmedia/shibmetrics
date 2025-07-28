@@ -1,6 +1,54 @@
 {
   "version": 4,
   "routes": {
+    "/contact": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/contact",
+      "dataRoute": "/contact.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/referrals/lbank": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/referrals/lbank",
+      "dataRoute": "/referrals/lbank.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/exchanges": {
       "experimentalBypassFor": [
         {
@@ -25,7 +73,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/api-status": {
+    "/referrals/blofin": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -38,32 +86,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/api-status",
-      "dataRoute": "/api-status.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
-    "/": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/",
-      "dataRoute": "/index.rsc",
+      "srcRoute": "/referrals/blofin",
+      "dataRoute": "/referrals/blofin.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -97,7 +121,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/referrals/lbank": {
+    "/history": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -110,8 +134,32 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/referrals/lbank",
-      "dataRoute": "/referrals/lbank.rsc",
+      "srcRoute": "/history",
+      "dataRoute": "/history.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/referrals/mexc": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/referrals/mexc",
+      "dataRoute": "/referrals/mexc.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -169,30 +217,6 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/burn-tracker": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/burn-tracker",
-      "dataRoute": "/burn-tracker.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/terms": {
       "experimentalBypassFor": [
         {
@@ -217,7 +241,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/referrals/blofin": {
+    "/": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -230,8 +254,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/referrals/blofin",
-      "dataRoute": "/referrals/blofin.rsc",
+      "srcRoute": "/",
+      "dataRoute": "/index.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -241,7 +265,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/contact": {
+    "/api-status": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -254,8 +278,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/contact",
-      "dataRoute": "/contact.rsc",
+      "srcRoute": "/api-status",
+      "dataRoute": "/api-status.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -265,7 +289,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/referrals/mexc": {
+    "/burn-tracker": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -278,32 +302,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/referrals/mexc",
-      "dataRoute": "/referrals/mexc.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
-    "/history": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/history",
-      "dataRoute": "/history.rsc",
+      "srcRoute": "/burn-tracker",
+      "dataRoute": "/burn-tracker.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",

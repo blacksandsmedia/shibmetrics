@@ -25,19 +25,25 @@ async function refreshBurnDataInBackground(): Promise<void> {
     const allTransactions: EtherscanTx[] = [];
     let successCount = 0;
 
-    // Quick parallel fetch from all addresses
-    const fetchPromises = burnAddresses.map(async (burnAddr) => {
+    // Sequential fetch with staggered delays to avoid rate limits
+    for (const burnAddr of burnAddresses) {
       try {
         const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=5&sort=desc&apikey=${apiKey}`;
+        
+        console.log(`🔥 Background refresh: Fetching from ${burnAddr.name}...`);
         
         const response = await fetch(requestUrl, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
         });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          console.log(`⚠️ HTTP ${response.status} for ${burnAddr.name}`);
+          continue;
+        }
 
         const data = await response.json();
+        console.log(`📊 ${burnAddr.name}: status=${data.status}, results=${data.result?.length || 0}`);
         
         if (data.status === '1' && data.result && Array.isArray(data.result)) {
           const transactions = data.result
@@ -57,16 +63,20 @@ async function refreshBurnDataInBackground(): Promise<void> {
           
           allTransactions.push(...transactions);
           successCount++;
-          return transactions;
+          console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total)`);
+        } else {
+          console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}`);
         }
-        return [];
+        
+        // Rate limiting delay between requests
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
       } catch (error) {
-        console.log(`⚠️ Background refresh failed for ${burnAddr.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        return [];
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.log(`❌ Background refresh failed for ${burnAddr.name}: ${errorMessage}`);
+        continue;
       }
-    });
-
-    await Promise.all(fetchPromises);
+    }
 
     if (allTransactions.length > 0) {
       // Sort and take top transactions
