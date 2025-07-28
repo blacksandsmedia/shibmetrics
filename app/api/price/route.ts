@@ -1,64 +1,100 @@
+// In-memory cache for 2-minute caching
+let priceCache: {
+  data: { price: number; priceChange24h: number } | null;
+  timestamp: number;
+} = {
+  data: null,
+  timestamp: 0
+};
+
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
 export async function GET() {
   try {
-    console.log('💰 Fetching SHIB price from CoinGecko...');
+    const now = Date.now();
     
-    // Add timestamp and no-cache headers for fresh data
-    const timestamp = Date.now();
+    // Check cache first (2-minute cache)
+    if (priceCache.data && (now - priceCache.timestamp) < CACHE_DURATION) {
+      console.log('🚀 Returning cached SHIB price');
+      return new Response(JSON.stringify({
+        price: priceCache.data.price,
+        priceChange24h: priceCache.data.priceChange24h,
+        timestamp: new Date().toISOString(),
+        source: 'coingecko-cached'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=60'
+        },
+      });
+    }
+
+    console.log('💰 Fetching fresh SHIB price from CoinGecko...');
+    
     const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=shiba-inu&vs_currencies=usd&include_24hr_change=true&t=${timestamp}`,
+      'https://api.coingecko.com/api/v3/simple/price?ids=shiba-inu&vs_currencies=usd&include_24hr_change=true',
       {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Cache-Control': 'no-cache',
         },
       }
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`CoinGecko API HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
 
-    if (data && data['shiba-inu']) {
-      const shibData = data['shiba-inu'];
-      const price = shibData.usd;
-      const change = shibData.usd_24h_change || 0;
-      
-      console.log(`✅ SHIB price: $${price}, 24h change: ${change.toFixed(2)}%`);
-      
-      return new Response(JSON.stringify({
-        price: price,
-        priceChange24h: change,
-        timestamp: new Date().toISOString(),
-        source: 'coingecko-live'
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=30' // Shorter cache for fresher data
-        },
-      });
-    } else {
-      throw new Error('Invalid response format from CoinGecko');
+    if (!data || !data['shiba-inu']) {
+      throw new Error('Invalid response format from CoinGecko API');
     }
-  } catch (error) {
-    console.error('❌ Error fetching SHIB price:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    const shibData = data['shiba-inu'];
+    const price = shibData.usd;
+    const change = shibData.usd_24h_change || 0;
     
-    // Return fallback with current market estimate from search
+    if (typeof price !== 'number' || price <= 0) {
+      throw new Error('Invalid price data from CoinGecko API');
+    }
+    
+    // Update cache
+    priceCache = {
+      data: { price, priceChange24h: change },
+      timestamp: now
+    };
+
+    console.log(`✅ SHIB price: $${price}, 24h change: ${change.toFixed(2)}%`);
+    
     return new Response(JSON.stringify({
-      price: 0.00001411, // Updated to match current market price
-      priceChange24h: 1.0, // Positive change based on search results
-      fallback: true,
-      error: `API temporarily unavailable: ${errorMessage}`,
-      timestamp: new Date().toISOString()
+      price: price,
+      priceChange24h: change,
+      timestamp: new Date().toISOString(),
+      source: 'coingecko-live'
     }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=120' // 2 minute cache for fallback
+        'Cache-Control': 'public, max-age=60'
+      },
+    });
+
+  } catch (error) {
+    console.error('❌ Price API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Return error - no fallback price data
+    return new Response(JSON.stringify({
+      error: 'Unable to fetch SHIB price',
+      message: errorMessage,
+      timestamp: new Date().toISOString()
+    }), {
+      status: 503, // Service Unavailable
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
       },
     });
   }
