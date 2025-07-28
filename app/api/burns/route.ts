@@ -45,7 +45,8 @@ async function refreshBurnDataInBackground(): Promise<void> {
         const data = await response.json();
         console.log(`📊 ${burnAddr.name}: status=${data.status}, results=${data.result?.length || 0}`);
         
-        if (data.status === '1' && data.result && Array.isArray(data.result)) {
+        // Include results even if status is '0' but we have valid transaction data
+        if (data.result && Array.isArray(data.result) && data.result.length > 0) {
           const transactions = data.result
             .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddr.address.toLowerCase())
             .slice(0, 25)
@@ -63,9 +64,9 @@ async function refreshBurnDataInBackground(): Promise<void> {
           
           allTransactions.push(...transactions);
           successCount++;
-          console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total)`);
+          console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total) - Status: ${data.status}`);
         } else {
-          console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}`);
+          console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
         }
         
         // Rate limiting delay between requests
