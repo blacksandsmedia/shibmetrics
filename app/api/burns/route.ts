@@ -42,12 +42,12 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
     { name: 'CA (Community Address)', address: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce' }
   ];
   
-  const allTransactions: EtherscanTx[] = [];
+  console.log('🔥 Making PARALLEL API calls to all burn addresses...');
   
-  // Fetch from each burn address
-  for (const burnAddr of burnAddresses) {
+  // Make all API calls in parallel for better performance
+  const fetchPromises = burnAddresses.map(async (burnAddr) => {
     try {
-      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=8&sort=desc&apikey=${apiKey}`;
+      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=6&sort=desc&apikey=${apiKey}`;
       
       console.log(`🔥 Fetching from ${burnAddr.name}...`);
       
@@ -60,7 +60,7 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
 
       if (!response.ok) {
         console.log(`⚠️ HTTP ${response.status} for ${burnAddr.name}`);
-        continue; // Try next address
+        return { burnAddr, transactions: [] };
       }
 
       const data = await response.json();
@@ -70,7 +70,7 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
         // Take transactions TO this burn address
         const transactions = data.result
           .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddr.address.toLowerCase())
-          .slice(0, 8)
+          .slice(0, 6)
           .map((tx: EtherscanTx) => ({
             hash: tx.hash,
             from: tx.from,
@@ -83,21 +83,28 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
             tokenDecimal: tx.tokenDecimal || '18'
           }));
         
-        allTransactions.push(...transactions);
         console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total)`);
+        return { burnAddr, transactions };
       } else {
         console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
+        return { burnAddr, transactions: [] };
       }
-      
-      // Rate limiting delay - increased for better reliability
-      await new Promise(resolve => setTimeout(resolve, 500));
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error(`❌ Error fetching from ${burnAddr.name}: ${errorMessage}`);
-      continue; // Try next address
+      return { burnAddr, transactions: [] };
     }
-  }
+  });
+
+  // Wait for all API calls to complete
+  const results = await Promise.all(fetchPromises);
+  
+  // Combine all transactions
+  const allTransactions: EtherscanTx[] = [];
+  results.forEach(result => {
+    allTransactions.push(...result.transactions);
+  });
   
   if (allTransactions.length === 0) {
     throw new Error('No burn transactions found from any burn address');
