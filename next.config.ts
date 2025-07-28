@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optimize for Netlify deployment
-  output: 'standalone',
-  trailingSlash: true,
+  // Remove standalone for Netlify - use default serverless
+  trailingSlash: false,
   
   env: {
     NEXT_PUBLIC_ETHERSCAN_API_KEY: process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY,
@@ -13,9 +12,14 @@ const nextConfig = {
     unoptimized: true, // Required for static export
   },
   
-  // Enable experimental features for better performance
-  experimental: {
-    optimizeCss: true,
+  // Configure for Netlify deployment
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
   },
 };
 

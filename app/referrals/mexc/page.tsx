@@ -65,7 +65,7 @@ export default function MEXCReferralPage() {
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
             <h3 className="text-xl font-semibold text-white mb-4">About MEXC</h3>
             <p className="text-gray-300 mb-4">
-              MEXC is one of the world's leading cryptocurrency exchanges, offering an extensive selection of over 2,100 cryptocurrencies including SHIB. Known for its competitive trading fees, advanced trading features, and high leverage options.
+              MEXC is one of the world&apos;s leading cryptocurrency exchanges, offering an extensive selection of over 2,100 cryptocurrencies including SHIB. Known for its competitive trading fees, advanced trading features, and high leverage options.
             </p>
             
             <div className="space-y-3">

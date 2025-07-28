@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">1. Introduction</h2>
             <p className="text-gray-300">
-              Welcome to ShibMetrics ("we," "our," or "us"). We operate shibmetrics.com (the "Service"), 
+              Welcome to ShibMetrics (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We operate shibmetrics.com (the &quot;Service&quot;), 
               which provides real-time tracking and analytics for SHIB token burn transactions on the Ethereum blockchain.
             </p>
             <p className="text-gray-300">
@@ -133,7 +133,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">9. Children's Privacy</h2>
+            <h2 className="text-2xl font-semibold text-white mb-4">9. Children&apos;s Privacy</h2>
             <p className="text-gray-300">
               Our Service is not intended for users under 13 years of age. We do not knowingly collect 
               personal information from children under 13.
@@ -144,7 +144,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-white mb-4">10. Changes to This Privacy Policy</h2>
             <p className="text-gray-300">
               We may update this Privacy Policy from time to time. We will notify you of any changes by 
-              posting the new Privacy Policy on this page and updating the "Last updated" date.
+              posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date.
             </p>
           </section>
 

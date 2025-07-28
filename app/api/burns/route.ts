@@ -31,7 +31,7 @@ interface EtherscanResponse {
 }
 
 // Helper function to fetch transactions for a single address with retries
-async function fetchAddressTransactions(address: string, apiKey: string, offset: number = 10, retries: number = 2): Promise<any[]> {
+async function fetchAddressTransactions(address: string, apiKey: string, offset: number = 10, retries: number = 2): Promise<EtherscanTx[]> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       console.log(`🔥 Fetching burns for address: ${address} (attempt ${attempt + 1}/${retries + 1})`);
@@ -49,7 +49,7 @@ async function fetchAddressTransactions(address: string, apiKey: string, offset:
             sort: 'desc',
             apikey: apiKey,
           },
-          timeout: 15000,
+          timeout: 8000, // Reduced for serverless
         }
       );
 
@@ -60,7 +60,10 @@ async function fetchAddressTransactions(address: string, apiKey: string, offset:
           to: tx.to,
           value: tx.value,
           timeStamp: tx.timeStamp,
-          blockNumber: tx.blockNumber
+          blockNumber: tx.blockNumber,
+          tokenName: tx.tokenName,
+          tokenSymbol: tx.tokenSymbol,
+          tokenDecimal: tx.tokenDecimal
         }));
 
         console.log(`✅ Fetched ${transactions.length} burn transactions for ${address}`);
@@ -73,8 +76,9 @@ async function fetchAddressTransactions(address: string, apiKey: string, offset:
         // Wait before retry
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
       }
-    } catch (error: any) {
-      console.log(`⚠️  Error on attempt ${attempt + 1} for ${address}:`, error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`⚠️  Error on attempt ${attempt + 1} for ${address}:`, errorMessage);
       if (attempt === retries) {
         return [];
       }
@@ -99,7 +103,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ transactions: [] });
     }
 
-    let allTransactions: any[] = [];
+    let allTransactions: EtherscanTx[] = [];
 
     if (address && !all) {
       // Fetch from specific address

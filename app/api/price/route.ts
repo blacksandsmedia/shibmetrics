@@ -30,9 +30,14 @@ export async function GET() {
     }
   } catch (error) {
     console.error('❌ Error fetching SHIB price:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Return fallback data instead of error status
     return NextResponse.json({
-      price: 0,
-      priceChange24h: 0
+      price: 0.00001408, // Fallback price
+      priceChange24h: 0,
+      error: `API temporarily unavailable: ${errorMessage}`,
+      fallback: true
     });
   }
 } 

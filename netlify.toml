@@ -5,10 +5,8 @@
 [build.environment]
   NODE_VERSION = "18"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+# Next.js API routes are automatically handled by Netlify
+# Remove manual redirects that might interfere
 
 [[headers]]
   for = "/*"

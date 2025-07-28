@@ -66,7 +66,7 @@ export default function BlofinReferralPage() {
             <h3 className="text-xl font-semibold text-white mb-4">About Blofin</h3>
             <p className="text-gray-300 mb-4">
               Blofin specializes in derivatives trading with sophisticated tools for professional traders. 
-              Offers competitive rates, good liquidity, and doesn't require KYC for most trading activities.
+              Offers competitive rates, good liquidity, and doesn&apos;t require KYC for most trading activities.
             </p>
             
             <div className="space-y-3">

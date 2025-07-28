@@ -35,7 +35,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">3. Use License</h2>
             <p className="text-gray-300">
-              Permission is granted to temporarily download one copy of ShibMetrics' materials for personal, 
+              Permission is granted to temporarily download one copy of ShibMetrics&apos; materials for personal, 
               non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
             </p>
             <ul className="list-disc list-inside text-gray-300 ml-4">
@@ -65,7 +65,7 @@ export default function TermsOfService() {
               <li>Is not a financial advisor or investment service</li>
               <li>Does not guarantee the accuracy or completeness of data</li>
               <li>Is not responsible for any investment decisions made based on our data</li>
-              <li>Displays publicly available blockchain data "as is"</li>
+              <li>Displays publicly available blockchain data &quot;as is&quot;</li>
             </ul>
             <p className="text-gray-300 mt-4">
               <strong>Always conduct your own research and consult with qualified financial advisors before making any investment decisions.</strong>
@@ -144,7 +144,7 @@ export default function TermsOfService() {
             <h2 className="text-2xl font-semibold text-white mb-4">10. Indemnification</h2>
             <p className="text-gray-300">
               You agree to defend, indemnify, and hold harmless ShibMetrics and its affiliates from and against any 
-              and all claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney's fees) 
+              and all claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney&apos;s fees) 
               arising from your use of and access to the service.
             </p>
           </section>

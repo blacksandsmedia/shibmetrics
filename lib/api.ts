@@ -28,7 +28,7 @@ function setCachedData<T>(key: keyof typeof cache, data: T, success: boolean = t
     data,
     timestamp: Date.now(),
     success,
-  } as any;
+  } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 function getCacheAge(key: keyof typeof cache): number | null {
@@ -144,8 +144,9 @@ export async function fetchBurnTransactions(
       }
       return [];
     }
-  } catch (error: any) {
-    console.error(`❌ Error fetching transactions for ${burnAddress}:`, error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`❌ Error fetching transactions for ${burnAddress}:`, errorMessage);
     // Return cached data if available
     const cached = getCachedData<BurnTransaction[]>('burnTransactions');
     if (cached) {
@@ -339,7 +340,7 @@ export async function fetchLatestBurns(limit = 20): Promise<CachedResponse<BurnT
   try {
     const allBurns: BurnTransaction[] = [];
     let apiCallsSuccessful = 0;
-    let apiCallsTotal = Object.keys(BURN_ADDRESSES).length;
+    const apiCallsTotal = Object.keys(BURN_ADDRESSES).length;
 
     for (const [name, address] of Object.entries(BURN_ADDRESSES)) {
       console.log(`🔥 Fetching burns for ${name} (${address})`);

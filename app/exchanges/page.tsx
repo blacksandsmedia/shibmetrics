@@ -19,6 +19,21 @@ interface ExchangeData {
   url: string;
 }
 
+interface TickerData {
+  market: {
+    name: string;
+    logo?: string;
+    identifier: string;
+  };
+  converted_volume: {
+    usd: number;
+  };
+  converted_last: {
+    usd: number;
+  };
+  trade_url: string;
+}
+
 export default function ExchangesPage() {
   const [exchanges, setExchanges] = useState<ExchangeData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,9 +60,9 @@ export default function ExchangesPage() {
         if (data.tickers && data.tickers.length > 0) {
           // Process real exchange data
           const processedExchanges: ExchangeData[] = data.tickers
-            .filter((ticker: any) => ticker.market && ticker.converted_volume && ticker.converted_volume.usd > 1000000) // Filter high volume exchanges
+            .filter((ticker: TickerData) => ticker.market && ticker.converted_volume && ticker.converted_volume.usd > 1000000) // Filter high volume exchanges
             .slice(0, 10) // Top 10 exchanges
-            .map((ticker: any) => ({
+            .map((ticker: TickerData) => ({
               name: ticker.market.name,
               volume24h: ticker.converted_volume.usd,
               price: ticker.converted_last.usd,

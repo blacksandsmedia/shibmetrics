@@ -46,7 +46,7 @@ export default function Contact() {
               <h2 className="text-2xl font-semibold text-white mb-6">Get in Touch</h2>
               <p className="text-gray-300 mb-6">
                 Have questions about ShibMetrics? Need technical support? Want to suggest a feature? 
-                We'd love to hear from you!
+                We&apos;d love to hear from you!
               </p>
             </div>
 

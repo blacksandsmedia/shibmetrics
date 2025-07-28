@@ -26,7 +26,7 @@ export async function GET() {
       return NextResponse.json({
         totalBurned: ACCURATE_TOTAL_BURNED,
         isFromCache: false,
-        source: 'shibburn.com (verified)'
+        source: 'shibburn.com (no API key)'
       });
     }
 
@@ -34,7 +34,7 @@ export async function GET() {
     let successfulQueries = 0;
 
     for (const [name, address] of Object.entries(BURN_ADDRESSES)) {
-      let retries = 2;
+      const retries = 2;
       let success = false;
       
       for (let attempt = 0; attempt <= retries && !success; attempt++) {
@@ -52,7 +52,7 @@ export async function GET() {
                 tag: 'latest',
                 apikey: apiKey,
               },
-              timeout: 15000,
+              timeout: 8000, // Reduced timeout for serverless
             }
           );
 
@@ -68,8 +68,9 @@ export async function GET() {
               await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
             }
           }
-        } catch (error: any) {
-          console.log(`⚠️  Error on attempt ${attempt + 1} for ${name}:`, error.message);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.log(`⚠️  Error on attempt ${attempt + 1} for ${name}:`, errorMessage);
           if (attempt < retries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
           }
