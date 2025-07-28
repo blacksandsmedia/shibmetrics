@@ -39,17 +39,17 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
     throw new Error('No valid Etherscan API key configured');
   }
 
-  console.log('🔥 Fetching real burn transactions from Etherscan...');
+  console.log('🔥 Fetching real SHIB transactions from Etherscan...');
   
   const communityAddress = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
   const allTransactions: EtherscanTx[] = [];
   
   try {
-    console.log(`🔥 Fetching outbound SHIB transactions from Community Address`);
+    console.log(`🔥 Fetching SHIB transactions involving Community Address`);
     
-    // Get outbound transactions from the community address
+    // Get all SHIB transactions involving the community address
     const response = await fetch(
-      `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=100&sort=desc&apikey=${apiKey}`,
+      `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=30&sort=desc&apikey=${apiKey}`,
       {
         method: 'GET',
         headers: {
@@ -65,17 +65,14 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
     const data = await response.json();
     
     if (data.status === '1' && data.result && Array.isArray(data.result)) {
-      // Filter for outbound transactions (from community address) that go to known burn addresses
-      const burnAddresses = Object.values(BURN_ADDRESSES).map(addr => addr.toLowerCase());
-      
+      // Get significant transactions (both inbound and outbound)
       const transactions = data.result
         .filter((tx: EtherscanTx) => {
-          const isFromCommunity = tx.from && tx.from.toLowerCase() === communityAddress.toLowerCase();
-          const isToBurnAddress = tx.to && burnAddresses.includes(tx.to.toLowerCase());
-          const isOutbound = isFromCommunity && tx.to && tx.to.toLowerCase() !== communityAddress.toLowerCase();
-          
-          return isOutbound && (isToBurnAddress || parseInt(tx.value) > 1000000000000000000000); // Large amounts are likely burns
+          const value = parseInt(tx.value);
+          // Filter for significant transactions (> 1 billion SHIB)
+          return value > 1000000000000000000000;
         })
+        .slice(0, 15) // Take top 15 significant transactions
         .map((tx: EtherscanTx) => ({
           hash: tx.hash,
           from: tx.from,
@@ -89,17 +86,16 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
         }));
       
       allTransactions.push(...transactions);
-      console.log(`✅ Found ${transactions.length} outbound burn transactions from Community Address`);
+      console.log(`✅ Found ${transactions.length} significant SHIB transactions`);
       
-      // If we don't find enough burn transactions, get some regular outbound transactions
-      if (transactions.length < 5) {
-        const regularOutbound = data.result
+      // If we don't have enough significant transactions, add some regular ones
+      if (transactions.length < 10) {
+        const regularTransactions = data.result
           .filter((tx: EtherscanTx) => {
-            const isFromCommunity = tx.from && tx.from.toLowerCase() === communityAddress.toLowerCase();
-            const isOutbound = isFromCommunity && tx.to && tx.to.toLowerCase() !== communityAddress.toLowerCase();
-            return isOutbound;
+            const value = parseInt(tx.value);
+            return value > 100000000000000000000; // > 100 million SHIB
           })
-          .slice(0, 10)
+          .slice(0, 15)
           .map((tx: EtherscanTx) => ({
             hash: tx.hash,
             from: tx.from,
@@ -112,16 +108,22 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
             tokenDecimal: tx.tokenDecimal || '18'
           }));
         
-        allTransactions.push(...regularOutbound);
-        console.log(`✅ Added ${regularOutbound.length} additional outbound transactions`);
+        // Add unique transactions only
+        const existingHashes = new Set(allTransactions.map((tx: EtherscanTx) => tx.hash));
+        const newTransactions = regularTransactions.filter((tx: EtherscanTx) => !existingHashes.has(tx.hash));
+        
+        allTransactions.push(...newTransactions);
+        console.log(`✅ Added ${newTransactions.length} additional SHIB transactions`);
       }
     } else {
-      console.log(`⚠️ No valid data from Community Address: ${data.message || 'Unknown error'}`);
+      console.log(`⚠️ No valid data from Etherscan: ${data.message || 'Unknown error'}`);
+      throw new Error(`Etherscan API error: ${data.message || 'Unknown error'}`);
     }
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`❌ Error fetching from Community Address:`, errorMessage);
+    console.error(`❌ Error fetching SHIB transactions:`, errorMessage);
+    throw error;
   }
 
   // Sort by timestamp (most recent first)
