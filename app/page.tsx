@@ -2,6 +2,7 @@ import { TrendingUp, TrendingDown, Flame, DollarSign, AlertTriangle, Clock } fro
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
 import RefreshButton from '../components/RefreshButton';
+import { formatTimeAgo } from '../lib/api';
 
 interface BurnTransaction {
   hash: string;
@@ -130,6 +131,10 @@ export default async function Home() {
   const burnRate = twentyFourHourBurnAmount / 24; // SHIB per hour
   const mostRecentBurn = burns[0];
 
+  // Calculate proper time since last burn
+  const timeSinceLastBurn = mostRecentBurn ? 
+    formatTimeAgo(mostRecentBurn.timeStamp) : 'Unknown';
+
   // Calculate market cap and burn percentage
   const circulatingSupply = 589246853017681; // Current circulating supply
   const totalSupply = 1000000000000000; // Original total supply: 1 quadrillion SHIB
@@ -225,7 +230,7 @@ export default async function Home() {
            {burnsData && mostRecentBurn ? (
              <StatCard
                title="Last Burn"
-               value={`${Math.floor((Date.now() - parseInt(mostRecentBurn.timeStamp) * 1000) / (1000 * 60 * 60))}h ago`}
+               value={`${timeSinceLastBurn}`}
                change="Most recent activity"
                icon={Clock}
                changeType="neutral"
