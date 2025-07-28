@@ -74,7 +74,8 @@ function formatTrend(percentage: number): { text: string; type: 'up' | 'down' | 
 // Server-side data fetching functions
 async function fetchBurnsData(): Promise<BurnTransaction[]> {
   try {
-    const response = await fetch('http://localhost:3000/api/burns?all=true&offset=20');
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://shibmetrics.com' : 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/burns?all=true&offset=20`);
     if (!response.ok) throw new Error(`Burns API failed: ${response.status}`);
     const data = await response.json();
     console.log('✅ Server-side burns fetch successful:', data.transactions?.length || 0, 'transactions from all burn addresses');
@@ -87,7 +88,8 @@ async function fetchBurnsData(): Promise<BurnTransaction[]> {
 
 async function fetchTotalBurnedData(): Promise<TotalBurnedData> {
   try {
-    const response = await fetch('http://localhost:3000/api/total-burned');
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://shibmetrics.com' : 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/total-burned`);
     if (!response.ok) throw new Error(`Total burned API failed: ${response.status}`);
     const data = await response.json();
     console.log('✅ Server-side total burned fetch successful:', formatBurnedAmount(data.totalBurned || 0), 'SHIB');
@@ -100,7 +102,8 @@ async function fetchTotalBurnedData(): Promise<TotalBurnedData> {
 
 async function fetchPriceData(): Promise<ShibPriceData> {
   try {
-    const response = await fetch('http://localhost:3000/api/price');
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://shibmetrics.com' : 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/price`);
     if (!response.ok) throw new Error(`Price API failed: ${response.status}`);
     const data = await response.json();
     console.log('✅ Server-side price fetch successful:', `$${data.price?.toFixed(8) || 0}`);

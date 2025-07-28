@@ -1,17 +1,56 @@
 export async function GET() {
-  // For now, return fallback data while we debug the external API issue
-  console.log('💰 Returning fallback SHIB price data...');
-  
-  return new Response(JSON.stringify({
-    price: 0.00001408, // Static fallback price
-    priceChange24h: -0.15,
-    fallback: true,
-    message: 'Using fallback data - external API temporarily unavailable'
-  }), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=60'
-    },
-  });
+  try {
+    console.log('💰 Fetching SHIB price from CoinGecko...');
+    
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=shiba-inu&vs_currencies=usd&include_24hr_change=true',
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data && data['shiba-inu']) {
+      const shibData = data['shiba-inu'];
+      console.log(`✅ SHIB price: $${shibData.usd}, 24h change: ${shibData.usd_24h_change?.toFixed(2)}%`);
+      
+      return new Response(JSON.stringify({
+        price: shibData.usd,
+        priceChange24h: shibData.usd_24h_change || 0
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300'
+        },
+      });
+    } else {
+      throw new Error('Invalid response format from CoinGecko');
+    }
+  } catch (error) {
+    console.error('❌ Error fetching SHIB price:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Return fallback data with better pricing
+    return new Response(JSON.stringify({
+      price: 0.00001408, // Updated fallback price
+      priceChange24h: -0.15,
+      fallback: true,
+      error: `API temporarily unavailable: ${errorMessage}`
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=60'
+      },
+    });
+  }
 } 
