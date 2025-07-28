@@ -43,8 +43,15 @@ function formatNumber(num: number): string {
 }
 
 function formatShibAmount(value: string): string {
-  const amount = parseInt(value) / Math.pow(10, 18);
-  return formatNumber(amount);
+  // Use BigInt to handle very large numbers properly
+  try {
+    const bigIntValue = BigInt(value);
+    const amount = Number(bigIntValue) / 1e18;
+    return formatNumber(amount);
+  } catch (error) {
+    console.warn('Invalid value for formatShibAmount:', value);
+    return '0';
+  }
 }
 
 function formatTimeAgo(timestamp: string): string {
@@ -86,23 +93,31 @@ export default function BurnHistoryPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
-  // Fetch comprehensive burn transaction data
+  // Fetch real burn transaction data (no fake data)
   const fetchBurnHistory = async () => {
     setLoading(true);
     try {
-      console.log('🔥 Fetching comprehensive burn history...');
+      console.log('🔥 Fetching real burn history...');
       
-      // First get the current API data
       const response = await fetch('/api/burns');
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       
       const data = await response.json();
       
       if (data.transactions && Array.isArray(data.transactions)) {
-        // Generate more comprehensive historical data
-        const extendedTransactions = generateComprehensiveHistory(data.transactions);
-        setAllTransactions(extendedTransactions);
-        console.log(`✅ Loaded ${extendedTransactions.length} burn transactions`);
+        // Filter out zero-value transactions and transactions with invalid values
+        const validTransactions = data.transactions.filter((tx: BurnTransaction) => {
+          try {
+            const bigIntValue = BigInt(tx.value || '0');
+            return bigIntValue > BigInt(0); // Only include transactions with positive values
+          } catch (error) {
+            console.log('Invalid transaction value:', tx.value);
+            return false;
+          }
+        });
+        
+        setAllTransactions(validTransactions);
+        console.log(`✅ Loaded ${validTransactions.length} valid burn transactions (filtered out ${data.transactions.length - validTransactions.length} zero/invalid value transactions)`);
       } else {
         console.log('⚠️ No transactions in API response');
         setAllTransactions([]);
@@ -117,47 +132,7 @@ export default function BurnHistoryPage() {
     }
   };
 
-  // Generate comprehensive historical burn data (simulate more transactions for demo)
-  const generateComprehensiveHistory = (baseTransactions: BurnTransaction[]): BurnTransaction[] => {
-    const extended: BurnTransaction[] = [...baseTransactions];
-    
-    // Generate additional historical transactions to simulate a full history
-    const destinations = Object.keys(BURN_DESTINATIONS);
-    
-    for (let i = 0; i < 200; i++) { // Generate 200 additional transactions
-      const randomDestination = destinations[Math.floor(Math.random() * destinations.length)];
-      const daysBack = Math.floor(Math.random() * 30) + 1; // 1-30 days ago
-      const hoursBack = Math.floor(Math.random() * 24); // Random hour of day
-      const timestamp = Math.floor(Date.now() / 1000) - (daysBack * 24 * 3600) - (hoursBack * 3600);
-      
-      // Generate realistic burn amounts (from small to large)
-      let amount: number;
-      const rand = Math.random();
-      if (rand < 0.4) { // 40% small burns (under 1K SHIB)
-        amount = Math.floor(Math.random() * 1000 + 100);
-      } else if (rand < 0.7) { // 30% medium burns (1K-100K SHIB) 
-        amount = Math.floor(Math.random() * 99000 + 1000);
-      } else if (rand < 0.9) { // 20% large burns (100K-1M SHIB)
-        amount = Math.floor(Math.random() * 900000 + 100000);
-      } else { // 10% very large burns (1M+ SHIB)
-        amount = Math.floor(Math.random() * 5000000 + 1000000);
-      }
-      
-      extended.push({
-        hash: `0x${(i + 1000).toString(16)}${'a'.repeat(60)}${i.toString().padStart(4, '0')}`,
-        from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-        to: randomDestination,
-        value: (amount * Math.pow(10, 18)).toString(), // Convert to wei
-        timeStamp: timestamp.toString(),
-        blockNumber: (21500000 - i * 10).toString(),
-        tokenName: 'SHIBA INU',
-        tokenSymbol: 'SHIB', 
-        tokenDecimal: '18'
-      });
-    }
-    
-    return extended;
-  };
+
 
   // Filter and sort transactions
   useEffect(() => {
@@ -173,7 +148,16 @@ export default function BurnHistoryPage() {
       if (sortBy === 'time') {
         return parseInt(b.timeStamp) - parseInt(a.timeStamp);
       } else {
-        return parseInt(b.value) - parseInt(a.value);
+        // Use BigInt for proper comparison of large values
+        try {
+          const valueA = BigInt(a.value);
+          const valueB = BigInt(b.value);
+          if (valueB > valueA) return 1;
+          if (valueB < valueA) return -1;
+          return 0;
+        } catch (error) {
+          return 0; // If comparison fails, treat as equal
+        }
       }
     });
     
