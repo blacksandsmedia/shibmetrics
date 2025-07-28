@@ -102,6 +102,8 @@ function LoadingCard({ title, icon }: { title: string; icon: React.ReactNode }) 
   );
 }
 
+// Client-side component for real-time data loading
+
 export default function Home() {
   const [priceState, setPriceState] = useState<ApiState<ShibPriceData>>({ data: null, loading: true, error: null });
   const [totalBurnedState, setTotalBurnedState] = useState<ApiState<TotalBurnedData>>({ data: null, loading: true, error: null });
