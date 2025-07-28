@@ -38,30 +38,21 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg border border-gray-700">
-        <div className="px-6 py-4 border-b border-gray-700">
-          <h3 className="text-lg font-semibold text-white">Latest Burn Transactions</h3>
-        </div>
-        <div className="p-6">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-4 py-3">
-              <div className="h-4 bg-gray-700 rounded w-20 animate-pulse"></div>
-              <div className="h-4 bg-gray-700 rounded w-32 animate-pulse"></div>
-              <div className="h-4 bg-gray-700 rounded w-16 animate-pulse"></div>
-              <div className="h-4 bg-gray-700 rounded w-24 animate-pulse"></div>
-            </div>
-          ))}
-        </div>
+      <div className="p-6">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center space-x-4 py-3">
+            <div className="h-4 bg-gray-700 rounded w-20 animate-pulse"></div>
+            <div className="h-4 bg-gray-700 rounded w-32 animate-pulse"></div>
+            <div className="h-4 bg-gray-700 rounded w-16 animate-pulse"></div>
+            <div className="h-4 bg-gray-700 rounded w-24 animate-pulse"></div>
+          </div>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700">
-      <div className="px-6 py-4 border-b border-gray-700">
-        <h3 className="text-lg font-semibold text-white">Latest Burn Transactions</h3>
-      </div>
-      <div className="overflow-x-auto">
+    <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-700">
           <thead className="bg-gray-750">
             <tr>
@@ -119,12 +110,11 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
             ))}
           </tbody>
         </table>
+        {uniqueTransactions.length === 0 && !loading && (
+          <div className="px-6 py-8 text-center">
+            <p className="text-gray-400">No burn transactions found</p>
+          </div>
+        )}
       </div>
-      {uniqueTransactions.length === 0 && !loading && (
-        <div className="px-6 py-8 text-center">
-          <p className="text-gray-400">No burn transactions found</p>
-        </div>
-      )}
-    </div>
-  );
+    );
 } 
