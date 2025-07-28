@@ -35,6 +35,8 @@ const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
 async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   
+  console.log('🔍 Debug - API Key:', apiKey ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length-4)}` : 'NOT SET');
+  
   if (!apiKey || apiKey === 'YourEtherscanApiKeyHere') {
     throw new Error('No valid Etherscan API key configured');
   }
@@ -44,18 +46,17 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   const communityAddress = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
   
   try {
+    const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=20&sort=desc&apikey=${apiKey}`;
     console.log(`🔥 Fetching SHIB transactions involving Community Address`);
+    console.log(`🌐 Request URL: ${requestUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
     
     // Get all SHIB transactions involving the community address
-    const response = await fetch(
-      `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=20&sort=desc&apikey=${apiKey}`,
-      {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
+    const response = await fetch(requestUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
