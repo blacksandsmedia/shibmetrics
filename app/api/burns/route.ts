@@ -1,4 +1,6 @@
-// API route for burn transactions
+// API route for SHIB burn transactions - SIMPLIFIED VERSION THAT WORKS
+
+const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 
 interface EtherscanTx {
   hash: string;
@@ -7,19 +9,10 @@ interface EtherscanTx {
   value: string;
   timeStamp: string;
   blockNumber: string;
-  tokenName: string;
-  tokenSymbol: string;
-  tokenDecimal: string;
+  tokenName?: string;
+  tokenSymbol?: string;
+  tokenDecimal?: string;
 }
-
-// SHIB contract and burn addresses
-const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcfc64e1e6cc01f0b64c4ce';
-const BURN_ADDRESSES = {
-  'Community Address': '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-  'Vitalik Burn Alt': '0xdead000000000000000042069420694206942069',
-  'Dead Address 1': '0x000000000000000000000000000000000000dead',
-  'Null Address': '0x0000000000000000000000000000000000000000',
-};
 
 // In-memory cache for 2-minute caching
 let cache: {
@@ -32,8 +25,6 @@ let cache: {
 
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
 
-// NO DUMMY DATA - Only use real cached data from last 2 minutes
-
 async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   
@@ -41,91 +32,64 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
     throw new Error('No valid Etherscan API key configured');
   }
 
-  console.log('🔥 Fetching real SHIB burn transactions from Etherscan...');
+  console.log('🔥 Fetching REAL burn transactions...');
   
-  // Start with the main burn address that we know has recent transactions
+  // Fetch transactions TO the main burn address
   const burnAddress = '0xdead000000000000000042069420694206942069';
+  const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddress}&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   
-  // Try with retries and rate limiting
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddress}&page=1&offset=15&sort=desc&apikey=${apiKey}`;
-      
-      console.log(`🔥 Fetching burns to ${burnAddress} (attempt ${attempt})`);
-      
-      // Add delay between attempts
-      if (attempt > 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-      }
-      
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'ShibMetrics/1.0'
-        },
-      });
+  console.log(`🔥 Requesting: ${requestUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
+  
+  const response = await fetch(requestUrl, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
 
-      if (!response.ok) {
-        console.log(`⚠️ HTTP ${response.status} on attempt ${attempt}`);
-        if (attempt === 3) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        continue;
-      }
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
 
-      const data = await response.json();
-      console.log(`📊 Etherscan response (attempt ${attempt}): status=${data.status}, results=${data.result?.length || 0}`);
-      
-      if (data.status === '1' && data.result && Array.isArray(data.result)) {
-      // Take all transactions - they should be TO the burn address
-      const transactions = data.result
-        .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddress.toLowerCase())
-        .slice(0, 15) // Take top 15 most recent
-        .map((tx: EtherscanTx) => ({
-          hash: tx.hash,
-          from: tx.from,
-          to: tx.to,
-          value: tx.value,
-          timeStamp: tx.timeStamp,
-          blockNumber: tx.blockNumber,
-          tokenName: tx.tokenName || 'SHIBA INU',
-          tokenSymbol: tx.tokenSymbol || 'SHIB',
-          tokenDecimal: tx.tokenDecimal || '18'
-        }));
-      
-      console.log(`✅ Found ${transactions.length} burn transactions, first value: ${transactions[0]?.value}`);
-      
-      if (transactions.length === 0) {
-        throw new Error(`No incoming transactions found to burn address ${burnAddress}`);
-      }
-      
-        return transactions;
-        
-      } else {
-        console.log(`⚠️ Etherscan returned status ${data.status} on attempt ${attempt}`);
-        if (attempt === 3) {
-          throw new Error(`Etherscan API error: ${data.message || data.status || 'Unknown error'}`);
-        }
-        continue;
-      }
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Error on attempt ${attempt}: ${errorMessage}`);
-      if (attempt === 3) {
-        throw error;
-      }
-      continue;
-    }
+  const data = await response.json();
+  console.log(`📊 Etherscan response: status=${data.status}, message=${data.message || 'OK'}, results=${data.result?.length || 0}`);
+  
+  if (data.status !== '1') {
+    throw new Error(`Etherscan API error: ${data.message || data.status}`);
+  }
+
+  if (!data.result || !Array.isArray(data.result) || data.result.length === 0) {
+    throw new Error('No burn transactions found');
+  }
+
+  // Take transactions and ensure they're TO the burn address
+  const transactions = data.result
+    .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddress.toLowerCase())
+    .slice(0, 10)
+    .map((tx: EtherscanTx) => ({
+      hash: tx.hash,
+      from: tx.from,
+      to: tx.to,
+      value: tx.value,
+      timeStamp: tx.timeStamp,
+      blockNumber: tx.blockNumber,
+      tokenName: tx.tokenName || 'SHIBA INU',
+      tokenSymbol: tx.tokenSymbol || 'SHIB',
+      tokenDecimal: tx.tokenDecimal || '18'
+    }));
+  
+  console.log(`✅ Found ${transactions.length} REAL burn transactions, first value: ${transactions[0]?.value}`);
+  
+  if (transactions.length === 0) {
+    throw new Error('No valid burn transactions found after filtering');
   }
   
-  // This should never be reached due to the throw statements above
-  throw new Error('All retry attempts failed');
+  return transactions;
 }
 
 export async function GET() {
-  const now = Date.now();
-  
   try {
+    const now = Date.now();
     
     // Check cache first (2-minute cache)
     if (cache.data && (now - cache.timestamp) < CACHE_DURATION) {
@@ -133,7 +97,8 @@ export async function GET() {
       return new Response(JSON.stringify({
         transactions: cache.data,
         cached: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        source: 'etherscan-cached'
       }), {
         status: 200,
         headers: {
@@ -143,16 +108,16 @@ export async function GET() {
       });
     }
 
-    // Fetch fresh data 
+    // Fetch fresh data
     const transactions = await fetchRealBurnTransactions();
-
+    
     // Update cache
     cache = {
       data: transactions,
       timestamp: now
     };
 
-    console.log(`✅ Successfully returned ${transactions.length} real burn transactions`);
+    console.log(`✅ Successfully returned ${transactions.length} REAL burn transactions`);
     
     return new Response(JSON.stringify({
       transactions: transactions,
@@ -171,9 +136,11 @@ export async function GET() {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Burns API error:', errorMessage);
     
-    // NO DUMMY DATA - Only return cached data if within 2 minutes, otherwise error
+    const now = Date.now();
+    
+    // Only use cached data if it's within 2 minutes
     if (cache.data && (now - cache.timestamp) < CACHE_DURATION) {
-      console.log('⚠️ Using cached data due to API error');
+      console.log('⚠️ Using recent cached data due to API error');
       return new Response(JSON.stringify({
         transactions: cache.data,
         cached: true,
@@ -188,7 +155,7 @@ export async function GET() {
       });
     }
     
-    // No recent cached data available - return error
+    // No valid cached data - return error
     return new Response(JSON.stringify({
       error: 'Unable to fetch burn transactions',
       message: errorMessage,
