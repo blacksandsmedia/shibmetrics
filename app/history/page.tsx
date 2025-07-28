@@ -28,9 +28,11 @@ interface BurnTransaction {
 
 // SHIB burn destination addresses
 const BURN_DESTINATIONS = {
-  '0xdead000000000000000042069420694206942069': 'BA-1',
-  '0x000000000000000000000000000000000000dead': 'BA-2', 
-  '0x0000000000000000000000000000000000000000': 'BA-3',
+  '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce': 'CA', // Community Address
+  '0xdead000000000000000042069420694206942069': 'BA-1', // Vitalik Burn Alt
+  '0x000000000000000000000000000000000000dead': 'BA-2', // Dead Address
+  '0x0000000000000000000000000000000000000000': 'BA-3', // Null Address  
+  '0xd7b7df10cb1dc2d1d15e7d00bcb244a7cfac61cc': 'VB-Original', // Original Vitalik burn address
 };
 
 // Helper functions
@@ -99,10 +101,24 @@ export default function BurnHistoryPage() {
     try {
       console.log('🔥 Fetching real burn history...');
       
-      const response = await fetch('/api/burns');
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const response = await fetch('/api/burns', {
+        cache: 'no-cache',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
       
       const data = await response.json();
+      console.log('📊 API Response:', {
+        hasTransactions: !!(data.transactions),
+        transactionCount: data.transactions?.length || 0,
+        fullResponse: data
+      });
       
       if (data.transactions && Array.isArray(data.transactions)) {
         // Filter out zero-value transactions and transactions with invalid values
@@ -116,16 +132,17 @@ export default function BurnHistoryPage() {
           }
         });
         
-        setAllTransactions(validTransactions);
         console.log(`✅ Loaded ${validTransactions.length} valid burn transactions (filtered out ${data.transactions.length - validTransactions.length} zero/invalid value transactions)`);
+        setAllTransactions(validTransactions);
       } else {
-        console.log('⚠️ No transactions in API response');
+        console.log('⚠️ No transactions in API response, data structure:', data);
         setAllTransactions([]);
       }
       
       setLastUpdated(new Date());
     } catch (error) {
       console.error('❌ Error fetching burn history:', error);
+      // Set empty array but don't fail silently
       setAllTransactions([]);
     } finally {
       setLoading(false);
@@ -167,7 +184,18 @@ export default function BurnHistoryPage() {
 
   // Load data on component mount
   useEffect(() => {
+    console.log('🔄 History page mounting, fetching data...');
     fetchBurnHistory();
+  }, []);
+
+  // Auto-refresh every 5 minutes to keep data current
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing history data...');
+      fetchBurnHistory();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Pagination component
@@ -289,16 +317,18 @@ export default function BurnHistoryPage() {
                 <Filter className="h-4 w-4 inline mr-2" />
                 Filter by Destination
               </label>
-              <select
-                value={selectedDestination}
-                onChange={(e) => setSelectedDestination(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="all">All Destinations</option>
-                <option value="0xdead000000000000000042069420694206942069">Vitalik Burn Alt (BA-1)</option>
-                <option value="0x000000000000000000000000000000000000dead">Dead Address (BA-2)</option>
-                <option value="0x0000000000000000000000000000000000000000">Null Address (BA-3)</option>
-              </select>
+                              <select
+                  value={selectedDestination}
+                  onChange={(e) => setSelectedDestination(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="all">All Destinations</option>
+                  <option value="0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce">Community Address (CA)</option>
+                  <option value="0xdead000000000000000042069420694206942069">Vitalik Burn Alt (BA-1)</option>
+                  <option value="0x000000000000000000000000000000000000dead">Dead Address (BA-2)</option>
+                  <option value="0x0000000000000000000000000000000000000000">Null Address (BA-3)</option>
+                  <option value="0xd7b7df10cb1dc2d1d15e7d00bcb244a7cfac61cc">Original Vitalik Burn</option>
+                </select>
             </div>
             
             <div className="flex-1">
