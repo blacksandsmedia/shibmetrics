@@ -22,9 +22,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", type: "image/x-icon", sizes: "16x16" }
+      { url: "/favicon.svg", type: "image/png", sizes: "32x32" }
     ],
     apple: "/favicon.svg",
+    shortcut: "/favicon.svg",
   },
   openGraph: {
     title: "SHIBMETRICS - SHIB Burn Tracker",
@@ -46,6 +47,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+        <link rel="shortcut icon" href="/favicon.svg?v=2" />
+        <link rel="apple-touch-icon" href="/favicon.svg?v=2" />
+      </head>
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <div className="min-h-screen flex flex-col">
           <Header />
