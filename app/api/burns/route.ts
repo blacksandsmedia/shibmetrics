@@ -46,26 +46,36 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
   // Start with the main burn address that we know has recent transactions
   const burnAddress = '0xdead000000000000000042069420694206942069';
   
-  try {
-    const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddress}&page=1&offset=20&sort=desc&apikey=${apiKey}`;
-    
-    console.log(`🔥 Fetching burns to ${burnAddress}`);
-    
-    const response = await fetch(requestUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
+  // Try with retries and rate limiting
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddress}&page=1&offset=15&sort=desc&apikey=${apiKey}`;
+      
+      console.log(`🔥 Fetching burns to ${burnAddress} (attempt ${attempt})`);
+      
+      // Add delay between attempts
+      if (attempt > 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+      
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'ShibMetrics/1.0'
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
+      if (!response.ok) {
+        console.log(`⚠️ HTTP ${response.status} on attempt ${attempt}`);
+        if (attempt === 3) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        continue;
+      }
 
-    const data = await response.json();
-    console.log(`📊 Etherscan response: status=${data.status}, results=${data.result?.length || 0}`);
-    
-    if (data.status === '1' && data.result && Array.isArray(data.result)) {
+      const data = await response.json();
+      console.log(`📊 Etherscan response (attempt ${attempt}): status=${data.status}, results=${data.result?.length || 0}`);
+      
+      if (data.status === '1' && data.result && Array.isArray(data.result)) {
       // Take all transactions - they should be TO the burn address
       const transactions = data.result
         .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddress.toLowerCase())
@@ -88,17 +98,28 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
         throw new Error(`No incoming transactions found to burn address ${burnAddress}`);
       }
       
-      return transactions;
+        return transactions;
+        
+      } else {
+        console.log(`⚠️ Etherscan returned status ${data.status} on attempt ${attempt}`);
+        if (attempt === 3) {
+          throw new Error(`Etherscan API error: ${data.message || data.status || 'Unknown error'}`);
+        }
+        continue;
+      }
       
-    } else {
-      throw new Error(`Etherscan API error: ${data.message || data.status || 'Unknown error'}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`❌ Error on attempt ${attempt}: ${errorMessage}`);
+      if (attempt === 3) {
+        throw error;
+      }
+      continue;
     }
-    
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`❌ Error fetching burn transactions:`, errorMessage);
-    throw error;
   }
+  
+  // This should never be reached due to the throw statements above
+  throw new Error('All retry attempts failed');
 }
 
 export async function GET() {
