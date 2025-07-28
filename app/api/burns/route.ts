@@ -38,12 +38,12 @@ async function refreshBurnDataInBackground(): Promise<void> {
         });
 
         if (!response.ok) {
-          console.log(`⚠️ HTTP ${response.status} for ${burnAddr.name}`);
-          continue;
+          console.log(`⚠️ HTTP ${response.status} for ${burnAddr.name} - continuing anyway`);
+          // Don't skip entirely, try to get data anyway
         }
 
         const data = await response.json();
-        console.log(`📊 ${burnAddr.name}: status=${data.status}, results=${data.result?.length || 0}`);
+        console.log(`📊 ${burnAddr.name}: status=${data.status}, results=${data.result?.length || 0}, message="${data.message || 'none'}"`);
         
         // Include results even if status is '0' but we have valid transaction data
         if (data.result && Array.isArray(data.result) && data.result.length > 0) {
@@ -74,8 +74,8 @@ async function refreshBurnDataInBackground(): Promise<void> {
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.log(`❌ Background refresh failed for ${burnAddr.name}: ${errorMessage}`);
-        continue;
+        console.log(`❌ Background refresh error for ${burnAddr.name}: ${errorMessage}`);
+        // Continue to next address instead of breaking the whole process
       }
     }
 
