@@ -69,11 +69,19 @@ export default function BurnTrackerPage() {
     let filtered = [...allBurns];
     console.log(`🔥 Starting filter with ${filtered.length} burns`);
 
-    // Filter by address
+    // Filter by address (support both source and destination filtering)
     if (selectedAddress !== 'all') {
       const beforeFilter = filtered.length;
-      filtered = filtered.filter(burn => burn.to.toLowerCase() === selectedAddress.toLowerCase());
-      console.log(`🔥 After address filter (${selectedAddress}): ${filtered.length} (was ${beforeFilter})`);
+      const filterAddress = selectedAddress.toLowerCase();
+      
+      // Community Address is the source (from), others are destinations (to)  
+      if (filterAddress === BURN_ADDRESSES['Community Address'].toLowerCase()) {
+        filtered = filtered.filter(burn => burn.from.toLowerCase() === filterAddress);
+        console.log(`🔥 After CA source filter: ${filtered.length} (was ${beforeFilter})`);
+      } else {
+        filtered = filtered.filter(burn => burn.to.toLowerCase() === filterAddress);
+        console.log(`🔥 After destination filter (${selectedAddress}): ${filtered.length} (was ${beforeFilter})`);
+      }
     }
 
     // Sort
@@ -167,14 +175,15 @@ export default function BurnTrackerPage() {
             <div className="flex-1">
                               <label className="block text-sm font-medium text-gray-300 mb-2">
                   <Filter className="h-4 w-4 inline mr-2" />
-                  Filter by Burn Destination
+                  Filter by Address
                 </label>
                               <select 
                   value={selectedAddress} 
                   onChange={(e) => setSelectedAddress(e.target.value)}
                   className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
-                  <option value="all">All Burn Destinations</option>
+                  <option value="all">All Addresses</option>
+                  <option value={BURN_ADDRESSES['Community Address']}>Community Address (CA)</option>
                   <option value={BURN_ADDRESSES['Vitalik Burn Alt']}>Vitalik Burn Alt (BA-1)</option>
                   <option value={BURN_ADDRESSES['Dead Address 1']}>Dead Address (BA-2)</option>
                   <option value={BURN_ADDRESSES['Null Address']}>Null Address (BA-3)</option>

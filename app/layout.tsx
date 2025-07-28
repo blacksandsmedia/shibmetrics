@@ -19,9 +19,16 @@ export const metadata: Metadata = {
   description: "Real-time Shiba Inu burn tracking, statistics, and ecosystem data. Track SHIB burns, exchange activity, and get the latest metrics.",
   keywords: "SHIB, Shiba Inu, burn tracker, crypto analytics, token burns, SHIB statistics",
   authors: [{ name: "SHIBMETRICS" }],
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", type: "image/x-icon", sizes: "16x16" }
+    ],
+    apple: "/favicon.svg",
+  },
   openGraph: {
     title: "SHIBMETRICS - SHIB Burn Tracker",
-    description: "Real-time Shiba Inu burn tracking and analytics",
+    description: "Real-time Shiba Inu burn tracking and analytics", 
     type: "website",
     url: "https://shibmetrics.com",
   },
