@@ -1,29 +1,35 @@
-import { NextResponse } from 'next/server';
-import axios from 'axios';
-
 export async function GET() {
   try {
     console.log('💰 Fetching SHIB price from CoinGecko...');
     
-    const response = await axios.get(
-      'https://api.coingecko.com/api/v3/simple/price',
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=shiba-inu&vs_currencies=usd&include_24hr_change=true',
       {
-        params: {
-          ids: 'shiba-inu',
-          vs_currencies: 'usd',
-          include_24hr_change: 'true'
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
         },
-        timeout: 10000,
       }
     );
 
-    if (response.data && response.data['shiba-inu']) {
-      const data = response.data['shiba-inu'];
-      console.log(`✅ SHIB price: $${data.usd}, 24h change: ${data.usd_24h_change?.toFixed(2)}%`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data && data['shiba-inu']) {
+      const shibData = data['shiba-inu'];
+      console.log(`✅ SHIB price: $${shibData.usd}, 24h change: ${shibData.usd_24h_change?.toFixed(2)}%`);
       
-      return NextResponse.json({
-        price: data.usd,
-        priceChange24h: data.usd_24h_change || 0
+      return new Response(JSON.stringify({
+        price: shibData.usd,
+        priceChange24h: shibData.usd_24h_change || 0
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
     } else {
       throw new Error('Invalid response format from CoinGecko');
@@ -33,11 +39,16 @@ export async function GET() {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     // Return fallback data instead of error status
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       price: 0.00001408, // Fallback price
       priceChange24h: 0,
       error: `API temporarily unavailable: ${errorMessage}`,
       fallback: true
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   }
 } 
