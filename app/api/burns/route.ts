@@ -69,8 +69,8 @@ async function refreshBurnDataInBackground(): Promise<void> {
           console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
         }
         
-        // Rate limiting delay between requests
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // Rate limiting delay between requests - increased to avoid timeouts
+        await new Promise(resolve => setTimeout(resolve, 1200));
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
