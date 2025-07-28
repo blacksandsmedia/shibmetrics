@@ -41,36 +41,65 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
 
   console.log('🔥 Fetching real burn transactions from Etherscan...');
   
+  const communityAddress = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
   const allTransactions: EtherscanTx[] = [];
   
-  // Fetch transactions from burn destination addresses
-  for (const [name, address] of Object.entries(BURN_ADDRESSES)) {
-    // Skip Community Address as it's the source, not destination
-    if (name === 'Community Address') continue;
+  try {
+    console.log(`🔥 Fetching outbound SHIB transactions from Community Address`);
     
-    try {
-      console.log(`🔥 Fetching burns to ${name} (${address})`);
-      
-      const response = await fetch(
-        `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${address}&page=1&offset=50&sort=desc&apikey=${apiKey}`,
-        {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error(`❌ HTTP error for ${name}: ${response.status}`);
-        continue;
+    // Get outbound transactions from the community address
+    const response = await fetch(
+      `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${communityAddress}&page=1&offset=100&sort=desc&apikey=${apiKey}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
       }
+    );
 
-      const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.status === '1' && data.result && Array.isArray(data.result)) {
+      // Filter for outbound transactions (from community address) that go to known burn addresses
+      const burnAddresses = Object.values(BURN_ADDRESSES).map(addr => addr.toLowerCase());
       
-      if (data.status === '1' && data.result && Array.isArray(data.result)) {
-        const transactions = data.result
-          .filter((tx: EtherscanTx) => tx.to && tx.to.toLowerCase() === address.toLowerCase())
+      const transactions = data.result
+        .filter((tx: EtherscanTx) => {
+          const isFromCommunity = tx.from && tx.from.toLowerCase() === communityAddress.toLowerCase();
+          const isToBurnAddress = tx.to && burnAddresses.includes(tx.to.toLowerCase());
+          const isOutbound = isFromCommunity && tx.to && tx.to.toLowerCase() !== communityAddress.toLowerCase();
+          
+          return isOutbound && (isToBurnAddress || parseInt(tx.value) > 1000000000000000000000); // Large amounts are likely burns
+        })
+        .map((tx: EtherscanTx) => ({
+          hash: tx.hash,
+          from: tx.from,
+          to: tx.to,
+          value: tx.value,
+          timeStamp: tx.timeStamp,
+          blockNumber: tx.blockNumber,
+          tokenName: tx.tokenName || 'SHIB',
+          tokenSymbol: tx.tokenSymbol || 'SHIB',
+          tokenDecimal: tx.tokenDecimal || '18'
+        }));
+      
+      allTransactions.push(...transactions);
+      console.log(`✅ Found ${transactions.length} outbound burn transactions from Community Address`);
+      
+      // If we don't find enough burn transactions, get some regular outbound transactions
+      if (transactions.length < 5) {
+        const regularOutbound = data.result
+          .filter((tx: EtherscanTx) => {
+            const isFromCommunity = tx.from && tx.from.toLowerCase() === communityAddress.toLowerCase();
+            const isOutbound = isFromCommunity && tx.to && tx.to.toLowerCase() !== communityAddress.toLowerCase();
+            return isOutbound;
+          })
+          .slice(0, 10)
           .map((tx: EtherscanTx) => ({
             hash: tx.hash,
             from: tx.from,
@@ -83,19 +112,16 @@ async function fetchRealBurnTransactions(): Promise<EtherscanTx[]> {
             tokenDecimal: tx.tokenDecimal || '18'
           }));
         
-        allTransactions.push(...transactions);
-        console.log(`✅ Found ${transactions.length} transactions for ${name}`);
-      } else {
-        console.log(`⚠️ No valid data for ${name}: ${data.message || 'Unknown error'}`);
+        allTransactions.push(...regularOutbound);
+        console.log(`✅ Added ${regularOutbound.length} additional outbound transactions`);
       }
-      
-      // Rate limiting delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Error fetching ${name}:`, errorMessage);
+    } else {
+      console.log(`⚠️ No valid data from Community Address: ${data.message || 'Unknown error'}`);
     }
+    
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`❌ Error fetching from Community Address:`, errorMessage);
   }
 
   // Sort by timestamp (most recent first)
