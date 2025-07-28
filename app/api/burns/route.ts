@@ -28,7 +28,7 @@ async function refreshBurnDataInBackground(): Promise<void> {
     // Sequential fetch with staggered delays to avoid rate limits
     for (const burnAddr of burnAddresses) {
       try {
-        const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=5&sort=desc&apikey=${apiKey}`;
+        const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=25&sort=desc&apikey=${apiKey}`;
         
         console.log(`🔥 Background refresh: Fetching from ${burnAddr.name}...`);
         
@@ -48,7 +48,7 @@ async function refreshBurnDataInBackground(): Promise<void> {
         if (data.status === '1' && data.result && Array.isArray(data.result)) {
           const transactions = data.result
             .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddr.address.toLowerCase())
-            .slice(0, 5)
+            .slice(0, 25)
             .map((tx: EtherscanTx) => ({
               hash: tx.hash,
               from: tx.from,
@@ -78,24 +78,25 @@ async function refreshBurnDataInBackground(): Promise<void> {
       }
     }
 
-    if (allTransactions.length > 0) {
-      // Sort and take top transactions
-      allTransactions.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp));
-      const topTransactions = allTransactions.slice(0, 20);
+    // Sort all transactions by timestamp (most recent first) and remove duplicates
+    const uniqueTransactions = Array.from(
+      new Map(allTransactions.map(tx => [tx.hash, tx])).values()
+    ).sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp))
+     .slice(0, 50); // Increase from previous limit to show more history
 
-      // Save to cache
-      saveBurnCache({
-        transactions: topTransactions,
-        lastUpdated: Date.now(),
-        source: 'background-refresh',
-        totalAddressesSuccess: successCount,
-        totalAddressesAttempted: burnAddresses.length
-      });
-
-      console.log(`✅ Background refresh completed: ${topTransactions.length} transactions from ${successCount}/${burnAddresses.length} addresses`);
-    }
+    console.log(`✅ Background refresh complete: ${uniqueTransactions.length} unique transactions from ${successCount}/${burnAddresses.length} addresses`);
+    
+    // Save to cache
+    saveBurnCache({
+      transactions: uniqueTransactions,
+      lastUpdated: Date.now(),
+      source: 'etherscan-background',
+      totalAddressesSuccess: successCount,
+      totalAddressesAttempted: burnAddresses.length
+    });
+    
   } catch (error) {
-    console.error('❌ Background refresh error:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('❌ Background refresh failed:', error);
   }
 }
 
