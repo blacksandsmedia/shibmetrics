@@ -3,6 +3,7 @@ import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
 import RefreshButton from '../components/RefreshButton';
 import { formatTimeAgo } from '../lib/api';
+import Link from 'next/link';
 
 interface BurnTransaction {
   hash: string;
@@ -349,6 +350,17 @@ export default async function Home() {
               <p className="text-red-300 text-sm mt-2">Service temporarily unavailable</p>
             </div>
           )}
+        </div>
+
+        {/* View Burn Tracker Button */}
+        <div className="mt-8 text-center">
+          <Link 
+            href="/burn-tracker"
+            className="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors shadow-lg"
+          >
+            <Flame className="h-5 w-5 mr-2" />
+            View Burn Tracker
+          </Link>
         </div>
       </div>
     </div>
