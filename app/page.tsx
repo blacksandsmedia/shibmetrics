@@ -215,13 +215,6 @@ export default function Home() {
   
   const burnRate = recentBurnAmount / 24; // SHIB per hour (approximate)
   const mostRecentBurn = burns[0];
-  
-  console.log('🔥 Homepage data:', {
-    totalBurns: burns.length,
-    recentBurns: recentBurns.length,
-    recentBurnAmount: recentBurnAmount,
-    firstBurn: burns[0]
-  });
 
   // Calculate market cap
   const circulatingSupply = 589246853017681; // Current circulating supply
