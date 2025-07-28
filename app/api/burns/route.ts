@@ -89,44 +89,21 @@ async function fetchAddressTransactions(address: string, apiKey: string, offset:
   return [];
 }
 
-export async function GET(request: Request) {
-  console.log('🔥 Returning fallback burn transaction data...');
-  
-  // Sample burn transaction data for fallback
-  const fallbackTransactions = [
-    {
-      hash: '0x123...abc',
-      from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-      to: '0xdead000000000000000042069420694206942069',
-      value: '1000000000000000000000',
-      timeStamp: '1672531200',
-      blockNumber: '16000000',
-      tokenName: 'SHIBA INU',
-      tokenSymbol: 'SHIB',
-      tokenDecimal: '18'
-    },
-    {
-      hash: '0x456...def',
-      from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
-      to: '0x000000000000000000000000000000000000dead',
-      value: '500000000000000000000',
-      timeStamp: '1672517800',
-      blockNumber: '15999900',
-      tokenName: 'SHIBA INU',
-      tokenSymbol: 'SHIB',
-      tokenDecimal: '18'
-    }
-  ];
-  
+export async function GET() {
   return new Response(JSON.stringify({
-    transactions: fallbackTransactions,
-    message: 'Using fallback data - external API temporarily unavailable',
-    fallback: true
+    transactions: [
+      {
+        hash: '0x123',
+        from: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
+        to: '0xdead000000000000000042069420694206942069',
+        value: '1000000000000000000000',
+        timeStamp: '1672531200'
+      }
+    ]
   }), {
     status: 200,
     headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=300'
-    },
+      'Content-Type': 'application/json'
+    }
   });
 } 

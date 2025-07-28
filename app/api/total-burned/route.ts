@@ -13,22 +13,13 @@ const BURN_ADDRESSES = {
 };
 
 export async function GET() {
-  console.log('🔥 Returning fallback total burned data...');
-  
-  // Accurate total from shibburn.com: 410,750,102,615,531 SHIB
-  const ACCURATE_TOTAL_BURNED = 410750102615531;
-  
-  // Return fallback data for now
   return new Response(JSON.stringify({
-    totalBurned: ACCURATE_TOTAL_BURNED,
-    isFromCache: false,
-    source: 'shibburn.com (fallback data)',
-    message: 'Using verified data - external API temporarily unavailable'
+    totalBurned: 410750102615531,
+    source: 'fallback'
   }), {
     status: 200,
     headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=300'
-    },
+      'Content-Type': 'application/json'
+    }
   });
 } 
