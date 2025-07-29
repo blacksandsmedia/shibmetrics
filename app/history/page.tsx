@@ -141,7 +141,7 @@ export default function BurnHistoryPage() {
         fullKeys: Object.keys(data)
       });
       
-      if (data.burns && Array.isArray(data.burns)) {
+      if (data.burns && Array.isArray(data.burns) && data.burns.length > 0) {
         // Filter out zero-value transactions and transactions with invalid values
         const validTransactions = data.burns.filter((tx: BurnTransaction) => {
           try {
@@ -161,8 +161,40 @@ export default function BurnHistoryPage() {
           console.warn('⚠️ No valid transactions after filtering!');
         }
       } else {
-        console.error('⚠️ No burns in API response, data structure:', data);
-        setAllTransactions([]);
+        // Historical data not available yet - fallback to regular burns API
+        console.log('📋 Historical data empty, falling back to regular burns API...');
+        
+        const fallbackResponse = await fetch('/api/burns', {
+          cache: 'no-cache',
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          
+          if (fallbackData.transactions && Array.isArray(fallbackData.transactions)) {
+            const validTransactions = fallbackData.transactions.filter((tx: BurnTransaction) => {
+              try {
+                const bigIntValue = BigInt(tx.value || '0');
+                return bigIntValue > BigInt(0);
+              } catch {
+                return false;
+              }
+            });
+            
+            console.log(`✅ Loaded ${validTransactions.length} transactions from fallback burns API`);
+            setAllTransactions(validTransactions);
+          } else {
+            console.error('⚠️ No transactions in fallback API response');
+            setAllTransactions([]);
+          }
+        } else {
+          console.error('⚠️ Fallback API request failed');
+          setAllTransactions([]);
+        }
       }
       
       setLastUpdated(new Date());
