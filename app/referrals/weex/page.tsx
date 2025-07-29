@@ -1,4 +1,4 @@
-import { ExternalLink, Shield, TrendingUp, Percent, Star, Gift, AlertTriangle, CheckCircle, UserX } from 'lucide-react';
+import { ExternalLink, Percent, Star, Gift, AlertTriangle, CheckCircle, UserX } from 'lucide-react';
 import Link from 'next/link';
 
 export default function WEEXReferralPage() {

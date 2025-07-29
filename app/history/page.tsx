@@ -50,7 +50,7 @@ function formatShibAmount(value: string): string {
     const bigIntValue = BigInt(value);
     const amount = Number(bigIntValue) / 1e18;
     return formatNumber(amount);
-  } catch (error) {
+  } catch {
     console.warn('Invalid value for formatShibAmount:', value);
     return '0';
   }
@@ -132,7 +132,7 @@ export default function BurnHistoryPage() {
           try {
             const bigIntValue = BigInt(tx.value || '0');
             return bigIntValue > BigInt(0); // Only include transactions with positive values
-          } catch (error) {
+          } catch {
             console.log('Invalid transaction value:', tx.value);
             return false;
           }
@@ -184,7 +184,7 @@ export default function BurnHistoryPage() {
           if (valueB > valueA) return 1;
           if (valueB < valueA) return -1;
           return 0;
-        } catch (error) {
+        } catch {
           return 0; // If comparison fails, treat as equal
         }
       }
@@ -402,7 +402,7 @@ export default function BurnHistoryPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {currentTransactions.map((tx, index) => (
+                  {currentTransactions.map((tx) => (
                     <tr key={tx.hash} className="hover:bg-gray-750 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-300 font-mono">

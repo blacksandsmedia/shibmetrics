@@ -1,4 +1,4 @@
-import { ExternalLink, Shield, TrendingUp, Percent, Star, Gift, AlertTriangle, CheckCircle, UserX, BarChart3 } from 'lucide-react';
+import { ExternalLink, TrendingUp, Star, AlertTriangle, CheckCircle, BarChart3, UserX } from 'lucide-react';
 import Link from 'next/link';
 
 export default function BlofinReferralPage() {

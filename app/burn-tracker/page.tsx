@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Flame, Filter, Download, RefreshCw, ExternalLink, History } from 'lucide-react';
 import Link from 'next/link';
 import { 
-  fetchBurnTransactions, 
   BurnTransaction, 
   BURN_ADDRESSES,
   formatNumber,
@@ -28,11 +27,6 @@ export default function BurnTrackerPage() {
     // Start fetching data immediately
     fetchAllBurns();
   }, []);
-
-  useEffect(() => {
-    console.log(`🔥 Filtering burns - allBurns: ${allBurns.length}, selectedAddress: ${selectedAddress}, sortBy: ${sortBy}`);
-    filterAndSortBurns();
-  }, [allBurns, selectedAddress, sortBy]);
 
   const fetchAllBurns = async () => {
     setLoading(true);
@@ -66,7 +60,7 @@ export default function BurnTrackerPage() {
     }
   };
 
-  const filterAndSortBurns = () => {
+  const filterAndSortBurns = useCallback(() => {
     let filtered = [...allBurns];
     console.log(`🔥 Starting filter with ${filtered.length} burns`);
 
@@ -96,7 +90,12 @@ export default function BurnTrackerPage() {
 
     console.log(`🔥 Final filtered burns: ${filtered.length}`);
     setFilteredBurns(filtered);
-  };
+  }, [allBurns, selectedAddress, sortBy]);
+
+  useEffect(() => {
+    console.log(`🔥 Filtering burns - allBurns: ${allBurns.length}, selectedAddress: ${selectedAddress}, sortBy: ${sortBy}`);
+    filterAndSortBurns();
+  }, [allBurns, selectedAddress, sortBy, filterAndSortBurns]);
 
   // Get friendly name for burn address  
   const getAddressName = (address: string): string => {
@@ -117,16 +116,7 @@ export default function BurnTrackerPage() {
     return 'Unknown';
   };
 
-  // Get address color for display
-  const getAddressColor = (address: string): string => {
-    const name = getAddressName(address);
-    switch (name) {
-      case 'Vitalik Burn': return 'text-orange-400';
-      case 'ShibaSwap': return 'text-green-400';
-      case 'Black Hole': return 'text-purple-400';
-      default: return 'text-gray-400';
-    }
-  };
+
 
   const totalBurnedAmount = latestBurns.reduce((total, burn) => {
     return total + (parseInt(burn.value) / Math.pow(10, 18));

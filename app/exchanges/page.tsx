@@ -19,21 +19,6 @@ interface ExchangeData {
   url: string;
 }
 
-interface TickerData {
-  market: {
-    name: string;
-    logo?: string;
-    identifier: string;
-  };
-  converted_volume: {
-    usd: number;
-  };
-  converted_last: {
-    usd: number;
-  };
-  trade_url: string;
-}
-
 export default function ExchangesPage() {
   const [exchanges, setExchanges] = useState<ExchangeData[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,20 +1,20 @@
 {
   "/api/burns/route": "/api/burns",
-  "/api/price/route": "/api/price",
   "/api/total-burned/route": "/api/total-burned",
-  "/api/test/route": "/api/test",
   "/_not-found/page": "/_not-found",
-  "/api-status/page": "/api-status",
+  "/api/price/route": "/api/price",
+  "/api/test/route": "/api/test",
   "/contact/page": "/contact",
-  "/burn-tracker/page": "/burn-tracker",
-  "/exchanges/page": "/exchanges",
+  "/api-status/page": "/api-status",
   "/history/page": "/history",
+  "/burn-tracker/page": "/burn-tracker",
+  "/privacy/page": "/privacy",
   "/referrals/lbank/page": "/referrals/lbank",
-  "/page": "/",
+  "/exchanges/page": "/exchanges",
   "/referrals/page": "/referrals",
   "/referrals/weex/page": "/referrals/weex",
-  "/privacy/page": "/privacy",
+  "/terms/page": "/terms",
   "/referrals/blofin/page": "/referrals/blofin",
   "/referrals/mexc/page": "/referrals/mexc",
-  "/terms/page": "/terms"
+  "/page": "/"
 }

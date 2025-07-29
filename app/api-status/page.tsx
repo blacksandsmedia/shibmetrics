@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Server, 
   CheckCircle, 
@@ -47,15 +47,7 @@ export default function ApiStatusPage() {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  useEffect(() => {
-    checkApiStatus();
-    
-    // Set up auto-refresh every 5 minutes
-    const interval = setInterval(checkApiStatus, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const checkApiStatus = async () => {
+  const checkApiStatus = useCallback(async () => {
     setLoading(true);
     
     const updatedEndpoints = await Promise.all(
@@ -123,7 +115,15 @@ export default function ApiStatusPage() {
     setApiEndpoints(updatedEndpoints);
     setLastUpdate(new Date());
     setLoading(false);
-  };
+  }, [apiEndpoints]);
+
+  useEffect(() => {
+    checkApiStatus();
+    
+    // Set up auto-refresh every 5 minutes
+    const interval = setInterval(checkApiStatus, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [checkApiStatus]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
