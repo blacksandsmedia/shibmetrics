@@ -95,13 +95,28 @@ export default function BurnHistoryPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
-  // Fetch real burn transaction data (no fake data)
+  // Fetch comprehensive historical burn data with pagination
   const fetchBurnHistory = async () => {
     setLoading(true);
     try {
-      console.log('🔥 Fetching real burn history...');
+      console.log('🔥 Fetching comprehensive burn history...');
       
-      const response = await fetch('/api/burns', {
+      // First get historical stats to show total available data
+      const statsResponse = await fetch('/api/burns-history?stats=true', {
+        cache: 'no-cache',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (statsResponse.ok) {
+        const stats = await statsResponse.json();
+        console.log('📊 Historical stats:', stats);
+      }
+      
+      // Get all historical data (not paginated here - we handle pagination client-side)
+      const response = await fetch(`/api/burns-history?page=1&limit=1000&address=${selectedDestination}`, {
         cache: 'no-cache',
         method: 'GET',
         headers: {
@@ -126,9 +141,9 @@ export default function BurnHistoryPage() {
         fullKeys: Object.keys(data)
       });
       
-      if (data.transactions && Array.isArray(data.transactions)) {
+      if (data.burns && Array.isArray(data.burns)) {
         // Filter out zero-value transactions and transactions with invalid values
-        const validTransactions = data.transactions.filter((tx: BurnTransaction) => {
+        const validTransactions = data.burns.filter((tx: BurnTransaction) => {
           try {
             const bigIntValue = BigInt(tx.value || '0');
             return bigIntValue > BigInt(0); // Only include transactions with positive values
@@ -138,14 +153,15 @@ export default function BurnHistoryPage() {
           }
         });
         
-        console.log(`✅ Loaded ${validTransactions.length} valid burn transactions (filtered out ${data.transactions.length - validTransactions.length} zero/invalid value transactions)`);
+        console.log(`✅ Loaded ${validTransactions.length} valid historical burns (filtered out ${data.burns.length - validTransactions.length} zero/invalid value transactions)`);
+        console.log(`📊 Total historical burns available: ${data.totalCount || 'unknown'}`);
         setAllTransactions(validTransactions);
         
         if (validTransactions.length === 0) {
           console.warn('⚠️ No valid transactions after filtering!');
         }
       } else {
-        console.error('⚠️ No transactions in API response, data structure:', data);
+        console.error('⚠️ No burns in API response, data structure:', data);
         setAllTransactions([]);
       }
       
@@ -200,12 +216,12 @@ export default function BurnHistoryPage() {
     fetchBurnHistory();
   }, []);
 
-  // Auto-refresh every 5 minutes to keep data current
+  // Auto-refresh every 10 minutes to keep historical data current
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('🔄 Auto-refreshing history data...');
+      console.log('🔄 Auto-refreshing historical data...');
       fetchBurnHistory();
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, []);
