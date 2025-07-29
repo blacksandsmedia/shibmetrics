@@ -1,4 +1,5 @@
 // API route for total burned calculation
+import { loadTotalBurnedCache, saveTotalBurnedCache } from '../../../lib/shared-cache';
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 
@@ -11,16 +12,7 @@ const BURN_ADDRESSES = {
   'Vitalik Burn Original': '0xD7B7df10Cb1Dc2d1d15e7D00bcb244a7cfAc61cC', // Original Vitalik burn address
 };
 
-// In-memory cache for 2-minute caching
-let totalBurnedCache: {
-  data: number | null;
-  timestamp: number;
-} = {
-  data: null,
-  timestamp: 0
-};
-
-const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+// Using shared cache system now - no more local cache constants needed
 
 async function fetchRealTotalBurned(): Promise<number> {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
@@ -95,16 +87,17 @@ async function fetchRealTotalBurned(): Promise<number> {
 
 export async function GET() {
   try {
-    const now = Date.now();
+    // Always try to serve from persistent cache first
+    const cachedData = loadTotalBurnedCache();
     
-    // Check cache first (2-minute cache)
-    if (totalBurnedCache.data && (now - totalBurnedCache.timestamp) < CACHE_DURATION) {
-      console.log('🚀 Returning cached total burned');
+    if (cachedData) {
+      console.log('🚀 Returning cached total burned from persistent cache');
       return new Response(JSON.stringify({
-        totalBurned: totalBurnedCache.data,
+        totalBurned: cachedData.totalBurned,
         cached: true,
         timestamp: new Date().toISOString(),
-        source: 'etherscan-cached'
+        source: 'etherscan-cached',
+        lastUpdated: new Date(cachedData.lastUpdated).toISOString()
       }), {
         status: 200,
         headers: {
@@ -117,11 +110,11 @@ export async function GET() {
     // Fetch fresh data
     const totalBurned = await fetchRealTotalBurned();
     
-    // Update cache
-    totalBurnedCache = {
-      data: totalBurned,
-      timestamp: now
-    };
+    // Update persistent cache
+    saveTotalBurnedCache({
+      totalBurned,
+      lastUpdated: Date.now()
+    });
 
     console.log(`✅ Total burned from live API: ${totalBurned.toLocaleString()} SHIB`);
     

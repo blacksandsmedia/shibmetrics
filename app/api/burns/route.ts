@@ -1,6 +1,7 @@
 // API route for SHIB burn transactions - SMART BACKGROUND REFRESH SYSTEM
 
 import { loadBurnCache, saveBurnCache, EtherscanTx } from '../../../lib/burn-cache';
+import { saveBurnsCache } from '../../../lib/shared-cache';
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 
@@ -87,14 +88,17 @@ async function refreshBurnDataInBackground(): Promise<void> {
 
     console.log(`✅ Background refresh complete: ${uniqueTransactions.length} unique transactions from ${successCount}/${burnAddresses.length} addresses`);
     
-    // Save to cache
-    saveBurnCache({
+    // Save to both cache systems for compatibility
+    const cacheData = {
       transactions: uniqueTransactions,
       lastUpdated: Date.now(),
       source: 'etherscan-background',
       totalAddressesSuccess: successCount,
       totalAddressesAttempted: burnAddresses.length
-    });
+    };
+    
+    saveBurnCache(cacheData);
+    saveBurnsCache(cacheData);
     
   } catch (error) {
     console.error('❌ Background refresh failed:', error);
@@ -105,7 +109,7 @@ export async function GET() {
   console.log('🚀 Smart burn API - serving with background refresh...');
   
   try {
-    // Load existing cache
+    // Load existing cache (prioritize old system for compatibility)
     const burnCache = loadBurnCache();
     
     // Check if cache needs refresh (older than 3 minutes)

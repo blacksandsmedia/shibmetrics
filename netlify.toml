@@ -5,6 +5,10 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Enable scheduled functions
+[functions]
+  included_files = ["lib/**", "app/api/**"]
+
 # Next.js API routes are automatically handled by Netlify
 # Remove manual redirects that might interfere
 

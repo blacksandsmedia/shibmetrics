@@ -1,26 +1,20 @@
-// In-memory cache for 2-minute caching
-let priceCache: {
-  data: { price: number; priceChange24h: number } | null;
-  timestamp: number;
-} = {
-  data: null,
-  timestamp: 0
-};
-
-const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+// Use shared cache system for persistent data
+import { loadPriceCache, savePriceCache } from '../../../lib/shared-cache';
 
 export async function GET() {
   try {
-    const now = Date.now();
+    // Always try to serve from persistent cache first
+    const cachedData = loadPriceCache();
     
-    // Check cache first (2-minute cache)
-    if (priceCache.data && (now - priceCache.timestamp) < CACHE_DURATION) {
-      console.log('🚀 Returning cached SHIB price');
+    if (cachedData) {
+      console.log('🚀 Returning cached SHIB price from persistent cache');
       return new Response(JSON.stringify({
-        price: priceCache.data.price,
-        priceChange24h: priceCache.data.priceChange24h,
+        price: cachedData.price,
+        priceChange24h: cachedData.priceChange24h,
         timestamp: new Date().toISOString(),
-        source: 'coingecko-cached'
+        source: 'coingecko-cached',
+        cached: true,
+        lastUpdated: new Date(cachedData.lastUpdated).toISOString()
       }), {
         status: 200,
         headers: {
@@ -60,11 +54,12 @@ export async function GET() {
       throw new Error('Invalid price data from CoinGecko API');
     }
     
-    // Update cache
-    priceCache = {
-      data: { price, priceChange24h: change },
-      timestamp: now
-    };
+    // Update persistent cache
+    savePriceCache({
+      price,
+      priceChange24h: change,
+      lastUpdated: Date.now()
+    });
 
     console.log(`✅ SHIB price: $${price}, 24h change: ${change.toFixed(2)}%`);
     
@@ -72,7 +67,8 @@ export async function GET() {
       price: price,
       priceChange24h: change,
       timestamp: new Date().toISOString(),
-      source: 'coingecko-live'
+      source: 'coingecko-live',
+      cached: false
     }), {
       status: 200,
       headers: {
