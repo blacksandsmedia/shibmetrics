@@ -63,7 +63,9 @@ async function fetchRealTotalBurned(): Promise<number> {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.log(`⚠️ Error on attempt ${attempt + 1} for ${name}: ${errorMessage}`);
         if (attempt < retries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          const delay = 2000 * (attempt + 1); // Longer delays between retries
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     }
@@ -72,14 +74,19 @@ async function fetchRealTotalBurned(): Promise<number> {
       console.error(`❌ Failed to get balance for ${name} after ${retries + 1} attempts`);
     }
     
-    // Rate limiting delay
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Longer rate limiting delay to avoid Etherscan throttling
+    await new Promise(resolve => setTimeout(resolve, 1500));
   }
 
   console.log(`📊 API Summary: ${successfulQueries}/${Object.keys(BURN_ADDRESSES).length} addresses queried successfully, total: ${totalBurned.toLocaleString()} SHIB`);
 
-  if (totalBurned <= 0 || successfulQueries === 0) {
-    throw new Error(`Insufficient data: only ${successfulQueries} successful queries, total: ${totalBurned}`);
+  if (successfulQueries === 0) {
+    throw new Error(`No successful queries: ${successfulQueries}/${Object.keys(BURN_ADDRESSES).length} addresses failed`);
+  }
+  
+  // Log warning if we're missing major burn data
+  if (totalBurned < 100000000000000) { // Less than 100 trillion is clearly wrong
+    console.error(`⚠️ WARNING: Total burned is suspiciously low: ${totalBurned.toLocaleString()} SHIB with only ${successfulQueries} successful queries`);
   }
 
   return totalBurned;
