@@ -50,7 +50,7 @@ async function refreshBurnDataInBackground(): Promise<void> {
         if (data.result && Array.isArray(data.result) && data.result.length > 0) {
           const transactions = data.result
             .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddr.address.toLowerCase())
-            .slice(0, 25)
+            .slice(0, 100)
             .map((tx: EtherscanTx) => ({
               hash: tx.hash,
               from: tx.from,
@@ -84,7 +84,7 @@ async function refreshBurnDataInBackground(): Promise<void> {
     const uniqueTransactions = Array.from(
       new Map(allTransactions.map(tx => [tx.hash, tx])).values()
     ).sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp))
-     .slice(0, 50); // Increase from previous limit to show more history
+     .slice(0, 400); // Increase from previous limit to show more history
 
     console.log(`✅ Background refresh complete: ${uniqueTransactions.length} unique transactions from ${successCount}/${burnAddresses.length} addresses`);
     
