@@ -115,8 +115,8 @@ export default function BurnHistoryPage() {
         console.log('📊 Historical stats:', stats);
       }
       
-      // Get all historical data (not paginated here - we handle pagination client-side)
-      const response = await fetch(`/api/burns-history?page=1&limit=1000&address=${selectedDestination}`, {
+      // Get historical data with higher limit to enable pagination
+      const response = await fetch(`/api/burns-history?page=1&limit=2000&address=${selectedDestination}`, {
         cache: 'no-cache',
         method: 'GET',
         headers: {
