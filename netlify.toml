@@ -1,13 +1,18 @@
 [build]
-  command = "npm run build"
   publish = ".next"
+  command = "npm run build"
 
-[build.environment]
-  NODE_VERSION = "18"
-
-# Enable scheduled functions
 [functions]
+  directory = "netlify/functions"
   included_files = ["lib/**", "app/api/**"]
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[template.environment]
+  NEXT_PUBLIC_ETHERSCAN_API_KEY = "Your Etherscan API key here"
 
 # Next.js API routes are automatically handled by Netlify
 # Remove manual redirects that might interfere
