@@ -29,7 +29,7 @@ async function refreshBurnDataInBackground(): Promise<void> {
     // Sequential fetch with staggered delays to avoid rate limits
     for (const burnAddr of burnAddresses) {
       try {
-        const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=25&sort=desc&apikey=${apiKey}`;
+        const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=100&sort=desc&apikey=${apiKey}`;
         
         console.log(`🔥 Background refresh: Fetching from ${burnAddr.name}...`);
         
