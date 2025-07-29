@@ -105,15 +105,18 @@ async function refreshBurnDataInBackground(): Promise<void> {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   console.log('🚀 Smart burn API - serving with background refresh...');
   
   try {
-    // Load existing cache (prioritize old system for compatibility)
-    const burnCache = loadBurnCache();
+    const url = new URL(request.url);
+    const forceRefresh = url.searchParams.get('force') === 'true';
     
-    // Check if cache needs refresh (older than 3 minutes)
-    const needsRefresh = !burnCache || (Date.now() - burnCache.lastUpdated) > (3 * 60 * 1000);
+    // Load existing cache (prioritize old system for compatibility, unless force refresh)
+    const burnCache = forceRefresh ? null : loadBurnCache();
+    
+    // Check if cache needs refresh (older than 3 minutes or force requested)
+    const needsRefresh = forceRefresh || !burnCache || (Date.now() - burnCache.lastUpdated) > (3 * 60 * 1000);
     
     if (needsRefresh) {
       console.log('🔄 Cache stale, triggering background refresh...');
