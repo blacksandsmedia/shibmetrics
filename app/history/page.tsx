@@ -246,7 +246,7 @@ export default function BurnHistoryPage() {
   useEffect(() => {
     console.log('🔄 History page mounting, fetching data...');
     fetchBurnHistory();
-  }, []);
+  }, [fetchBurnHistory]);
 
   // Auto-refresh every 10 minutes to keep historical data current
   useEffect(() => {
@@ -256,7 +256,7 @@ export default function BurnHistoryPage() {
     }, 10 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchBurnHistory]);
 
   // Pagination component
   const PaginationControls = () => {

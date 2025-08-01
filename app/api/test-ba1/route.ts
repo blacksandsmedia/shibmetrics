@@ -1,10 +1,10 @@
 // Test endpoint specifically for BA-1 transaction collection
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 const BA1_ADDRESS = '0xdead000000000000000042069420694206942069';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   
   if (!apiKey || apiKey === 'YourEtherscanApiKeyHere') {
@@ -52,13 +52,13 @@ export async function GET(request: NextRequest) {
 
     // Apply the same filtering logic as our main API
     const transactions = data.result
-      .filter((tx: any) => {
-        const matches = tx.to?.toLowerCase() === BA1_ADDRESS.toLowerCase();
+      .filter((tx: Record<string, unknown>) => {
+        const matches = (tx.to as string)?.toLowerCase() === BA1_ADDRESS.toLowerCase();
         console.log(`🧪 Transaction ${tx.hash}: to=${tx.to}, matches=${matches}`);
         return matches;
       })
       .slice(0, 20)
-      .map((tx: any) => ({
+      .map((tx: Record<string, unknown>) => ({
         hash: tx.hash,
         from: tx.from,
         to: tx.to,
@@ -80,11 +80,11 @@ export async function GET(request: NextRequest) {
       filteredCount: transactions.length,
       ba1Address: BA1_ADDRESS,
       sampleTransactions: transactions.slice(0, 5),
-      allTransactionHashes: transactions.map(tx => tx.hash),
+      allTransactionHashes: transactions.map((tx: Record<string, unknown>) => tx.hash),
       filteringTest: {
         expectedAddress: BA1_ADDRESS.toLowerCase(),
-        actualAddresses: data.result.slice(0, 5).map((tx: any) => tx.to?.toLowerCase()),
-        matchingCount: data.result.filter((tx: any) => tx.to?.toLowerCase() === BA1_ADDRESS.toLowerCase()).length
+        actualAddresses: data.result.slice(0, 5).map((tx: Record<string, unknown>) => (tx.to as string)?.toLowerCase()),
+        matchingCount: data.result.filter((tx: Record<string, unknown>) => (tx.to as string)?.toLowerCase() === BA1_ADDRESS.toLowerCase()).length
       },
       timestamp: new Date().toISOString()
     });

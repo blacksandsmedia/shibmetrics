@@ -1,6 +1,6 @@
 // API route to manually populate historical cache
 import fs from 'fs';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 const HISTORICAL_CACHE_FILE = '/tmp/historical-burns.json';
@@ -122,7 +122,7 @@ function addBurnsToHistory(newBurns: HistoricalBurn[]): HistoricalCache {
   return cache;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   
   if (!apiKey || apiKey === 'YourEtherscanApiKeyHere') {
@@ -165,15 +165,15 @@ export async function GET(request: NextRequest) {
         
         if (data.result && Array.isArray(data.result) && data.result.length > 0) {
           const transactions = data.result
-            .filter((tx: any) => {
+            .filter((tx: Record<string, unknown>) => {
               try {
-                const value = BigInt(tx.value || '0');
+                const value = BigInt((tx.value as string) || '0');
                 return value > BigInt(0); // Only include positive value transactions
               } catch {
                 return false;
               }
             })
-            .map((tx: any) => ({
+            .map((tx: Record<string, unknown>) => ({
               hash: tx.hash,
               from: tx.from,
               to: tx.to,
