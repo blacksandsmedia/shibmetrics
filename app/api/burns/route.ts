@@ -28,55 +28,89 @@ async function refreshBurnDataInBackground(): Promise<void> {
 
     // Sequential fetch with staggered delays to avoid rate limits
     for (const burnAddr of burnAddresses) {
-      try {
-        const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=100&sort=desc&apikey=${apiKey}`;
-        
-        console.log(`🔥 Background refresh: Fetching from ${burnAddr.name}...`);
-        
-        const response = await fetch(requestUrl, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-        });
-
-        if (!response.ok) {
-          console.log(`⚠️ HTTP ${response.status} for ${burnAddr.name} - continuing anyway`);
-          // Don't skip entirely, try to get data anyway
-        }
-
-        const data = await response.json();
-        console.log(`📊 ${burnAddr.name}: status=${data.status}, results=${data.result?.length || 0}, message="${data.message || 'none'}"`);
-        
-        // Include results even if status is '0' but we have valid transaction data
-        if (data.result && Array.isArray(data.result) && data.result.length > 0) {
-          const transactions = data.result
-            .filter((tx: EtherscanTx) => tx.to?.toLowerCase() === burnAddr.address.toLowerCase())
-            .slice(0, 100)
-            .map((tx: EtherscanTx) => ({
-              hash: tx.hash,
-              from: tx.from,
-              to: tx.to,
-              value: tx.value,
-              timeStamp: tx.timeStamp,
-              blockNumber: tx.blockNumber,
-              tokenName: tx.tokenName || 'SHIBA INU',
-              tokenSymbol: tx.tokenSymbol || 'SHIB',
-              tokenDecimal: tx.tokenDecimal || '18'
-            }));
+      let addressSuccess = false;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries && !addressSuccess; attempt++) {
+        try {
+          const requestUrl = `https://api.etherscan.io/api?module=account&action=tokentx&contractaddress=${SHIB_CONTRACT_ADDRESS}&address=${burnAddr.address}&page=1&offset=100&sort=desc&apikey=${apiKey}`;
           
-          allTransactions.push(...transactions);
-          successCount++;
-          console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total) - Status: ${data.status}`);
-        } else {
-          console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
+          console.log(`🔥 Background refresh: Fetching from ${burnAddr.name} (attempt ${attempt}/${maxRetries})...`);
+          
+          const response = await fetch(requestUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(15000) // 15 second timeout
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          console.log(`📊 ${burnAddr.name}: status=${data.status}, results=${data.result?.length || 0}, message="${data.message || 'none'}"`);
+          
+          // Check for Etherscan API errors
+          if (data.status === '0' && data.message && data.message.includes('rate limit')) {
+            console.log(`⚠️ Rate limit hit for ${burnAddr.name}, waiting longer...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            continue; // Retry
+          }
+          
+          // Include results even if status is '0' but we have valid transaction data
+          if (data.result && Array.isArray(data.result) && data.result.length > 0) {
+            const transactions = data.result
+              .filter((tx: EtherscanTx) => {
+                const matches = tx.to?.toLowerCase() === burnAddr.address.toLowerCase();
+                if (!matches) {
+                  console.log(`🔍 Filtering out non-matching tx: ${tx.hash} (to: ${tx.to})`);
+                }
+                return matches;
+              })
+              .slice(0, 100)
+              .map((tx: EtherscanTx) => ({
+                hash: tx.hash,
+                from: tx.from,
+                to: tx.to,
+                value: tx.value,
+                timeStamp: tx.timeStamp,
+                blockNumber: tx.blockNumber,
+                tokenName: tx.tokenName || 'SHIBA INU',
+                tokenSymbol: tx.tokenSymbol || 'SHIB',
+                tokenDecimal: tx.tokenDecimal || '18'
+              }));
+            
+            allTransactions.push(...transactions);
+            successCount++;
+            addressSuccess = true;
+            console.log(`✅ Found ${transactions.length} burns to ${burnAddr.name} (filtered from ${data.result.length} total) - Status: ${data.status}`);
+          } else if (data.status === '1' && (!data.result || data.result.length === 0)) {
+            // No transactions for this address, but API call was successful
+            console.log(`ℹ️ ${burnAddr.name}: No transactions found (but API call successful)`);
+            successCount++;
+            addressSuccess = true;
+          } else {
+            console.log(`⚠️ ${burnAddr.name}: status=${data.status}, message=${data.message || 'No message'}, results=${data.result?.length || 0}`);
+            if (attempt === maxRetries) {
+              console.log(`❌ ${burnAddr.name}: Max retries reached, marking as failed`);
+            }
+          }
+          
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.log(`❌ Background refresh error for ${burnAddr.name} (attempt ${attempt}/${maxRetries}): ${errorMessage}`);
+          
+          if (attempt < maxRetries) {
+            const backoffDelay = attempt * 2000; // Exponential backoff: 2s, 4s, 6s
+            console.log(`⏳ Waiting ${backoffDelay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+          }
         }
-        
-        // Rate limiting delay between requests - increased to avoid timeouts
-        await new Promise(resolve => setTimeout(resolve, 1200));
-        
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.log(`❌ Background refresh error for ${burnAddr.name}: ${errorMessage}`);
-        // Continue to next address instead of breaking the whole process
+      }
+      
+      // Rate limiting delay between addresses (even after failure)
+      if (burnAddresses.indexOf(burnAddr) < burnAddresses.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
 
@@ -87,6 +121,13 @@ async function refreshBurnDataInBackground(): Promise<void> {
      .slice(0, 400); // Increase from previous limit to show more history
 
     console.log(`✅ Background refresh complete: ${uniqueTransactions.length} unique transactions from ${successCount}/${burnAddresses.length} addresses`);
+    
+    // Log address breakdown for debugging
+    const addressBreakdown = burnAddresses.map(addr => ({
+      name: addr.name,
+      txCount: uniqueTransactions.filter(tx => tx.to?.toLowerCase() === addr.address.toLowerCase()).length
+    }));
+    console.log('📊 Address breakdown:', addressBreakdown);
     
     // Save to both cache systems for compatibility
     const cacheData = {
