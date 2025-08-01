@@ -55,14 +55,16 @@ export function loadBurnCache(): BurnDataCache | null {
     const data = fs.readFileSync(CACHE_FILE_PATH, 'utf8');
     const cache = JSON.parse(data) as BurnDataCache;
     
-    // Check if cache is stale (older than 5 minutes)
-    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-    if (cache.lastUpdated < fiveMinutesAgo) {
-      console.log('⚠️ Cache is stale (older than 5 minutes)');
+    // Always return cache if it exists - let the API handle staleness
+    // Cache is only considered unusable if it's older than 24 hours (extreme case)
+    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+    if (cache.lastUpdated < twentyFourHoursAgo) {
+      console.log('⚠️ Cache is extremely stale (older than 24 hours) - discarding');
       return null;
     }
     
-    console.log(`✅ Loaded burn cache: ${cache.transactions.length} transactions from ${cache.source}`);
+    const ageInSeconds = Math.round((Date.now() - cache.lastUpdated) / 1000);
+    console.log(`✅ Loaded burn cache: ${cache.transactions.length} transactions from ${cache.source} (age: ${ageInSeconds}s)`);
     return cache;
     
   } catch (error) {
