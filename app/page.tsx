@@ -55,8 +55,7 @@ function formatMarketCap(marketCap: number): string {
 async function fetchShibPrice(): Promise<ShibPriceData | null> {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/price`, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache' }
+      next: { revalidate: 60 } // Cache for 60 seconds
     });
     
     if (!response.ok) return null;
@@ -71,8 +70,7 @@ async function fetchShibPrice(): Promise<ShibPriceData | null> {
 async function fetchTotalBurned(): Promise<TotalBurnedData | null> {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/total-burned`, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache' }
+      next: { revalidate: 180 } // Cache for 3 minutes
     });
     
     if (!response.ok) return null;
@@ -87,8 +85,7 @@ async function fetchTotalBurned(): Promise<TotalBurnedData | null> {
 async function fetchBurns(): Promise<BurnsData | null> {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/burns`, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache' }
+      next: { revalidate: 60 } // Cache for 60 seconds
     });
     
     if (!response.ok) return null;
