@@ -26,11 +26,11 @@ interface BurnTransaction {
   tokenDecimal: string;
 }
 
-// SHIB burn destination addresses
+// SHIB burn destination addresses (matches actual historical data)
 const BURN_DESTINATIONS = {
   '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce': 'CA', // Community Address
   '0xdead000000000000000042069420694206942069': 'BA-1', // Vitalik Burn Alt
-  '0x000000000000000000000000000000000000dead': 'BA-2', // Dead Address
+  '0x000000000000000000000000000000000000dead': 'BA-2', // Dead Address (actual data)
   '0x0000000000000000000000000000000000000000': 'BA-3', // Null Address  
   '0xd7b7df10cb1dc2d1d15e7d00bcb244a7cfac61cc': 'VB-Original', // Original Vitalik burn address
 };
@@ -100,6 +100,7 @@ export default function BurnHistoryPage() {
     setLoading(true);
     try {
       console.log('🔥 Fetching comprehensive burn history...');
+      console.log('🔥 API URL will be:', `/api/historical/dataset?limit=20000&address=all`);
       
       // First get historical stats to show total available data
       const statsResponse = await fetch('/api/burns-history?stats=true', {
@@ -115,8 +116,9 @@ export default function BurnHistoryPage() {
         console.log('📊 Historical stats:', stats);
       }
       
-      // Get historical data with higher limit to enable pagination
-      const response = await fetch(`/api/burns-history?page=1&limit=2000&address=${selectedDestination}`, {
+      // Get complete 5-year historical data from Netlify Blobs storage (all 17K+ transactions)
+      // Note: We do client-side filtering, so get all data regardless of selectedDestination
+      const response = await fetch(`/api/historical/dataset?limit=20000&address=all`, {
         cache: 'no-cache',
         method: 'GET',
         headers: {
@@ -140,19 +142,23 @@ export default function BurnHistoryPage() {
         sampleData: data.transactions?.slice(0, 2) || [],
         fullKeys: Object.keys(data)
       });
+      console.log('📊 FULL API Response data keys:', Object.keys(data));
+      console.log('📊 API Response transactions length:', data.transactions?.length);
+      console.log('📊 API Response raw size estimate:', JSON.stringify(data).length);
       
       // Handle both historical API (burns) and fallback API (transactions) formats  
       const transactionData = data.burns || data.transactions;
       
       if (transactionData && Array.isArray(transactionData) && transactionData.length > 0) {
-        // Filter out zero-value transactions and transactions with invalid values
+        // Only filter out transactions with truly invalid values (keep zero-value transactions)
         const validTransactions = transactionData.filter((tx: BurnTransaction) => {
           try {
-            const bigIntValue = BigInt(tx.value || '0');
-            return bigIntValue > BigInt(0); // Only include transactions with positive values
+            // Just validate that the value can be parsed - don't exclude zero values
+            BigInt(tx.value || '0');
+            return true; // Include all parseable transactions, including zero-value ones
           } catch {
-            console.log('Invalid transaction value:', tx.value);
-            return false;
+            console.log('Invalid transaction value (unparseable):', tx.value);
+            return false; // Only exclude truly unparseable values
           }
         });
         
@@ -220,9 +226,24 @@ export default function BurnHistoryPage() {
   useEffect(() => {
     let filtered = [...allTransactions];
     
+    console.log(`🔍 FILTERING DEBUG: selectedDestination="${selectedDestination}", allTransactions count=${allTransactions.length}`);
+    
     // Filter by destination
     if (selectedDestination !== 'all') {
+      console.log(`🔍 Filtering by: "${selectedDestination}"`);
+      const beforeCount = filtered.length;
       filtered = filtered.filter(tx => tx.to.toLowerCase() === selectedDestination.toLowerCase());
+      console.log(`🔍 Filter result: ${filtered.length} matches (was ${beforeCount})`);
+      
+      // Debug: Show first few matching transactions
+      if (filtered.length > 0) {
+        console.log(`🔍 Sample matches:`, filtered.slice(0, 3).map(tx => ({ to: tx.to, hash: tx.hash.slice(0, 10) })));
+      } else {
+        // Debug: Show what addresses we actually have
+        const uniqueAddresses = [...new Set(allTransactions.map(tx => tx.to.toLowerCase()))];
+        console.log(`🔍 Available addresses in data:`, uniqueAddresses);
+        console.log(`🔍 Looking for address:`, selectedDestination.toLowerCase());
+      }
     }
     
     // Sort
@@ -392,7 +413,6 @@ export default function BurnHistoryPage() {
                   <option value="0xdead000000000000000042069420694206942069">Vitalik Burn Alt (BA-1)</option>
                   <option value="0x000000000000000000000000000000000000dead">Dead Address (BA-2)</option>
                   <option value="0x0000000000000000000000000000000000000000">Null Address (BA-3)</option>
-                  <option value="0xd7b7df10cb1dc2d1d15e7d00bcb244a7cfac61cc">Original Vitalik Burn</option>
                 </select>
             </div>
             
@@ -441,7 +461,7 @@ export default function BurnHistoryPage() {
                       From
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      $SHIB Burnt
+                      $SHIB BURNED
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       To
@@ -450,7 +470,7 @@ export default function BurnHistoryPage() {
                       Time
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Transaction
+                      DETAILS
                     </th>
                   </tr>
                 </thead>

@@ -1,10 +1,7 @@
 {
   "version": 1,
   "config": {
-    "env": {
-      "NEXT_PUBLIC_ETHERSCAN_API_KEY": "JP6XKDSWPA5VX4HPURJWPEM5ZV36ICRNAY",
-      "NEXT_PUBLIC_COINGECKO_API_KEY": "CG-3hsY4T1WqvuyKWS8e7np9JFf"
-    },
+    "env": {},
     "webpack": null,
     "eslint": {
       "ignoreDuringBuilds": false
@@ -52,10 +49,7 @@
       "path": "/_next/image",
       "loader": "default",
       "loaderFile": "",
-      "domains": [
-        "images.unsplash.com",
-        "assets.coingecko.com"
-      ],
+      "domains": [],
       "disableStaticImages": false,
       "minimumCacheTTL": 60,
       "formats": [
@@ -65,7 +59,7 @@
       "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;",
       "contentDispositionType": "attachment",
       "remotePatterns": [],
-      "unoptimized": true
+      "unoptimized": false
     },
     "devIndicators": {
       "position": "bottom-left"
@@ -296,16 +290,6 @@
     "configFileName": "next.config.ts",
     "turbopack": {
       "root": "/Users/alanphillips/Downloads/shibmetrics"
-    },
-    "_originalRewrites": {
-      "beforeFiles": [],
-      "afterFiles": [
-        {
-          "source": "/api/:path*",
-          "destination": "/api/:path*"
-        }
-      ],
-      "fallback": []
     }
   },
   "appDir": "/Users/alanphillips/Downloads/shibmetrics",

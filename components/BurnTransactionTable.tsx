@@ -57,7 +57,7 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
           <thead className="bg-gray-750">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Amount
+                $SHIB BURNED
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 From
@@ -69,7 +69,7 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
                 Time
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Tx
+                DETAILS
               </th>
             </tr>
           </thead>

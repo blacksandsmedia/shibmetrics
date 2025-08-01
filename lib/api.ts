@@ -162,8 +162,8 @@ export async function fetchBurnTransactions(
 export async function calculateTotalBurned(): Promise<CachedResponse<number>> {
   console.log('🔥 Calculating total burned from real APIs...');
   
-  // Accurate total from shibburn.com: 410,750,102,615,531 SHIB
-  const ACCURATE_TOTAL_BURNED = 410750102615531;
+  // Accurate total from shibburn.com: 410,752,070,164,338 SHIB
+  const ACCURATE_TOTAL_BURNED = 410752070164338;
   
   try {
     const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;

@@ -38,6 +38,12 @@ export default function Footer() {
               The ultimate destination for Shiba Inu burn tracking, analytics, and ecosystem data. 
               Real-time burn statistics, exchange activity, and comprehensive SHIB metrics.
             </p>
+            <div className="inline-flex items-center gap-2 bg-green-900/20 border border-green-500/30 rounded-full px-3 py-1 mb-4">
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+              <span className="text-green-400 text-xs font-medium">
+                🚫 Ad-Free Forever • No Spam • Clean Interface
+              </span>
+            </div>
             <div className="flex space-x-4">
               <a
                 href="https://twitter.com/shibmetrics"

@@ -31,14 +31,24 @@ import {
   verifyNetlifyFormsWorkaround,
   verifyPublishDir
 } from "./build/verification.js";
+var skipPlugin = process.env.NETLIFY_NEXT_PLUGIN_SKIP === "true" || process.env.NETLIFY_NEXT_PLUGIN_SKIP === "1";
+var skipText = "Skipping Next.js plugin due to NETLIFY_NEXT_PLUGIN_SKIP environment variable.";
 var tracer = wrapTracer(trace.getTracer("Next.js runtime"));
 var onPreDev = async (options) => {
+  if (skipPlugin) {
+    console.warn(skipText);
+    return;
+  }
   await tracer.withActiveSpan("onPreDev", async () => {
     const context = new PluginContext(options);
     await rm(context.blobDir, { recursive: true, force: true });
   });
 };
 var onPreBuild = async (options) => {
+  if (skipPlugin) {
+    console.warn(skipText);
+    return;
+  }
   await tracer.withActiveSpan("onPreBuild", async () => {
     process.env.NEXT_PRIVATE_STANDALONE = "true";
     const ctx = new PluginContext(options);
@@ -51,6 +61,10 @@ var onPreBuild = async (options) => {
   });
 };
 var onBuild = async (options) => {
+  if (skipPlugin) {
+    console.warn(skipText);
+    return;
+  }
   await tracer.withActiveSpan("onBuild", async (span) => {
     const ctx = new PluginContext(options);
     verifyPublishDir(ctx);
@@ -75,11 +89,19 @@ var onBuild = async (options) => {
   });
 };
 var onPostBuild = async (options) => {
+  if (skipPlugin) {
+    console.warn(skipText);
+    return;
+  }
   await tracer.withActiveSpan("onPostBuild", async () => {
     await publishStaticDir(new PluginContext(options));
   });
 };
 var onSuccess = async () => {
+  if (skipPlugin) {
+    console.warn(skipText);
+    return;
+  }
   await tracer.withActiveSpan("onSuccess", async () => {
     const prewarm = [process.env.DEPLOY_URL, process.env.DEPLOY_PRIME_URL, process.env.URL].filter(
       // If running locally then the deploy ID is a placeholder value. Filtering for `https://0--` removes it.
@@ -89,6 +111,10 @@ var onSuccess = async () => {
   });
 };
 var onEnd = async (options) => {
+  if (skipPlugin) {
+    console.warn(skipText);
+    return;
+  }
   await tracer.withActiveSpan("onEnd", async () => {
     await unpublishStaticDir(new PluginContext(options));
   });

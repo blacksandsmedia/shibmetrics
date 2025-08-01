@@ -69,10 +69,12 @@ export default function BurnTrackerPage() {
       const beforeFilter = filtered.length;
       const filterAddress = selectedAddress.toLowerCase();
       
-      // Community Address is the source (from), others are destinations (to)  
+      // Community Address can be either source (from) OR destination (to), others are destinations (to)  
       if (filterAddress === BURN_ADDRESSES['Community Address'].toLowerCase()) {
-        filtered = filtered.filter(burn => burn.from.toLowerCase() === filterAddress);
-        console.log(`🔥 After CA source filter: ${filtered.length} (was ${beforeFilter})`);
+        filtered = filtered.filter(burn => 
+          burn.from.toLowerCase() === filterAddress || burn.to.toLowerCase() === filterAddress
+        );
+        console.log(`🔥 After CA source/destination filter: ${filtered.length} (was ${beforeFilter})`);
       } else {
         filtered = filtered.filter(burn => burn.to.toLowerCase() === filterAddress);
         console.log(`🔥 After destination filter (${selectedAddress}): ${filtered.length} (was ${beforeFilter})`);
@@ -225,7 +227,7 @@ export default function BurnTrackerPage() {
                 <thead className="bg-gray-750">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Amount Burned
+                      $SHIB BURNED
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       From Address
@@ -237,7 +239,7 @@ export default function BurnTrackerPage() {
                       Time
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Transaction
+                      DETAILS
                     </th>
                   </tr>
                 </thead>
@@ -248,7 +250,6 @@ export default function BurnTrackerPage() {
                         <span className="text-lg font-bold text-orange-400">
                           🔥 {formatNumber(parseInt(tx.value) / Math.pow(10, 18))}
                         </span>
-                        <span className="text-gray-400 ml-2">SHIB</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-300 font-mono">
