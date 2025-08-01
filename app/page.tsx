@@ -84,15 +84,30 @@ async function fetchTotalBurned(): Promise<TotalBurnedData | null> {
 
 async function fetchBurns(): Promise<BurnsData | null> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/burns`, {
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/burns`;
+    console.log('🔥 Homepage: Fetching burns from:', url);
+    
+    const response = await fetch(url, {
       next: { revalidate: 60 } // Cache for 60 seconds
     });
     
-    if (!response.ok) return null;
+    console.log('🔥 Homepage: Burns API response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('🔥 Homepage: Burns API failed with status:', response.status);
+      return null;
+    }
+    
     const data = await response.json();
+    console.log('🔥 Homepage: Burns API data:', { 
+      hasTransactions: !!data.transactions, 
+      count: data.transactions?.length || 0,
+      error: data.error 
+    });
+    
     return data.error ? null : data;
   } catch (error) {
-    console.error('Failed to fetch burns:', error);
+    console.error('🔥 Homepage: Failed to fetch burns:', error);
     return null;
   }
 }
