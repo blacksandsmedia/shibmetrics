@@ -249,11 +249,18 @@ export default async function Home() {
   // Calculate burns to display: either last 10 OR all burns in last 24 hours (whichever is greater)
   const now = Date.now();
   const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
+  const fortyEightHoursAgo = now - (48 * 60 * 60 * 1000);
   
   // Filter burns from last 24 hours
   const last24HourBurns = burns.filter(tx => {
     const txTime = parseInt(tx.timeStamp) * 1000;
     return txTime >= twentyFourHoursAgo;
+  });
+  
+  // Filter burns from previous 24 hours (24-48 hours ago) for day-over-day comparison
+  const previous24HourBurns = burns.filter(tx => {
+    const txTime = parseInt(tx.timeStamp) * 1000;
+    return txTime >= fortyEightHoursAgo && txTime < twentyFourHoursAgo;
   });
   
   // Show either last 10 burns or all 24h burns (whichever is greater)
@@ -262,6 +269,37 @@ export default async function Home() {
   // Calculate 24H burn activity from actual 24H burns
   const twentyFourHourBurnAmount = last24HourBurns.reduce((total: number, tx: BurnTransaction) => 
     total + (parseInt(tx.value) / 1e18), 0);
+
+  // Calculate previous 24H burn activity for comparison
+  const previous24HourBurnAmount = previous24HourBurns.reduce((total: number, tx: BurnTransaction) => 
+    total + (parseInt(tx.value) / 1e18), 0);
+
+  // Calculate day-over-day percentage change
+  let dayOverDayChange = 0;
+  let dayOverDayText = 'No previous data';
+  
+  if (previous24HourBurnAmount > 0) {
+    dayOverDayChange = ((twentyFourHourBurnAmount - previous24HourBurnAmount) / previous24HourBurnAmount) * 100;
+    const sign = dayOverDayChange >= 0 ? '+' : '';
+    
+    // Format large percentage changes appropriately
+    let formattedChange;
+    if (Math.abs(dayOverDayChange) >= 1000) {
+      // For very large changes (1000%+), show no decimal places
+      formattedChange = `${Math.round(dayOverDayChange).toLocaleString()}`;
+    } else if (Math.abs(dayOverDayChange) >= 100) {
+      // For large changes (100-999%), show 1 decimal place
+      formattedChange = dayOverDayChange.toFixed(1);
+    } else {
+      // For smaller changes (<100%), show 1 decimal place
+      formattedChange = dayOverDayChange.toFixed(1);
+    }
+    
+    dayOverDayText = `${sign}${formattedChange}% vs yesterday`;
+  } else if (twentyFourHourBurnAmount > 0) {
+    // If there were no burns yesterday but there are burns today, it's technically infinite increase
+    dayOverDayText = '🚀 New activity today';
+  }
   
   const burnRate = twentyFourHourBurnAmount / 24; // SHIB per hour
   const mostRecentBurn = burns[0];
@@ -302,9 +340,9 @@ export default async function Home() {
           <StatCard
             title="24H Burn Activity"
             value={`${formatBurnedAmountDetailed(twentyFourHourBurnAmount)} SHIB`}
-            change={`${last24HourBurns.length} recent burns`}
+            change={dayOverDayText}
             icon={TrendingDown}
-            changeType="neutral"
+            changeType={dayOverDayChange > 0 ? "positive" : dayOverDayChange < 0 ? "negative" : "neutral"}
           />
  
            {/* SHIB Price - ALWAYS available now */}
