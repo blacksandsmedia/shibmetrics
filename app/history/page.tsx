@@ -141,9 +141,12 @@ export default function BurnHistoryPage() {
         fullKeys: Object.keys(data)
       });
       
-      if (data.burns && Array.isArray(data.burns) && data.burns.length > 0) {
+      // Handle both historical API (burns) and fallback API (transactions) formats  
+      const transactionData = data.burns || data.transactions;
+      
+      if (transactionData && Array.isArray(transactionData) && transactionData.length > 0) {
         // Filter out zero-value transactions and transactions with invalid values
-        const validTransactions = data.burns.filter((tx: BurnTransaction) => {
+        const validTransactions = transactionData.filter((tx: BurnTransaction) => {
           try {
             const bigIntValue = BigInt(tx.value || '0');
             return bigIntValue > BigInt(0); // Only include transactions with positive values
@@ -153,8 +156,8 @@ export default function BurnHistoryPage() {
           }
         });
         
-        console.log(`✅ Loaded ${validTransactions.length} valid historical burns (filtered out ${data.burns.length - validTransactions.length} zero/invalid value transactions)`);
-        console.log(`📊 Total historical burns available: ${data.totalCount || 'unknown'}`);
+        console.log(`✅ Loaded ${validTransactions.length} valid transactions (filtered out ${transactionData.length - validTransactions.length} zero/invalid value transactions)`);
+        console.log(`📊 Data source: ${data.burns ? 'historical API' : 'fallback burns API'}`);
         setAllTransactions(validTransactions);
         
         if (validTransactions.length === 0) {
@@ -490,7 +493,7 @@ export default function BurnHistoryPage() {
           )}
 
           {/* Pagination */}
-          {!loading && totalPages > 1 && <PaginationControls />}
+          {!loading && filteredTransactions.length > 0 && <PaginationControls />}
         </div>
 
         {/* Summary Stats */}
