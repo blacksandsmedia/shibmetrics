@@ -177,6 +177,8 @@ export default function BurnHistoryPage() {
         
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
+          console.log('📋 Fallback API response keys:', Object.keys(fallbackData));
+          console.log('📋 Fallback transactions count:', fallbackData.transactions?.length || 0);
           
           if (fallbackData.transactions && Array.isArray(fallbackData.transactions)) {
             const validTransactions = fallbackData.transactions.filter((tx: BurnTransaction) => {
@@ -188,14 +190,14 @@ export default function BurnHistoryPage() {
               }
             });
             
-            console.log(`✅ Loaded ${validTransactions.length} transactions from fallback burns API`);
+            console.log(`✅ Loaded ${validTransactions.length} transactions from fallback burns API (${fallbackData.transactions.length} raw)`);
             setAllTransactions(validTransactions);
           } else {
             console.error('⚠️ No transactions in fallback API response');
             setAllTransactions([]);
           }
         } else {
-          console.error('⚠️ Fallback API request failed');
+          console.error('⚠️ Fallback API request failed with status:', fallbackResponse.status);
           setAllTransactions([]);
         }
       }
