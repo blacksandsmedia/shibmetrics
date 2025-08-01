@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   History, 
   ExternalLink, 
@@ -96,7 +96,7 @@ export default function BurnHistoryPage() {
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
   // Fetch comprehensive historical burn data with pagination
-  const fetchBurnHistory = async () => {
+  const fetchBurnHistory = useCallback(async () => {
     setLoading(true);
     try {
       console.log('🔥 Fetching comprehensive burn history...');
@@ -207,7 +207,7 @@ export default function BurnHistoryPage() {
       console.log('🏁 Fetch completed, setting loading to false');
       setLoading(false);
     }
-  };
+  }, [selectedDestination]);
 
 
 

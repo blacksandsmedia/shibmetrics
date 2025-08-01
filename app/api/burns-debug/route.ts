@@ -59,7 +59,7 @@ export async function GET() {
             success: true,
             rawCount: data.result.length,
             filteredCount: transactions.length,
-            sampleHashes: transactions.slice(0, 3).map(tx => tx.hash)
+            sampleHashes: transactions.slice(0, 3).map((tx: Record<string, unknown>) => tx.hash)
           });
           
           console.log(`✅ DEBUG: ${burnAddr.name}: ${transactions.length} transactions`);
