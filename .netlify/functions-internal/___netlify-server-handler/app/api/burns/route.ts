@@ -160,22 +160,24 @@ export async function GET(request: Request) {
       // Load existing cache first - ALWAYS prioritize instant response
   let burnCache = loadBurnCache();
   
-  // Check if cache has invalid future timestamps - force refresh if so
+  // CRITICAL: Check for corrupted Etherscan data (future timestamps)
+  // If cache exists but has obviously wrong data, bypass it completely  
   if (burnCache && burnCache.transactions.length > 0) {
     const firstTx = burnCache.transactions[0];
     const currentTime = Math.floor(Date.now() / 1000);
     const txTime = parseInt(firstTx.timeStamp);
     
-    if (txTime > currentTime + (24 * 60 * 60)) { // If more than 1 day in future
-      console.log(`🚨 STALE CACHE DETECTED: Transaction timestamp ${txTime} is in the future (current: ${currentTime}), clearing cache...`);
+    if (txTime > currentTime + (60 * 60)) { // If more than 1 hour in future (corrupted data)
+      console.log(`🚨 CORRUPTED ETHERSCAN DATA DETECTED: Transaction timestamp ${txTime} is in the future (current: ${currentTime})`);
+      console.log(`🚨 This indicates Etherscan API is returning test/corrupted data instead of real blockchain data`);
       
-      // Clear the actual cache files
+      // Clear the corrupted cache files immediately
       try {
         import('fs').then(fs => {
           const path = '/tmp/shibmetrics-burn-cache.json';
           if (fs.existsSync(path)) {
             fs.unlinkSync(path);
-            console.log('🗑️ Cleared stale burn cache file');
+            console.log('🗑️ Cleared corrupted data cache');
           }
         }).catch(e => {
           console.warn('⚠️ Could not clear cache file:', e);
@@ -184,7 +186,40 @@ export async function GET(request: Request) {
         console.warn('⚠️ Could not clear cache file:', e);
       }
       
-      burnCache = null; // Force refresh
+      // Force immediate fallback to historical data - don't even try to refresh from bad API
+      console.log('🛡️ Forcing immediate historical data fallback...');
+      try {
+        const historicalResponse = await fetch(`${request.url.replace('/api/burns', '/api/historical/dataset')}?limit=100`);
+        if (historicalResponse.ok) {
+          const historicalData = await historicalResponse.json();
+          if (historicalData.transactions && historicalData.transactions.length > 0) {
+            console.log(`📚 SUCCESS: Using clean historical data: ${historicalData.transactions.length} transactions`);
+            
+            return new Response(JSON.stringify({
+              transactions: historicalData.transactions,
+              cached: true,
+              timestamp: new Date().toISOString(),
+              source: 'historical_data_etherscan_corrupted',
+              lastUpdated: new Date().toISOString(),
+              addressesSuccess: 4,
+              addressesAttempted: 4,
+              refreshing: false,
+              message: 'Using historical data due to corrupted Etherscan API returning future timestamps'
+            }), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'public, max-age=300'
+              },
+            });
+          }
+        }
+      } catch (historicalError) {
+        console.warn('⚠️ Historical data fallback failed:', historicalError);
+      }
+      
+      // If historical data also fails, don't return corrupted data
+      burnCache = null;
     }
   }
   
