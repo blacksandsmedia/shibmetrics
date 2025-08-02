@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { 
   BurnTransaction, 
   BURN_ADDRESSES,
+  formatBurnAmount,
   formatNumber,
   formatTimeAgo 
 } from '@/lib/api';
@@ -248,7 +249,7 @@ export default function BurnTrackerPage() {
                     <tr key={tx.hash} className="hover:bg-gray-750 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-lg font-bold text-orange-400">
-                          🔥 {formatNumber(parseInt(tx.value) / Math.pow(10, 18))}
+                          🔥 {formatBurnAmount(parseInt(tx.value) / Math.pow(10, 18))}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

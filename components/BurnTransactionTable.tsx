@@ -1,6 +1,6 @@
 'use client';
 
-import { BurnTransaction, formatNumber, formatTimeAgo } from '@/lib/api';
+import { BurnTransaction, formatBurnAmount, formatTimeAgo } from '@/lib/api';
 import { ExternalLink } from 'lucide-react';
 
 interface BurnTransactionTableProps {
@@ -78,7 +78,7 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
               <tr key={`${tx.hash}-${index}`} className="hover:bg-gray-750 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm font-medium text-white">
-                    🔥 {formatNumber(parseInt(tx.value) / Math.pow(10, 18))}
+                    🔥 {formatBurnAmount(parseInt(tx.value) / Math.pow(10, 18))}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

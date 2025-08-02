@@ -49,6 +49,12 @@ function formatShibAmount(value: string): string {
   try {
     const bigIntValue = BigInt(value);
     const amount = Number(bigIntValue) / 1e18;
+    
+    // For very small positive amounts that would show as "0.00", show "<1" instead
+    if (amount > 0 && amount < 1) {
+      return '<1';
+    }
+    
     return formatNumber(amount);
   } catch {
     console.warn('Invalid value for formatShibAmount:', value);
