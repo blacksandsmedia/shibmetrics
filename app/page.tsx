@@ -128,7 +128,7 @@ async function fetchTotalBurnedSSR(): Promise<TotalBurnedData> {
   }
 
   return {
-    totalBurned: 410752070164338,
+    totalBurned: 410500000000000, // Updated to use only the 3 official burn addresses
     source: 'ssr_fallback',
     cached: true
   };

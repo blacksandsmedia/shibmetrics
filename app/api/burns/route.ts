@@ -18,10 +18,9 @@ async function refreshBurnDataInBackground(): Promise<EtherscanTx[]> {
     console.log('🔄 Starting background burn data refresh...');
     
     const burnAddresses = [
-      { name: 'BA-1 (Vitalik Burn Alt)', address: '0xdead000000000000000042069420694206942069' },
-      { name: 'BA-2 (Dead Address 1)', address: '0x000000000000000000000000000000000000dead' },
-      { name: 'BA-3 (Null Address)', address: '0x0000000000000000000000000000000000000000' },
-      { name: 'CA (Community Address)', address: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce' }
+      { name: 'BA-1 (Vitalik Burn)', address: '0xdead000000000000000042069420694206942069' },
+      { name: 'BA-2 (Dead Address)', address: '0x000000000000000000000000000000000000dead' },
+      { name: 'BA-3 (Genesis/Black Hole)', address: '0x0000000000000000000000000000000000000000' }
     ];
 
     const allTransactions: EtherscanTx[] = [];
