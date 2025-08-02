@@ -158,7 +158,7 @@ export async function GET(request: Request) {
     const forceRefresh = url.searchParams.get('force') === 'true';
     
       // Load existing cache first - ALWAYS prioritize instant response
-  const burnCache = loadBurnCache();
+  let burnCache = loadBurnCache();
   
   // Check if cache has invalid future timestamps - force refresh if so
   if (burnCache && burnCache.transactions.length > 0) {
