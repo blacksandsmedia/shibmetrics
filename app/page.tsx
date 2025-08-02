@@ -8,6 +8,18 @@ import RefreshButton from '../components/RefreshButton';
 import { formatTimeAgo } from '../lib/api';
 import Link from 'next/link';
 
+/*
+ * ⚡ ATOMIC DATA UPDATES SYSTEM ⚡
+ * 
+ * This homepage uses ATOMIC UPDATES to prevent data inconsistency:
+ * - ALL data (price, burns, stats) is validated BEFORE any UI updates
+ * - If ANY data fails validation, NO data is updated (keeps old consistent data)  
+ * - Users NEVER see mixed old/new data or missing transactions during updates
+ * - Loading indicators show when atomic updates are in progress
+ * 
+ * This ensures users always see complete, consistent data - never partial updates!
+ */
+
 interface BurnTransaction {
   hash: string;
   from: string;
@@ -287,7 +299,7 @@ export default function Home() {
     }
   }, []);
   
-  // Main data fetching function
+  // Main data fetching function with ATOMIC UPDATES - prevents data inconsistency
   const fetchAllData = useCallback(async (showLoading: boolean = false, forceFresh: boolean = false) => {
     console.log(`📡 fetchAllData called: showLoading=${showLoading}, forceFresh=${forceFresh}`);
     if (showLoading) setIsUpdating(true);
@@ -296,33 +308,58 @@ export default function Home() {
       const { newPriceData, newTotalBurnedData, newBurnsData } = await fetchFreshData(forceFresh);
       console.log('📊 Raw API responses:', { newPriceData, newTotalBurnedData, newBurnsData });
       
-      // Validate data before updating state
-      if (newPriceData && typeof newPriceData.price === 'number' && newPriceData.price > 0) {
+      // ⚡ CRITICAL: Validate ALL data BEFORE updating ANY state
+      // This prevents users from seeing inconsistent/mixed old+new data
+      
+      const isPriceDataValid = newPriceData && 
+                              typeof newPriceData.price === 'number' && 
+                              newPriceData.price > 0 &&
+                              typeof newPriceData.marketCap === 'number' &&
+                              newPriceData.marketCap > 0;
+      
+      const isTotalBurnedDataValid = newTotalBurnedData && 
+                                    typeof newTotalBurnedData.totalBurned === 'number' &&
+                                    newTotalBurnedData.totalBurned > 0;
+      
+      const isBurnsDataValid = newBurnsData && 
+                              Array.isArray(newBurnsData.transactions) &&
+                              newBurnsData.transactions.length > 0;
+      
+      // Log validation results
+      console.log('🔍 Data validation:', {
+        price: isPriceDataValid,
+        totalBurned: isTotalBurnedDataValid,
+        burns: isBurnsDataValid
+      });
+      
+      // ⚡ ATOMIC UPDATE: Only update state if ALL data is valid
+      // This ensures users never see partial/inconsistent data
+      if (isPriceDataValid && isTotalBurnedDataValid && isBurnsDataValid) {
+        console.log('✅ All data valid - performing atomic update');
+        
+        // Update all state atomically
         setPriceData(newPriceData);
-        console.log(`💰 Price updated: $${newPriceData.price}, marketCap: $${newPriceData.marketCap}, source: ${newPriceData.source}`);
-      } else {
-        console.warn('❌ Price data validation failed:', newPriceData);
-      }
-      
-      if (newTotalBurnedData && typeof newTotalBurnedData.totalBurned === 'number') {
         setTotalBurnedData(newTotalBurnedData);
-        console.log('🔥 Total burned data updated:', newTotalBurnedData.totalBurned);
-      } else {
-        console.warn('❌ Total burned data validation failed:', newTotalBurnedData);
-      }
-      
-      if (newBurnsData && Array.isArray(newBurnsData.transactions)) {
         setBurnsData(newBurnsData);
-        console.log('📋 Burns data updated:', newBurnsData.transactions.length, 'transactions');
+        setLastUpdate(new Date());
+        
+        if (!isLive) setIsLive(true);
+        
+        console.log(`💰 ATOMIC UPDATE COMPLETE - Price: $${newPriceData.price}, MarketCap: $${newPriceData.marketCap}, Burns: ${newBurnsData.transactions.length} transactions`);
+        
       } else {
-        console.warn('❌ Burns data validation failed:', newBurnsData);
+        // If ANY data is invalid, keep ALL old data (prevents inconsistency)
+        console.warn('❌ ATOMIC UPDATE REJECTED - keeping existing data to prevent inconsistency');
+        console.warn('Failed validations:', {
+          priceData: isPriceDataValid ? 'OK' : newPriceData,
+          totalBurnedData: isTotalBurnedDataValid ? 'OK' : newTotalBurnedData,
+          burnsData: isBurnsDataValid ? 'OK' : `${newBurnsData?.transactions?.length || 0} transactions`
+        });
       }
-      
-      setLastUpdate(new Date());
-      if (!isLive) setIsLive(true);
       
     } catch (error) {
-      console.error('💥 Error fetching data:', error);
+      console.error('💥 Error fetching data - keeping existing data:', error);
+      // On error, existing state is preserved (no inconsistent data shown)
     } finally {
       if (showLoading) setIsUpdating(false);
     }
@@ -336,16 +373,16 @@ export default function Home() {
 
   // Initial data load and real-time polling setup
   useEffect(() => {
-    console.log('🔄 Starting real-time updates system...');
-    // Load data immediately on mount
+    console.log('🔄 Starting real-time updates system with ATOMIC UPDATES...');
+    // Load data immediately on mount with full validation
     fetchAllData(true, false);
     
     // Set up polling for real-time updates (every 45 seconds)
-    console.log('⏰ Setting up 45-second polling interval...');
+    console.log('⏰ Setting up 45-second polling interval with atomic updates...');
     const interval = setInterval(() => {
       // Only poll if page is visible
       if (!document.hidden) {
-        console.log('🔔 45-second timer: fetching fresh data...');
+        console.log('🔔 45-second timer: fetching fresh data with atomic validation...');
         fetchAllData(false, false);
       } else {
         console.log('👁️ Page hidden, skipping poll');
@@ -501,7 +538,7 @@ export default function Home() {
         </div>
 
         {/* All Stats - Tight 2x3 Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 transition-opacity duration-200 ${isUpdating ? 'opacity-90' : ''}`}>
           {/* 24H Burn Activity - ALWAYS available now */}
           <StatCard
             title="24H Burn Activity"
@@ -585,13 +622,21 @@ export default function Home() {
         </div>
 
         {/* Latest Burn Transactions */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700">
+        <div className={`bg-gray-800 rounded-lg border border-gray-700 relative ${isUpdating ? 'opacity-95' : ''}`}>
           <div className="px-6 py-4 border-b border-gray-700">
-            <h3 className="text-lg font-semibold text-white">
-              {last24HourBurns.length > 10 
-                ? `Recent Burn Transactions (${last24HourBurns.length} in last 24h)` 
-                : 'Latest Burn Transactions (Last 10)'}
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">
+                {last24HourBurns.length > 10 
+                  ? `Recent Burn Transactions (${last24HourBurns.length} in last 24h)` 
+                  : 'Latest Burn Transactions (Last 10)'}
+              </h3>
+              {isUpdating && (
+                <div className="flex items-center gap-2 text-orange-400 text-xs">
+                  <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>
+                  <span>Refreshing...</span>
+                </div>
+              )}
+            </div>
           </div>
           <BurnTransactionTable transactions={burnsToShow} loading={false} />
         </div>
