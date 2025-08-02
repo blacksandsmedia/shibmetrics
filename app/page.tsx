@@ -1,4 +1,7 @@
-import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
+'use client';
+
+import { TrendingUp, TrendingDown, Flame, DollarSign, Clock, Activity } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
 import RefreshButton from '../components/RefreshButton';
@@ -69,12 +72,12 @@ function formatBurnedAmountDetailed(amount: number): string {
   return amount.toFixed(4);
 }
 
-// Enhanced server-side data fetching functions with bulletproof fallbacks
+// Client-side data fetching functions with bulletproof fallbacks
 async function fetchShibPrice(): Promise<ShibPriceData> {
   // Try live API first
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/price`, {
-      next: { revalidate: 60 } // Cache for 60 seconds
+    const response = await fetch('/api/price', {
+      cache: 'no-cache' // Always get fresh data for real-time updates
     });
     
     if (response.ok) {
@@ -101,8 +104,8 @@ async function fetchShibPrice(): Promise<ShibPriceData> {
 async function fetchTotalBurned(): Promise<TotalBurnedData> {
   // Try live API first
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/total-burned`, {
-      next: { revalidate: 180 } // Cache for 3 minutes
+    const response = await fetch('/api/total-burned', {
+      cache: 'no-cache' // Always get fresh data for real-time updates
     });
     
     if (response.ok) {
@@ -118,8 +121,8 @@ async function fetchTotalBurned(): Promise<TotalBurnedData> {
 
   // Try historical data fallback
   try {
-    const historicalResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/historical/burns?limit=1000`, {
-      next: { revalidate: 300 } // Cache for 5 minutes
+    const historicalResponse = await fetch('/api/historical/burns?limit=1000', {
+      cache: 'no-cache'
     });
     
     if (historicalResponse.ok) {
@@ -158,19 +161,12 @@ async function fetchTotalBurned(): Promise<TotalBurnedData> {
 }
 
 async function fetchBurns(): Promise<BurnsData> {
-  // Try live API first - force absolute URL for server-side rendering
+  // Try live API first - client-side fetch
   try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://shibmetrics.com' 
-      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const url = `${baseUrl}/api/burns`;
-    console.log('🔥 Homepage: Fetching burns from:', url);
+    console.log('🔥 Homepage: Fetching burns from: /api/burns');
     
-    const response = await fetch(url, {
-      next: { revalidate: 60 }, // Cache for 60 seconds
-      headers: {
-        'User-Agent': 'SHIBMETRICS-SSR'
-      }
+    const response = await fetch('/api/burns', {
+      cache: 'no-cache' // Always get fresh data for real-time updates
     });
     
     console.log('🔥 Homepage: Burns API response status:', response.status);
@@ -198,8 +194,8 @@ async function fetchBurns(): Promise<BurnsData> {
   // Try complete 5-year historical data fallback (Netlify Blobs)
   try {
     console.log('🛡️ Trying 5-year historical dataset fallback...');
-    const historicalResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://shibmetrics.com'}/api/historical/dataset?limit=100`, {
-      next: { revalidate: 300 } // Cache for 5 minutes
+    const historicalResponse = await fetch('/api/historical/dataset?limit=100', {
+      cache: 'no-cache'
     });
     
     if (historicalResponse.ok) {
@@ -234,14 +230,84 @@ async function fetchBurns(): Promise<BurnsData> {
   };
 }
 
-// Server-side component - no loading states needed!
-export default async function Home() {
-  // Fetch all data on the server - bulletproof fallbacks ensure we ALWAYS have data
-  const [priceData, totalBurnedData, burnsData] = await Promise.all([
-    fetchShibPrice(),
-    fetchTotalBurned(),
-    fetchBurns()
-  ]);
+// Real-time client component with live updates!
+export default function Home() {
+  // State management for real-time data
+  const [priceData, setPriceData] = useState<ShibPriceData>({
+    price: 0.00000800,
+    priceChange24h: 0.00,
+    source: 'loading',
+    cached: true
+  });
+  
+  const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>({
+    totalBurned: 410752070164338,
+    source: 'loading',
+    cached: true
+  });
+  
+  const [burnsData, setBurnsData] = useState<BurnsData>({
+    transactions: [],
+    source: 'loading',
+    cached: true
+  });
+  
+  const [isLive, setIsLive] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Fetch all data function
+  const fetchAllData = useCallback(async (showLoading: boolean = false) => {
+    if (showLoading) setIsUpdating(true);
+    
+    try {
+      const [newPriceData, newTotalBurnedData, newBurnsData] = await Promise.all([
+        fetchShibPrice(),
+        fetchTotalBurned(),
+        fetchBurns()
+      ]);
+      
+      setPriceData(newPriceData);
+      setTotalBurnedData(newTotalBurnedData);  
+      setBurnsData(newBurnsData);
+      setLastUpdate(new Date());
+      
+      if (!isLive) setIsLive(true);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      if (showLoading) setIsUpdating(false);
+    }
+  }, [isLive]);
+
+  // Initial data load and real-time polling setup
+  useEffect(() => {
+    // Load data immediately on mount
+    fetchAllData(true);
+    
+    // Set up polling for real-time updates (every 45 seconds)
+    const interval = setInterval(() => {
+      // Only poll if page is visible
+      if (!document.hidden) {
+        fetchAllData(false);
+      }
+    }, 45000);
+    
+    // Page visibility change handler - resume polling when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Page became visible - fetch fresh data
+        fetchAllData(false);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchAllData]);
 
   // Calculate derived data - all data is ALWAYS available now due to bulletproof fallbacks
   const burns = burnsData.transactions;
@@ -321,11 +387,27 @@ export default async function Home() {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
             <h1 className="text-4xl md:text-6xl font-bold text-white">🔥 SHIBMETRICS</h1>
+            
+            {/* Live Status Indicator */}
+            {isLive && (
+              <div className="ml-4 flex items-center gap-2 bg-green-900/20 border border-green-500/30 rounded-full px-3 py-1">
+                <div className={`w-2 h-2 rounded-full ${isUpdating ? 'bg-orange-400 animate-pulse' : 'bg-green-400 animate-pulse'}`}></div>
+                <span className={`text-xs font-medium ${isUpdating ? 'text-orange-400' : 'text-green-400'}`}>
+                  {isUpdating ? 'UPDATING...' : 'LIVE'}
+                </span>
+              </div>
+            )}
+            
             <RefreshButton />
           </div>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-4">
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-2">
             Track SHIBA INU token burns in real-time. Monitor burn transactions, rates, and supply reduction.
           </p>
+          {isLive && (
+            <p className="text-sm text-gray-400 mb-4">
+              Auto-updates every 45 seconds • Last updated: {lastUpdate.toLocaleTimeString()}
+            </p>
+          )}
           <div className="inline-flex items-center gap-2 bg-green-900/20 border border-green-500/30 rounded-full px-4 py-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-green-400 text-sm font-medium">
