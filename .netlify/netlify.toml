@@ -1,7 +1,7 @@
 functionsDirectory = "/Users/alanphillips/Downloads/shibmetrics/netlify/functions"
 functionsDirectoryOrigin = "config"
-headersOrigin = "inline"
-redirectsOrigin = "inline"
+headersOrigin = "config"
+redirectsOrigin = "config"
 
 [build]
 publish = "/Users/alanphillips/Downloads/shibmetrics/.next"
@@ -32,7 +32,7 @@ NEXT_PUBLIC_ETHERSCAN_API_KEY = "Your Etherscan API key here"
 [functions]
 
 [functions."*"]
-included_files = ["lib/**", "app/api/**", ".env", ".env.production", ".env.local", ".env.production.local"]
+included_files = ["lib/**", "app/api/**"]
 
 [[plugins]]
 origin = "default"
@@ -56,12 +56,6 @@ for = "/api/*"
 [headers.values]
 Cache-Control = "public, max-age=300, s-maxage=300"
 
-[[headers]]
-for = "/_next/static/*"
-
-[headers.values]
-Cache-Control = "public, max-age=31536000, immutable"
-
 [[redirects]]
 from = "/*"
 to = "/index.html"
@@ -69,36 +63,6 @@ status = 200.0
 force = false
 
 [redirects.query]
-
-[redirects.conditions]
-
-[redirects.headers]
-
-[[redirects]]
-from = "/_next/image"
-to = "/.netlify/images?url=:url&w=:width&q=:quality"
-status = 200.0
-force = false
-
-[redirects.query]
-url = ":url"
-w = ":width"
-q = ":quality"
-
-[redirects.conditions]
-
-[redirects.headers]
-
-[[redirects]]
-from = "/_ipx/*"
-to = "/.netlify/images?url=:url&w=:width&q=:quality"
-status = 200.0
-force = false
-
-[redirects.query]
-url = ":url"
-w = ":width"
-q = ":quality"
 
 [redirects.conditions]
 

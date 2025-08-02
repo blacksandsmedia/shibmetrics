@@ -2,21 +2,50 @@
 
 import { useEffect, useState, useCallback } from 'react';
 
+interface ShibPriceData {
+  price: number;
+  priceChange24h: number;
+  marketCap: number;
+  circulatingSupply: number;
+  totalSupply: number;
+  source: string;
+  cached: boolean;
+}
+
+interface TotalBurnedData {
+  totalBurned: number;
+  source: string;
+  cached: boolean;
+}
+
+interface BurnsData {
+  transactions: Array<{
+    hash: string;
+    from: string;
+    to: string;
+    value: string;
+    timeStamp: string;
+    blockNumber: string;
+  }>;
+  source: string;
+  cached: boolean;
+}
+
 interface RealTimeUpdaterProps {
   onDataUpdate?: (data: {
-    priceData: any;
-    totalBurnedData: any;
-    burnsData: any;
+    priceData: ShibPriceData;
+    totalBurnedData: TotalBurnedData;
+    burnsData: BurnsData;
   }) => void;
-  initialData: {
-    priceData: any;
-    totalBurnedData: any;
-    burnsData: any;
+  initialData?: {
+    priceData: ShibPriceData;
+    totalBurnedData: TotalBurnedData;
+    burnsData: BurnsData;
   };
 }
 
 // Client-side component that handles real-time updates
-export default function RealTimeUpdater({ onDataUpdate, initialData }: RealTimeUpdaterProps) {
+export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLive, setIsLive] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());

@@ -56,10 +56,6 @@ function formatNumber(num: number): string {
   return num.toFixed(2);
 }
 
-function formatBurnedAmount(amount: number): string {
-  return formatNumber(amount);
-}
-
 function formatBurnedAmountHighPrecision(amount: number): string {
   if (amount >= 1e12) return (amount / 1e12).toFixed(5) + 'T';
   if (amount >= 1e9) return (amount / 1e9).toFixed(5) + 'B';
@@ -247,9 +243,7 @@ export default async function Home() {
     dayOverDayText = '🚀 New activity today';
   }
   
-  const burnRate = twentyFourHourBurnAmount / 24; // SHIB per hour
-  const mostRecentBurn = burns[0];
-  const timeSinceLastBurn = mostRecentBurn ? formatTimeAgo(mostRecentBurn.timeStamp) : 'Unknown';
+  // Additional calculations can be added here if needed
 
   // Calculate burn percentage
   const totalSupplyOriginal = 1000000000000000; // Original total supply: 1 quadrillion SHIB
@@ -264,9 +258,7 @@ export default async function Home() {
             <h1 className="text-4xl md:text-6xl font-bold text-white">🔥 SHIBMETRICS</h1>
             
             {/* Real-time updater component - handles live status */}
-            <RealTimeUpdater 
-              initialData={{ priceData, totalBurnedData, burnsData }}
-            />
+            <RealTimeUpdater />
           </div>
           
           <p className="text-xl text-gray-300 mb-4">
