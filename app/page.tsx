@@ -258,59 +258,126 @@ export default function Home() {
   const [isLive, setIsLive] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isUpdating, setIsUpdating] = useState(false);
+  const [pageWasHidden, setPageWasHidden] = useState(false);
   
-  // Fetch all data function
-  const fetchAllData = useCallback(async (showLoading: boolean = false) => {
-    if (showLoading) setIsUpdating(true);
+  // Fetch fresh data with cache-busting for critical updates
+  const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
+    const timestamp = Date.now();
+    const cacheParam = forceFresh ? `?_t=${timestamp}` : '';
     
     try {
       const [newPriceData, newTotalBurnedData, newBurnsData] = await Promise.all([
-        fetchShibPrice(),
+        fetch(`/api/price${cacheParam}`, { 
+          cache: 'no-cache',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        }).then(res => res.ok ? res.json() : fetchShibPrice()),
         fetchTotalBurned(),
         fetchBurns()
       ]);
       
-      setPriceData(newPriceData);
-      setTotalBurnedData(newTotalBurnedData);  
-      setBurnsData(newBurnsData);
-      setLastUpdate(new Date());
+      return { newPriceData, newTotalBurnedData, newBurnsData };
+    } catch (error) {
+      console.error('Fresh data fetch failed, using fallback:', error);
+      // Fallback to original functions
+      return {
+        newPriceData: await fetchShibPrice(),
+        newTotalBurnedData: await fetchTotalBurned(), 
+        newBurnsData: await fetchBurns()
+      };
+    }
+  }, []);
+  
+  // Main data fetching function
+  const fetchAllData = useCallback(async (showLoading: boolean = false, forceFresh: boolean = false) => {
+    if (showLoading) setIsUpdating(true);
+    
+    try {
+      const { newPriceData, newTotalBurnedData, newBurnsData } = await fetchFreshData(forceFresh);
       
+      // Validate data before updating state
+      if (newPriceData && typeof newPriceData.price === 'number' && newPriceData.price > 0) {
+        setPriceData(newPriceData);
+        console.log(`💰 Price updated: $${newPriceData.price}, source: ${newPriceData.source}`);
+      }
+      
+      if (newTotalBurnedData && typeof newTotalBurnedData.totalBurned === 'number') {
+        setTotalBurnedData(newTotalBurnedData);
+      }
+      
+      if (newBurnsData && Array.isArray(newBurnsData.transactions)) {
+        setBurnsData(newBurnsData);
+      }
+      
+      setLastUpdate(new Date());
       if (!isLive) setIsLive(true);
+      
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       if (showLoading) setIsUpdating(false);
     }
-  }, [isLive]);
+  }, [isLive, fetchFreshData]);
+
+  // Manual refresh handler for RefreshButton
+  const handleManualRefresh = useCallback(async () => {
+    console.log('🔄 Manual refresh triggered - forcing fresh data');
+    await fetchAllData(true, true); // Force fresh data with loading indicator
+  }, [fetchAllData]);
 
   // Initial data load and real-time polling setup
   useEffect(() => {
     // Load data immediately on mount
-    fetchAllData(true);
+    fetchAllData(true, false);
     
     // Set up polling for real-time updates (every 45 seconds)
     const interval = setInterval(() => {
       // Only poll if page is visible
       if (!document.hidden) {
-        fetchAllData(false);
+        fetchAllData(false, false);
       }
     }, 45000);
     
-    // Page visibility change handler - resume polling when page becomes visible
+    // Enhanced Page visibility change handler with better caching control
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // Page became visible - fetch fresh data
-        fetchAllData(false);
+      if (document.hidden) {
+        // Page became hidden - track this state
+        setPageWasHidden(true);
+        console.log('📱 Page hidden - pausing real-time updates');
+      } else {
+        // Page became visible
+        console.log('👁️ Page visible - resuming with fresh data');
+        
+        // If page was hidden, force fresh data to prevent stale pricing
+        if (pageWasHidden) {
+          console.log('🔄 Forcing fresh data after page was hidden');
+          fetchAllData(true, true); // Force fresh data with cache busting
+          setPageWasHidden(false);
+        } else {
+          // Normal visibility change, regular fetch
+          fetchAllData(false, false);
+        }
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
+    // Also listen for focus events as additional fallback
+    const handleFocus = () => {
+      if (pageWasHidden) {
+        console.log('🎯 Window focused after being hidden - forcing fresh data');
+        fetchAllData(true, true);
+        setPageWasHidden(false);
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
-  }, [fetchAllData]);
+  }, [fetchAllData, pageWasHidden]);
 
   // Calculate derived data - all data is ALWAYS available now due to bulletproof fallbacks
   const burns = burnsData.transactions;
@@ -400,7 +467,7 @@ export default function Home() {
               </div>
             )}
             
-            <RefreshButton />
+            <RefreshButton onRefresh={handleManualRefresh} />
           </div>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-2">
             Track SHIBA INU token burns in real-time. Monitor burn transactions, rates, and supply reduction.
