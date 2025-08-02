@@ -1,28 +1,36 @@
 // Use shared cache system for persistent data
 import { loadPriceCache, savePriceCache } from '../../../lib/shared-cache';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Always try to serve from persistent cache first
-    const cachedData = loadPriceCache();
+    // Check for cache-busting parameter
+    const url = new URL(request.url);
+    const forceFresh = url.searchParams.has('_t');
     
-    if (cachedData) {
-      console.log('🚀 Returning cached SHIB price and market cap from persistent cache');
-      return new Response(JSON.stringify({
-        price: cachedData.price,
-        priceChange24h: cachedData.priceChange24h,
-        marketCap: cachedData.marketCap,
-        timestamp: new Date().toISOString(),
-        source: 'coingecko-cached',
-        cached: true,
-        lastUpdated: new Date(cachedData.lastUpdated).toISOString()
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=60'
-        },
-      });
+    // Try to serve from persistent cache first (unless force refresh is requested)
+    if (!forceFresh) {
+      const cachedData = loadPriceCache();
+      
+      if (cachedData) {
+        console.log('🚀 Returning cached SHIB price and market cap from persistent cache');
+        return new Response(JSON.stringify({
+          price: cachedData.price,
+          priceChange24h: cachedData.priceChange24h,
+          marketCap: cachedData.marketCap,
+          timestamp: new Date().toISOString(),
+          source: 'coingecko-cached',
+          cached: true,
+          lastUpdated: new Date(cachedData.lastUpdated).toISOString()
+        }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=60'
+          },
+        });
+      }
+    } else {
+      console.log('🔄 Cache-busting parameter detected - forcing fresh data from CoinGecko');
     }
 
     console.log('💰 Fetching fresh SHIB price and market cap from CoinGecko...');

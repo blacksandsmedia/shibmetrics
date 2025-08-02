@@ -289,30 +289,40 @@ export default function Home() {
   
   // Main data fetching function
   const fetchAllData = useCallback(async (showLoading: boolean = false, forceFresh: boolean = false) => {
+    console.log(`📡 fetchAllData called: showLoading=${showLoading}, forceFresh=${forceFresh}`);
     if (showLoading) setIsUpdating(true);
     
     try {
       const { newPriceData, newTotalBurnedData, newBurnsData } = await fetchFreshData(forceFresh);
+      console.log('📊 Raw API responses:', { newPriceData, newTotalBurnedData, newBurnsData });
       
       // Validate data before updating state
       if (newPriceData && typeof newPriceData.price === 'number' && newPriceData.price > 0) {
         setPriceData(newPriceData);
-        console.log(`💰 Price updated: $${newPriceData.price}, source: ${newPriceData.source}`);
+        console.log(`💰 Price updated: $${newPriceData.price}, marketCap: $${newPriceData.marketCap}, source: ${newPriceData.source}`);
+      } else {
+        console.warn('❌ Price data validation failed:', newPriceData);
       }
       
       if (newTotalBurnedData && typeof newTotalBurnedData.totalBurned === 'number') {
         setTotalBurnedData(newTotalBurnedData);
+        console.log('🔥 Total burned data updated:', newTotalBurnedData.totalBurned);
+      } else {
+        console.warn('❌ Total burned data validation failed:', newTotalBurnedData);
       }
       
       if (newBurnsData && Array.isArray(newBurnsData.transactions)) {
         setBurnsData(newBurnsData);
+        console.log('📋 Burns data updated:', newBurnsData.transactions.length, 'transactions');
+      } else {
+        console.warn('❌ Burns data validation failed:', newBurnsData);
       }
       
       setLastUpdate(new Date());
       if (!isLive) setIsLive(true);
       
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('💥 Error fetching data:', error);
     } finally {
       if (showLoading) setIsUpdating(false);
     }
@@ -326,14 +336,19 @@ export default function Home() {
 
   // Initial data load and real-time polling setup
   useEffect(() => {
+    console.log('🔄 Starting real-time updates system...');
     // Load data immediately on mount
     fetchAllData(true, false);
     
     // Set up polling for real-time updates (every 45 seconds)
+    console.log('⏰ Setting up 45-second polling interval...');
     const interval = setInterval(() => {
       // Only poll if page is visible
       if (!document.hidden) {
+        console.log('🔔 45-second timer: fetching fresh data...');
         fetchAllData(false, false);
+      } else {
+        console.log('👁️ Page hidden, skipping poll');
       }
     }, 45000);
     
