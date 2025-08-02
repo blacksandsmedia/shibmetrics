@@ -171,12 +171,15 @@ export async function GET(request: Request) {
       
       // Clear the actual cache files
       try {
-        const fs = require('fs');
-        const path = '/tmp/shibmetrics-burn-cache.json';
-        if (fs.existsSync(path)) {
-          fs.unlinkSync(path);
-          console.log('🗑️ Cleared stale burn cache file');
-        }
+        import('fs').then(fs => {
+          const path = '/tmp/shibmetrics-burn-cache.json';
+          if (fs.existsSync(path)) {
+            fs.unlinkSync(path);
+            console.log('🗑️ Cleared stale burn cache file');
+          }
+        }).catch(e => {
+          console.warn('⚠️ Could not clear cache file:', e);
+        });
       } catch (e) {
         console.warn('⚠️ Could not clear cache file:', e);
       }
