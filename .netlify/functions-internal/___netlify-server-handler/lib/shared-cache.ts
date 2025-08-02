@@ -7,6 +7,8 @@ export interface PriceCache {
   price: number;
   priceChange24h: number;
   marketCap: number;
+  circulatingSupply: number;
+  totalSupply: number;
   lastUpdated: number;
 }
 

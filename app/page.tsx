@@ -286,16 +286,25 @@ export default function Home() {
   // Fetch fresh data with cache-busting for critical updates
   const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
     const timestamp = Date.now();
-    const cacheParam = forceFresh ? `?_t=${timestamp}` : '';
+    const priceCacheParam = forceFresh ? `?_t=${timestamp}` : '';
+    const burnsCacheParam = forceFresh ? '?force=true' : '';
+    
+    console.log(`🔄 fetchFreshData: forceFresh=${forceFresh}, using cache-busting=${forceFresh ? 'YES' : 'NO'}`);
     
     try {
       const [newPriceData, newTotalBurnedData, newBurnsData] = await Promise.all([
-        fetch(`/api/price${cacheParam}`, { 
+        fetch(`/api/price${priceCacheParam}`, { 
           cache: 'no-cache',
           headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
         }).then(res => res.ok ? res.json() : fetchShibPrice()),
-        fetchTotalBurned(),
-        fetchBurns()
+        fetch(`/api/total-burned`, { 
+          cache: forceFresh ? 'no-cache' : 'default',
+          headers: forceFresh ? { 'Cache-Control': 'no-cache, no-store, must-revalidate' } : {}
+        }).then(res => res.ok ? res.json() : fetchTotalBurned()),
+        fetch(`/api/burns${burnsCacheParam}`, { 
+          cache: 'no-cache',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        }).then(res => res.ok ? res.json() : fetchBurns())
       ]);
       
       return { newPriceData, newTotalBurnedData, newBurnsData };
@@ -337,8 +346,8 @@ export default function Home() {
                                     newTotalBurnedData.totalBurned > 0;
       
       const isBurnsDataValid = newBurnsData && 
-                              Array.isArray(newBurnsData.transactions) &&
-                              newBurnsData.transactions.length > 0;
+                              Array.isArray(newBurnsData.transactions);
+                              // Note: Allow empty arrays - valid during quiet periods
       
       // Log validation results
       console.log('🔍 Data validation:', {
@@ -360,15 +369,15 @@ export default function Home() {
         
         if (!isLive) setIsLive(true);
         
-        console.log(`💰 ATOMIC UPDATE COMPLETE - Price: $${newPriceData.price}, MarketCap: $${newPriceData.marketCap}, Burns: ${newBurnsData.transactions.length} transactions`);
+        console.log(`💰 ATOMIC UPDATE COMPLETE - Price: $${newPriceData.price}, MarketCap: $${(newPriceData.marketCap / 1e9).toFixed(2)}B, CircSupply: ${(newPriceData.circulatingSupply / 1e12).toFixed(0)}T, Burns: ${newBurnsData.transactions.length} transactions`);
         
       } else {
         // If ANY data is invalid, keep ALL old data (prevents inconsistency)
         console.warn('❌ ATOMIC UPDATE REJECTED - keeping existing data to prevent inconsistency');
         console.warn('Failed validations:', {
-          priceData: isPriceDataValid ? 'OK' : newPriceData,
-          totalBurnedData: isTotalBurnedDataValid ? 'OK' : newTotalBurnedData,
-          burnsData: isBurnsDataValid ? 'OK' : `${newBurnsData?.transactions?.length || 0} transactions`
+          priceData: isPriceDataValid ? 'OK' : `FAIL - price: ${newPriceData?.price}, marketCap: ${newPriceData?.marketCap}, circSupply: ${newPriceData?.circulatingSupply}, totalSupply: ${newPriceData?.totalSupply}`,
+          totalBurnedData: isTotalBurnedDataValid ? 'OK' : `FAIL - totalBurned: ${newTotalBurnedData?.totalBurned}`,
+          burnsData: isBurnsDataValid ? 'OK' : `FAIL - transactions: ${newBurnsData?.transactions?.length || 'undefined'}, isArray: ${Array.isArray(newBurnsData?.transactions)}`
         });
       }
       
@@ -389,8 +398,9 @@ export default function Home() {
   // Initial data load and real-time polling setup
   useEffect(() => {
     console.log('🔄 Starting real-time updates system with ATOMIC UPDATES...');
-    // Load data immediately on mount with full validation
-    fetchAllData(true, false);
+    // Load data immediately on mount with AGGRESSIVE fresh data fetch
+    console.log('🚀 Initial load: forcing fresh data on page mount...');
+    fetchAllData(true, true); // Force fresh data on initial load
     
     // Set up polling for real-time updates (every 45 seconds)
     console.log('⏰ Setting up 45-second polling interval with atomic updates...');
