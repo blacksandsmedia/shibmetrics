@@ -7,10 +7,11 @@ export async function GET() {
     const cachedData = loadPriceCache();
     
     if (cachedData) {
-      console.log('🚀 Returning cached SHIB price from persistent cache');
+      console.log('🚀 Returning cached SHIB price and market cap from persistent cache');
       return new Response(JSON.stringify({
         price: cachedData.price,
         priceChange24h: cachedData.priceChange24h,
+        marketCap: cachedData.marketCap,
         timestamp: new Date().toISOString(),
         source: 'coingecko-cached',
         cached: true,
@@ -24,10 +25,10 @@ export async function GET() {
       });
     }
 
-    console.log('💰 Fetching fresh SHIB price from CoinGecko...');
+    console.log('💰 Fetching fresh SHIB price and market cap from CoinGecko...');
     
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=shiba-inu&vs_currencies=usd&include_24hr_change=true',
+      'https://api.coingecko.com/api/v3/simple/price?ids=shiba-inu&vs_currencies=usd&include_24hr_change=true&include_market_cap=true',
       {
         method: 'GET',
         headers: {
@@ -49,23 +50,30 @@ export async function GET() {
     const shibData = data['shiba-inu'];
     const price = shibData.usd;
     const change = shibData.usd_24h_change || 0;
+    const marketCap = shibData.usd_market_cap || 0;
     
     if (typeof price !== 'number' || price <= 0) {
       throw new Error('Invalid price data from CoinGecko API');
+    }
+    
+    if (typeof marketCap !== 'number' || marketCap < 0) {
+      throw new Error('Invalid market cap data from CoinGecko API');
     }
     
     // Update persistent cache
     savePriceCache({
       price,
       priceChange24h: change,
+      marketCap,
       lastUpdated: Date.now()
     });
 
-    console.log(`✅ SHIB price: $${price}, 24h change: ${change.toFixed(2)}%`);
+    console.log(`✅ SHIB price: $${price}, 24h change: ${change.toFixed(2)}%, market cap: $${(marketCap / 1e9).toFixed(2)}B`);
     
     return new Response(JSON.stringify({
       price: price,
       priceChange24h: change,
+      marketCap: marketCap,
       timestamp: new Date().toISOString(),
       source: 'coingecko-live',
       cached: false

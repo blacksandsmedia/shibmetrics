@@ -20,6 +20,7 @@ interface BurnTransaction {
 interface ShibPriceData {
   price: number;
   priceChange24h: number;
+  marketCap: number;
   source?: string;
   cached?: boolean;
 }
@@ -96,6 +97,7 @@ async function fetchShibPrice(): Promise<ShibPriceData> {
   return {
     price: 0.00000800, // Reasonable SHIB price
     priceChange24h: 0.00,
+    marketCap: 4700000000, // Reasonable SHIB market cap (~4.7B)
     source: 'emergency_fallback',
     cached: true
   };
@@ -236,6 +238,7 @@ export default function Home() {
   const [priceData, setPriceData] = useState<ShibPriceData>({
     price: 0.00000800,
     priceChange24h: 0.00,
+    marketCap: 4700000000, // Reasonable SHIB market cap (~4.7B)
     source: 'loading',
     cached: true
   });
@@ -374,10 +377,9 @@ export default function Home() {
   const timeSinceLastBurn = mostRecentBurn ? 
     formatTimeAgo(mostRecentBurn.timeStamp) : 'Unknown';
 
-  // Calculate market cap and burn percentage - data is ALWAYS available now
-  const circulatingSupply = 589246853017681; // Current circulating supply
+  // Use market cap from CoinGecko API and calculate burn percentage - data is ALWAYS available now
   const totalSupply = 1000000000000000; // Original total supply: 1 quadrillion SHIB
-  const marketCap = priceData.price * circulatingSupply;
+  const marketCap = priceData.marketCap; // Market cap from CoinGecko API for accuracy
   const burnPercentage = (totalBurnedData.totalBurned / totalSupply) * 100;
 
   return (

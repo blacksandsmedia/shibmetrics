@@ -6,6 +6,7 @@ import path from 'path';
 export interface PriceCache {
   price: number;
   priceChange24h: number;
+  marketCap: number;
   lastUpdated: number;
 }
 

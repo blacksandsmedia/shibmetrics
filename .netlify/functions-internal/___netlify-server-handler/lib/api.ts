@@ -430,6 +430,29 @@ export function formatNumber(num: number, decimals = 2): string {
   return num.toFixed(decimals);
 }
 
+// Format burn amounts specifically - shows "<1" for very small amounts instead of "0.00"
+export function formatBurnAmount(num: number, decimals = 2): string {
+  // For very small positive amounts that would show as "0.00", show "<1" instead
+  if (num > 0 && num < 1) {
+    return '<1';
+  }
+  
+  // Use regular formatting for all other amounts
+  if (num >= 1e12) {
+    return (num / 1e12).toFixed(decimals) + 'T';
+  }
+  if (num >= 1e9) {
+    return (num / 1e9).toFixed(decimals) + 'B';
+  }
+  if (num >= 1e6) {
+    return (num / 1e6).toFixed(decimals) + 'M';
+  }
+  if (num >= 1e3) {
+    return (num / 1e3).toFixed(decimals) + 'K';
+  }
+  return num.toFixed(decimals);
+}
+
 // Format timestamp to readable date with consistent format
 export function formatTimestamp(timestamp: string): string {
   const date = new Date(parseInt(timestamp) * 1000);
