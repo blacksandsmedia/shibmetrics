@@ -291,23 +291,35 @@ export async function GET(request: Request) {
       if (freshData && freshData.length > 0) {
         console.log('🛡️ Direct fetch successful:', freshData.length, 'transactions');
         
-        return new Response(JSON.stringify({
-          transactions: freshData,
-          cached: false,
-          timestamp: new Date().toISOString(),
-          source: 'etherscan_direct',
-          lastUpdated: new Date().toISOString(),
-          addressesSuccess: 4,
-          addressesAttempted: 4,
-          refreshing: false,
-          message: 'Fresh data from Etherscan'
-        }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=60'
-          },
-        });
+        // CRITICAL: Validate fresh data for corrupted timestamps before returning
+        const currentTime = Math.floor(Date.now() / 1000);
+        const firstTxTime = parseInt(freshData[0].timeStamp);
+        
+        if (firstTxTime > currentTime + (60 * 60)) { // If more than 1 hour in future
+          console.log(`🚨 FRESH ETHERSCAN DATA IS CORRUPTED: Transaction timestamp ${firstTxTime} is in the future (current: ${currentTime})`);
+          console.log(`🚨 Etherscan API is returning test/corrupted data - falling back to historical data`);
+          
+          // Don't return corrupted fresh data - let it fall through to historical fallback
+        } else {
+          // Fresh data looks good - return it
+          return new Response(JSON.stringify({
+            transactions: freshData,
+            cached: false,
+            timestamp: new Date().toISOString(),
+            source: 'etherscan_direct',
+            lastUpdated: new Date().toISOString(),
+            addressesSuccess: 4,
+            addressesAttempted: 4,
+            refreshing: false,
+            message: 'Fresh data from Etherscan'
+          }), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=60'
+            },
+          });
+        }
       }
     } catch (directFetchError) {
       console.warn('⚠️ Direct Etherscan fetch failed:', directFetchError);
