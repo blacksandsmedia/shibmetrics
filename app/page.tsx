@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Flame, DollarSign, Clock, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
