@@ -101,15 +101,15 @@ export default function BurnHistoryPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
-  // Fetch comprehensive historical burn data with pagination
-  const fetchBurnHistory = useCallback(async () => {
+  // Fetch comprehensive burn data - RECENT + HISTORICAL for complete consistency
+  const fetchBurnHistory = useCallback(async (forceFresh: boolean = false) => {
     setLoading(true);
     try {
-      console.log('🔥 Fetching comprehensive burn history...');
-      console.log('🔥 API URL will be:', `/api/historical/dataset?limit=20000&address=all`);
+      console.log(`🔥 Fetching RECENT burn data for consistency with homepage/burn-tracker (forceFresh=${forceFresh})...`);
       
-      // First get historical stats to show total available data
-      const statsResponse = await fetch('/api/burns-history?stats=true', {
+      // CRITICAL: Use the SAME API endpoint as homepage and burn tracker for consistency
+      const cacheParam = forceFresh ? '?force=true' : '';
+      const recentResponse = await fetch(`/api/burns${cacheParam}`, {
         cache: 'no-cache',
         method: 'GET',
         headers: {
@@ -117,69 +117,20 @@ export default function BurnHistoryPage() {
         },
       });
       
-      if (statsResponse.ok) {
-        const stats = await statsResponse.json();
-        console.log('📊 Historical stats:', stats);
+      if (!recentResponse.ok) {
+        throw new Error(`Recent burns API failed: ${recentResponse.status} ${recentResponse.statusText}`);
       }
       
-      // Get complete 5-year historical data from Netlify Blobs storage (all 17K+ transactions)
-      // Note: We do client-side filtering, so get all data regardless of selectedDestination
-      const response = await fetch(`/api/historical/dataset?limit=20000&address=all`, {
-        cache: 'no-cache',
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const recentData = await recentResponse.json();
+      console.log(`🔥 Got ${recentData.transactions?.length || 0} RECENT transactions from same API as homepage`);
       
-      console.log('📊 Response status:', response.status, response.statusText);
-      console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
+      // Use recent data as primary source (same as homepage/burn-tracker)
+      let allTransactions = recentData.transactions || [];
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Response Error:', errorText);
-        throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('📊 API Response:', {
-        hasTransactions: !!(data.transactions),
-        transactionCount: data.transactions?.length || 0,
-        sampleData: data.transactions?.slice(0, 2) || [],
-        fullKeys: Object.keys(data)
-      });
-      console.log('📊 FULL API Response data keys:', Object.keys(data));
-      console.log('📊 API Response transactions length:', data.transactions?.length);
-      console.log('📊 API Response raw size estimate:', JSON.stringify(data).length);
-      
-      // Handle both historical API (burns) and fallback API (transactions) formats  
-      const transactionData = data.burns || data.transactions;
-      
-      if (transactionData && Array.isArray(transactionData) && transactionData.length > 0) {
-        // Only filter out transactions with truly invalid values (keep zero-value transactions)
-        const validTransactions = transactionData.filter((tx: BurnTransaction) => {
-          try {
-            // Just validate that the value can be parsed - don't exclude zero values
-            BigInt(tx.value || '0');
-            return true; // Include all parseable transactions, including zero-value ones
-          } catch {
-            console.log('Invalid transaction value (unparseable):', tx.value);
-            return false; // Only exclude truly unparseable values
-          }
-        });
-        
-        console.log(`✅ Loaded ${validTransactions.length} valid transactions (filtered out ${transactionData.length - validTransactions.length} zero/invalid value transactions)`);
-        console.log(`📊 Data source: ${data.burns ? 'historical API' : 'fallback burns API'}`);
-        setAllTransactions(validTransactions);
-        
-        if (validTransactions.length === 0) {
-          console.warn('⚠️ No valid transactions after filtering!');
-        }
-      } else {
-        // Historical data not available yet - fallback to regular burns API
-        console.log('📋 Historical data empty, falling back to regular burns API...');
-        
-        const fallbackResponse = await fetch('/api/burns', {
+      // Optionally try to enhance with historical data, but recent data is primary
+      try {
+        console.log('📚 Attempting to enhance with historical data...');
+        const historicalResponse = await fetch(`/api/historical/dataset?limit=10000&address=all`, {
           cache: 'no-cache',
           method: 'GET',
           headers: {
@@ -187,31 +138,45 @@ export default function BurnHistoryPage() {
           },
         });
         
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          console.log('📋 Fallback API response keys:', Object.keys(fallbackData));
-          console.log('📋 Fallback transactions count:', fallbackData.transactions?.length || 0);
+        if (historicalResponse.ok) {
+          const historicalData = await historicalResponse.json();
+          const historicalTransactions = historicalData.burns || historicalData.transactions || [];
+          console.log(`📚 Got ${historicalTransactions.length} historical transactions`);
           
-          if (fallbackData.transactions && Array.isArray(fallbackData.transactions)) {
-            const validTransactions = fallbackData.transactions.filter((tx: BurnTransaction) => {
-              try {
-                const bigIntValue = BigInt(tx.value || '0');
-                return bigIntValue > BigInt(0);
-              } catch {
-                return false;
-              }
-            });
-            
-            console.log(`✅ Loaded ${validTransactions.length} transactions from fallback burns API (${fallbackData.transactions.length} raw)`);
-            setAllTransactions(validTransactions);
-          } else {
-            console.error('⚠️ No transactions in fallback API response');
-            setAllTransactions([]);
-          }
-        } else {
-          console.error('⚠️ Fallback API request failed with status:', fallbackResponse.status);
-          setAllTransactions([]);
+          // Merge recent and historical data, removing duplicates by hash
+          const recentHashes = new Set(allTransactions.map((tx: BurnTransaction) => tx.hash));
+          const uniqueHistorical = historicalTransactions.filter((tx: BurnTransaction) => !recentHashes.has(tx.hash));
+          
+          allTransactions = [...allTransactions, ...uniqueHistorical];
+          console.log(`🔥 Total after merge: ${allTransactions.length} transactions (${recentData.transactions?.length || 0} recent + ${uniqueHistorical.length} unique historical)`);
         }
+      } catch (historicalError) {
+        console.warn('📚 Historical data enhancement failed, using recent data only:', historicalError);
+      }
+      
+      // Sort by timestamp descending (most recent first) - SAME as homepage/burn-tracker
+      const sortedTransactions = allTransactions.sort((a: BurnTransaction, b: BurnTransaction) => {
+        const timeA = parseInt(a.timeStamp) || 0;
+        const timeB = parseInt(b.timeStamp) || 0;
+        return timeB - timeA; // Descending order (newest first)
+      });
+      
+      // Validate transactions (same validation as other pages)
+      const validTransactions = sortedTransactions.filter((tx: BurnTransaction) => {
+        try {
+          BigInt(tx.value || '0');
+          return true;
+        } catch {
+          console.log('Invalid transaction value:', tx.value);
+          return false;
+        }
+      });
+      
+      console.log(`✅ CONSISTENCY FIXED: Using ${validTransactions.length} transactions (same data source as homepage/burn-tracker)`);
+      setAllTransactions(validTransactions);
+      
+      if (validTransactions.length === 0) {
+        console.warn('⚠️ No valid transactions after filtering - this should not happen with recent burns API!');
       }
       
       setLastUpdated(new Date());
@@ -280,12 +245,14 @@ export default function BurnHistoryPage() {
     fetchBurnHistory();
   }, [fetchBurnHistory]);
 
-  // Auto-refresh every 10 minutes to keep historical data current
+  // Auto-refresh every 60 seconds to keep data in sync with homepage/burn-tracker
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('🔄 Auto-refreshing historical data...');
-      fetchBurnHistory();
-    }, 10 * 60 * 1000);
+      if (!document.hidden) {
+        console.log('🔄 Auto-refreshing burn history for consistency with other pages...');
+        fetchBurnHistory();
+      }
+    }, 60 * 1000); // 60 seconds to match burn tracker frequency
     
     return () => clearInterval(interval);
   }, [fetchBurnHistory]);
@@ -379,7 +346,7 @@ export default function BurnHistoryPage() {
               </p>
             </div>
             <button
-              onClick={fetchBurnHistory}
+              onClick={() => fetchBurnHistory(true)} // Force fresh data on manual refresh
               disabled={loading}
               className="flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
             >
