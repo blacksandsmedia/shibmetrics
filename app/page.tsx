@@ -341,7 +341,7 @@ export default async function Home() {
             title="24H Burn Activity"
             value={`${formatBurnedAmountDetailed(twentyFourHourBurnAmount)} SHIB`}
             change={dayOverDayText}
-            icon={TrendingDown}
+            icon={dayOverDayChange > 0 ? TrendingUp : dayOverDayChange < 0 ? TrendingDown : Flame}
             changeType={dayOverDayChange > 0 ? "positive" : dayOverDayChange < 0 ? "negative" : "neutral"}
           />
  
