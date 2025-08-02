@@ -345,14 +345,7 @@ export default function BurnHistoryPage() {
                 Complete history of all Shiba Inu token burn transactions
               </p>
             </div>
-            <button
-              onClick={() => fetchBurnHistory(true)} // Force fresh data on manual refresh
-              disabled={loading}
-              className="flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
+
           </div>
           
           <div className="mt-4 flex items-center text-sm text-gray-400">
