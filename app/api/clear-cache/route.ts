@@ -8,11 +8,13 @@ export async function POST() {
     
     // List of potential cache files to clear
     const cacheFiles = [
-      '/tmp/burn-cache.json',
-      '/tmp/price-cache.json', 
-      '/tmp/total-burned-cache.json',
-      '/tmp/burns-cache.json',
-      '/tmp/historical-burns.json'
+      '/tmp/shibmetrics-burn-cache.json',      // Main burn cache
+      '/tmp/shibmetrics-price-cache.json',     // Price cache
+      '/tmp/shibmetrics-total-burned-cache.json', // Total burned cache
+      '/tmp/shibmetrics-cache/burns.json',     // Shared burns cache
+      '/tmp/shibmetrics-cache/price.json',     // Shared price cache
+      '/tmp/shibmetrics-cache/total-burned.json', // Shared total burned
+      '/tmp/historical-burns.json'             // Historical cache
     ];
     
     let clearedCount = 0;

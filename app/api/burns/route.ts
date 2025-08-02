@@ -160,6 +160,31 @@ export async function GET(request: Request) {
       // Load existing cache first - ALWAYS prioritize instant response
   const burnCache = loadBurnCache();
   
+  // Check if cache has invalid future timestamps - force refresh if so
+  if (burnCache && burnCache.transactions.length > 0) {
+    const firstTx = burnCache.transactions[0];
+    const currentTime = Math.floor(Date.now() / 1000);
+    const txTime = parseInt(firstTx.timeStamp);
+    
+    if (txTime > currentTime + (24 * 60 * 60)) { // If more than 1 day in future
+      console.log(`🚨 STALE CACHE DETECTED: Transaction timestamp ${txTime} is in the future (current: ${currentTime}), clearing cache...`);
+      
+      // Clear the actual cache files
+      try {
+        const fs = require('fs');
+        const path = '/tmp/shibmetrics-burn-cache.json';
+        if (fs.existsSync(path)) {
+          fs.unlinkSync(path);
+          console.log('🗑️ Cleared stale burn cache file');
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not clear cache file:', e);
+      }
+      
+      burnCache = null; // Force refresh
+    }
+  }
+  
   // If we have cache and it's not a force refresh, return immediately
   if (burnCache && burnCache.transactions.length > 1 && !forceRefresh) {
       console.log(`⚡ INSTANT: Serving ${burnCache.transactions.length} transactions from cache (age: ${Math.round((Date.now() - burnCache.lastUpdated) / 1000)}s)`);
