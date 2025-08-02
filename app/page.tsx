@@ -278,6 +278,9 @@ export default function Home() {
     cached: true
   });
   
+  // Loading state to prevent showing misleading "0.00" values
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
   const [isLive, setIsLive] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isUpdating, setIsUpdating] = useState(false);
@@ -368,6 +371,7 @@ export default function Home() {
         setLastUpdate(new Date());
         
         if (!isLive) setIsLive(true);
+        if (isInitialLoad) setIsInitialLoad(false); // Mark initial load complete
         
         console.log(`💰 ATOMIC UPDATE COMPLETE - Price: $${newPriceData.price}, MarketCap: $${(newPriceData.marketCap / 1e9).toFixed(2)}B, CircSupply: ${(newPriceData.circulatingSupply / 1e12).toFixed(0)}T, Burns: ${newBurnsData.transactions.length} transactions`);
         
@@ -571,6 +575,7 @@ export default function Home() {
             change={dayOverDayText}
             icon={dayOverDayChange > 0 ? TrendingUp : dayOverDayChange < 0 ? TrendingDown : Flame}
             changeType={dayOverDayChange > 0 ? "positive" : dayOverDayChange < 0 ? "negative" : "neutral"}
+            loading={isInitialLoad}
           />
  
            {/* SHIB Price - ALWAYS available now */}
@@ -598,6 +603,7 @@ export default function Home() {
              change="Most recent activity"
              icon={Clock}
              changeType="neutral"
+             loading={isInitialLoad}
            />
  
            {/* Burn Rate - ALWAYS available now */}
@@ -607,6 +613,7 @@ export default function Home() {
              change={`${formatBurnedAmount(twentyFourHourBurnAmount)} SHIB in past day`}
              icon={Flame}
              changeType="neutral"
+             loading={isInitialLoad}
            />
  
            {/* Market Cap - ALWAYS available now */}

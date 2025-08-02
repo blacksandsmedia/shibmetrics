@@ -22,19 +22,33 @@ export default function BurnTrackerPage() {
   // Show latest 25 burns only
   const latestBurns = filteredBurns.slice(0, 25);
 
-  // Initialize with immediate data fetch
+  // Initialize with immediate data fetch and setup auto-refresh
   useEffect(() => {
     console.log('🔥 Burn Tracker: Component mounted, fetching initial data...');
     // Start fetching data immediately
     fetchAllBurns();
+    
+    // Set up automatic refresh every 60 seconds (slightly longer than homepage)
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        console.log('🔥 Auto-refresh: Fetching fresh burn data...');
+        fetchAllBurns(false); // Regular refresh, not forced
+      }
+    }, 60000); // 60 seconds
+    
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchAllBurns = async () => {
+  const fetchAllBurns = async (forceFresh: boolean = false) => {
     setLoading(true);
-    console.log('🔥 Burn Tracker: Starting to fetch burns from API...');
+    console.log(`🔥 Burn Tracker: Starting to fetch burns from API (forceFresh=${forceFresh})...`);
     try {
-      // Fetch from our internal API endpoint instead of direct Etherscan calls
-      const response = await fetch('/api/burns');
+      // Fetch from our internal API endpoint with cache-busting when needed
+      const cacheParam = forceFresh ? '?force=true' : '';
+      const response = await fetch(`/api/burns${cacheParam}`, {
+        cache: 'no-cache',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
@@ -141,7 +155,7 @@ export default function BurnTrackerPage() {
               </p>
             </div>
             <button
-              onClick={fetchAllBurns}
+              onClick={() => fetchAllBurns(true)} // Force fresh data on manual refresh
               disabled={loading}
               className="flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
             >
