@@ -33,6 +33,8 @@ interface ShibPriceData {
   price: number;
   priceChange24h: number;
   marketCap: number;
+  circulatingSupply: number;
+  totalSupply: number;
   source?: string;
   cached?: boolean;
 }
@@ -85,6 +87,11 @@ function formatBurnedAmountDetailed(amount: number): string {
   return amount.toFixed(4);
 }
 
+function formatSupplyNumber(supply: number): string {
+  // Format supply numbers with full precision and commas (no rounding)
+  return Math.floor(supply).toLocaleString('en-US');
+}
+
 // Client-side data fetching functions with bulletproof fallbacks
 async function fetchShibPrice(): Promise<ShibPriceData> {
   // Try live API first
@@ -110,6 +117,8 @@ async function fetchShibPrice(): Promise<ShibPriceData> {
     price: 0.00000800, // Reasonable SHIB price
     priceChange24h: 0.00,
     marketCap: 4700000000, // Reasonable SHIB market cap (~4.7B)
+    circulatingSupply: 589247070164338, // Reasonable circulating supply
+    totalSupply: 1000000000000000, // Total supply: 1 quadrillion
     source: 'emergency_fallback',
     cached: true
   };
@@ -251,6 +260,8 @@ export default function Home() {
     price: 0.00000800,
     priceChange24h: 0.00,
     marketCap: 4700000000, // Reasonable SHIB market cap (~4.7B)
+    circulatingSupply: 589247070164338, // Reasonable circulating supply
+    totalSupply: 1000000000000000, // Total supply: 1 quadrillion
     source: 'loading',
     cached: true
   });
@@ -315,7 +326,11 @@ export default function Home() {
                               typeof newPriceData.price === 'number' && 
                               newPriceData.price > 0 &&
                               typeof newPriceData.marketCap === 'number' &&
-                              newPriceData.marketCap > 0;
+                              newPriceData.marketCap > 0 &&
+                              typeof newPriceData.circulatingSupply === 'number' &&
+                              newPriceData.circulatingSupply > 0 &&
+                              typeof newPriceData.totalSupply === 'number' &&
+                              newPriceData.totalSupply > 0;
       
       const isTotalBurnedDataValid = newTotalBurnedData && 
                                     typeof newTotalBurnedData.totalBurned === 'number' &&
@@ -579,7 +594,7 @@ export default function Home() {
            <StatCard
              title="Burn Rate"
              value={`${formatBurnedAmount(burnRate)} SHIB/hr`}
-             change={`${formatBurnedAmount(twentyFourHourBurnAmount)} SHIB/day`}
+             change={`${formatBurnedAmount(twentyFourHourBurnAmount)} SHIB in past day`}
              icon={Flame}
              changeType="neutral"
            />
@@ -590,6 +605,24 @@ export default function Home() {
              value={`$${formatMarketCap(marketCap)}B`}
              change="Current valuation"
              icon={TrendingUp}
+             changeType="neutral"
+           />
+
+           {/* Circulating Supply - NEW */}
+           <StatCard
+             title="Circulating Supply"
+             value={`${formatSupplyNumber(priceData.circulatingSupply)} SHIB`}
+             change="Currently in circulation"
+             icon={TrendingUp}
+             changeType="neutral"
+           />
+
+           {/* Total Supply - NEW */}
+           <StatCard
+             title="Total Supply"
+             value={`${formatSupplyNumber(priceData.totalSupply)} SHIB`}
+             change="Maximum ever created"
+             icon={Flame}
              changeType="neutral"
            />
         </div>
