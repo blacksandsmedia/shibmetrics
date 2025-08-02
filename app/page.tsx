@@ -1,8 +1,6 @@
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
-import RefreshButton from '../components/RefreshButton';
-import { formatTimeAgo } from '../lib/api';
 import Link from 'next/link';
 import RealTimeUpdater from '../components/RealTimeUpdater';
 
@@ -264,10 +262,6 @@ export default async function Home() {
           <p className="text-xl text-gray-300 mb-4">
             Track SHIBA INU token burns in real-time. Monitor burn transactions, rates, and supply reduction.
           </p>
-          
-          <div className="flex items-center justify-center space-x-4">
-            <RefreshButton />
-          </div>
         </div>
 
         {/* Stats Grid */}
