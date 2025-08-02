@@ -1,23 +1,19 @@
-'use client';
-
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
 import RefreshButton from '../components/RefreshButton';
 import { formatTimeAgo } from '../lib/api';
 import Link from 'next/link';
+import RealTimeUpdater from '../components/RealTimeUpdater';
 
 /*
- * ⚡ ATOMIC DATA UPDATES SYSTEM ⚡
+ * ⚡ INSTANT LOADING with Server-Side Rendering + Real-time Updates!
  * 
- * This homepage uses ATOMIC UPDATES to prevent data inconsistency:
- * - ALL data (price, burns, stats) is validated BEFORE any UI updates
- * - If ANY data fails validation, NO data is updated (keeps old consistent data)  
- * - Users NEVER see mixed old/new data or missing transactions during updates
- * - Loading indicators show when atomic updates are in progress
+ * This homepage uses a hybrid approach:
+ * 1. SERVER-SIDE: Fetches cached data instantly for immediate display
+ * 2. CLIENT-SIDE: Enhances with real-time updates using RealTimeUpdater component
  * 
- * This ensures users always see complete, consistent data - never partial updates!
+ * Result: Users see data INSTANTLY, then it updates in real-time!
  */
 
 interface BurnTransaction {
@@ -35,20 +31,20 @@ interface ShibPriceData {
   marketCap: number;
   circulatingSupply: number;
   totalSupply: number;
-  source?: string;
-  cached?: boolean;
+  source: string;
+  cached: boolean;
 }
 
 interface TotalBurnedData {
   totalBurned: number;
-  source?: string;
-  cached?: boolean;
+  source: string;
+  cached: boolean;
 }
 
 interface BurnsData {
   transactions: BurnTransaction[];
-  cached?: boolean;
-  source?: string;
+  source: string;
+  cached: boolean;
 }
 
 // Format large numbers for display
@@ -61,12 +57,10 @@ function formatNumber(num: number): string {
 }
 
 function formatBurnedAmount(amount: number): string {
-  // API already returns SHIB amounts, just format them
   return formatNumber(amount);
 }
 
 function formatBurnedAmountHighPrecision(amount: number): string {
-  // High precision formatting for burnt from initial supply with 5 decimal places
   if (amount >= 1e12) return (amount / 1e12).toFixed(5) + 'T';
   if (amount >= 1e9) return (amount / 1e9).toFixed(5) + 'B';
   if (amount >= 1e6) return (amount / 1e6).toFixed(5) + 'M';
@@ -79,7 +73,6 @@ function formatMarketCap(marketCap: number): string {
 }
 
 function formatBurnedAmountDetailed(amount: number): string {
-  // More detailed formatting for 24H burn activity with extra decimal places
   if (amount >= 1e12) return (amount / 1e12).toFixed(4) + 'T';
   if (amount >= 1e9) return (amount / 1e9).toFixed(4) + 'B';
   if (amount >= 1e6) return (amount / 1e6).toFixed(4) + 'M';
@@ -88,157 +81,83 @@ function formatBurnedAmountDetailed(amount: number): string {
 }
 
 function formatSupplyNumber(supply: number): string {
-  // Format supply numbers with full precision and commas (no rounding)
   return Math.floor(supply).toLocaleString('en-US');
 }
 
-// Client-side data fetching functions with bulletproof fallbacks
-async function fetchShibPrice(): Promise<ShibPriceData> {
-  // Try live API first
+// Server-side data fetching functions for instant loading
+async function fetchShibPriceSSR(): Promise<ShibPriceData> {
   try {
-    const response = await fetch('/api/price', {
-      cache: 'no-cache' // Always get fresh data for real-time updates
+    const baseUrl = process.env.NETLIFY_URL || 'https://shibmetrics.com';
+    const response = await fetch(`${baseUrl}/api/price`, {
+      next: { revalidate: 30 } // Cache for 30 seconds
     });
     
     if (response.ok) {
       const data = await response.json();
       if (!data.error && data.price) {
-        console.log('💰 Price fetched from live API');
+        console.log('💰 Price fetched from SSR cache');
         return data;
       }
     }
   } catch (error) {
-    console.warn('⚠️ Live price API failed:', error);
+    console.warn('⚠️ SSR price API failed:', error);
   }
 
-  // Emergency fallback - reasonable SHIB price data
-  console.log('🛡️ Using emergency fallback price data');
+  // Fallback
   return {
-    price: 0.00000800, // Reasonable SHIB price
+    price: 0.00000800,
     priceChange24h: 0.00,
-    marketCap: 4700000000, // Reasonable SHIB market cap (~4.7B)
-    circulatingSupply: 589247070164338, // Reasonable circulating supply
-    totalSupply: 1000000000000000, // Total supply: 1 quadrillion
-    source: 'emergency_fallback',
+    marketCap: 4700000000,
+    circulatingSupply: 589247070164338,
+    totalSupply: 1000000000000000,
+    source: 'ssr_fallback',
     cached: true
   };
 }
 
-async function fetchTotalBurned(): Promise<TotalBurnedData> {
-  // Try live API first
+async function fetchTotalBurnedSSR(): Promise<TotalBurnedData> {
   try {
-    const response = await fetch('/api/total-burned', {
-      cache: 'no-cache' // Always get fresh data for real-time updates
+    const baseUrl = process.env.NETLIFY_URL || 'https://shibmetrics.com';
+    const response = await fetch(`${baseUrl}/api/total-burned`, {
+      next: { revalidate: 60 } // Cache for 60 seconds
     });
     
     if (response.ok) {
       const data = await response.json();
       if (!data.error && data.totalBurned) {
-        console.log('🔥 Total burned fetched from live API');
+        console.log('🔥 Total burned fetched from SSR cache');
         return data;
       }
     }
   } catch (error) {
-    console.warn('⚠️ Live total burned API failed:', error);
+    console.warn('⚠️ SSR total burned API failed:', error);
   }
 
-  // Try historical data fallback
-  try {
-    const historicalResponse = await fetch('/api/historical/burns?limit=1000', {
-      cache: 'no-cache'
-    });
-    
-    if (historicalResponse.ok) {
-      const historicalData = await historicalResponse.json();
-      if (historicalData.burns && Array.isArray(historicalData.burns)) {
-        // Calculate total from historical data
-        const totalBurned = historicalData.burns.reduce((sum: number, tx: BurnTransaction) => {
-          try {
-            return sum + (parseFloat(tx.value) / Math.pow(10, 18));
-          } catch {
-            return sum;
-          }
-        }, 0);
-        
-        if (totalBurned > 0) {
-          console.log('🛡️ Total burned calculated from historical data:', totalBurned);
-          return {
-            totalBurned,
-            source: 'historical_fallback',
-            cached: true
-          };
-        }
-      }
-    }
-  } catch (error) {
-    console.warn('⚠️ Historical data fallback failed:', error);
-  }
-
-  // Emergency fallback - conservative estimate
-  console.log('🛡️ Using emergency fallback total burned data');
   return {
-    totalBurned: 410752070164338, // Updated to match shibburn.com exactly
-    source: 'emergency_fallback',
+    totalBurned: 410752070164338,
+    source: 'ssr_fallback',
     cached: true
   };
 }
 
-async function fetchBurns(): Promise<BurnsData> {
-  // Try live API first - client-side fetch
+async function fetchBurnsSSR(): Promise<BurnsData> {
   try {
-    console.log('🔥 Homepage: Fetching burns from: /api/burns');
-    
-    const response = await fetch('/api/burns', {
-      cache: 'no-cache' // Always get fresh data for real-time updates
+    const baseUrl = process.env.NETLIFY_URL || 'https://shibmetrics.com';
+    const response = await fetch(`${baseUrl}/api/burns`, {
+      next: { revalidate: 30 } // Cache for 30 seconds
     });
-    
-    console.log('🔥 Homepage: Burns API response status:', response.status);
     
     if (response.ok) {
       const data = await response.json();
-      console.log('🔥 Homepage: Raw API response:', {
-        hasError: !!data.error,
-        hasTransactions: !!data.transactions,
-        count: data.transactions?.length || 0,
-        source: data.source
-      });
-      
-      if (!data.error && data.transactions && Array.isArray(data.transactions) && data.transactions.length > 0) {
-        console.log('🔥 Homepage: Burns API data loaded successfully - returning real data');
+      if (!data.error && data.transactions && Array.isArray(data.transactions)) {
+        console.log('🔥 Burns fetched from SSR cache');
         return data;
-      } else {
-        console.warn('🔥 Homepage: API returned invalid data:', data);
       }
     }
   } catch (error) {
-    console.warn('⚠️ Live burns API failed:', error);
+    console.warn('⚠️ SSR burns API failed:', error);
   }
 
-  // Try complete 5-year historical data fallback (Netlify Blobs)
-  try {
-    console.log('🛡️ Trying 5-year historical dataset fallback...');
-    const historicalResponse = await fetch('/api/historical/dataset?limit=100', {
-      cache: 'no-cache'
-    });
-    
-    if (historicalResponse.ok) {
-      const historicalData = await historicalResponse.json();
-      if (historicalData.transactions && Array.isArray(historicalData.transactions) && historicalData.transactions.length > 0) {
-        console.log('🛡️ Using 5-year historical dataset:', historicalData.transactions.length, 'transactions');
-        console.log(`🛡️ Dataset info: ${historicalData.summary?.years_of_data || 'N/A'} years, ${historicalData.metadata?.totalDatasizeTransactions || 'N/A'} total burns`);
-        return {
-          transactions: historicalData.transactions,
-          source: '5year_historical_dataset',
-          cached: true
-        };
-      }
-    }
-  } catch (error) {
-    console.warn('⚠️ 5-year historical dataset fallback failed:', error);
-  }
-
-  // Emergency fallback - show a single placeholder transaction to prevent errors
-  console.log('🛡️ Using emergency fallback burn data');
   return {
     transactions: [{
       hash: '0x0000000000000000000000000000000000000000000000000000000000000000',
@@ -248,234 +167,48 @@ async function fetchBurns(): Promise<BurnsData> {
       timeStamp: String(Math.floor(Date.now() / 1000) - 3600), // 1 hour ago
       blockNumber: '0'
     }],
-    source: 'emergency_fallback',
+    source: 'ssr_fallback',
     cached: true
   };
 }
 
-// Real-time client component with live updates!
-export default function Home() {
-  // State management for real-time data
-  const [priceData, setPriceData] = useState<ShibPriceData>({
-    price: 0.00000800,
-    priceChange24h: 0.00,
-    marketCap: 4700000000, // Reasonable SHIB market cap (~4.7B)
-    circulatingSupply: 589247070164338, // Reasonable circulating supply
-    totalSupply: 1000000000000000, // Total supply: 1 quadrillion
-    source: 'loading',
-    cached: true
+// ⚡ INSTANT LOADING with Server-Side Rendering + Real-time Updates!
+export default async function Home() {
+  // ⚡ INSTANT SERVER-SIDE DATA FETCHING - No loading delays!
+  console.log('🚀 SSR: Fetching data instantly with cached content...');
+  
+  const [priceData, totalBurnedData, burnsData] = await Promise.all([
+    fetchShibPriceSSR(),
+    fetchTotalBurnedSSR(), 
+    fetchBurnsSSR()
+  ]);
+  
+  console.log('🚀 SSR: All data fetched instantly!', {
+    priceSource: priceData.source,
+    totalBurnedSource: totalBurnedData.source,
+    burnsSource: burnsData.source,
+    burnsCount: burnsData.transactions.length
   });
   
-  const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>({
-    totalBurned: 410752070164338,
-    source: 'loading',
-    cached: true
-  });
-  
-  const [burnsData, setBurnsData] = useState<BurnsData>({
-    transactions: [],
-    source: 'loading',
-    cached: true
-  });
-  
-  // Loading state to prevent showing misleading "0.00" values
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  
-  const [isLive, setIsLive] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [pageWasHidden, setPageWasHidden] = useState(false);
-  
-  // Fetch fresh data with cache-busting for critical updates
-  const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
-    const timestamp = Date.now();
-    const priceCacheParam = forceFresh ? `?_t=${timestamp}` : '';
-    const burnsCacheParam = forceFresh ? '?force=true' : '';
-    
-    console.log(`🔄 fetchFreshData: forceFresh=${forceFresh}, using cache-busting=${forceFresh ? 'YES' : 'NO'}`);
-    
-    try {
-      const [newPriceData, newTotalBurnedData, newBurnsData] = await Promise.all([
-        fetch(`/api/price${priceCacheParam}`, { 
-          cache: 'no-cache',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-        }).then(res => res.ok ? res.json() : fetchShibPrice()),
-        fetch(`/api/total-burned`, { 
-          cache: forceFresh ? 'no-cache' : 'default',
-          headers: forceFresh ? { 'Cache-Control': 'no-cache, no-store, must-revalidate' } : {}
-        }).then(res => res.ok ? res.json() : fetchTotalBurned()),
-        fetch(`/api/burns${burnsCacheParam}`, { 
-          cache: 'no-cache',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-        }).then(res => res.ok ? res.json() : fetchBurns())
-      ]);
-      
-      return { newPriceData, newTotalBurnedData, newBurnsData };
-    } catch (error) {
-      console.error('Fresh data fetch failed, using fallback:', error);
-      // Fallback to original functions
-      return {
-        newPriceData: await fetchShibPrice(),
-        newTotalBurnedData: await fetchTotalBurned(), 
-        newBurnsData: await fetchBurns()
-      };
-    }
-  }, []);
-  
-  // Main data fetching function with ATOMIC UPDATES - prevents data inconsistency
-  const fetchAllData = useCallback(async (showLoading: boolean = false, forceFresh: boolean = false) => {
-    console.log(`📡 fetchAllData called: showLoading=${showLoading}, forceFresh=${forceFresh}`);
-    if (showLoading) setIsUpdating(true);
-    
-    try {
-      const { newPriceData, newTotalBurnedData, newBurnsData } = await fetchFreshData(forceFresh);
-      console.log('📊 Raw API responses:', { newPriceData, newTotalBurnedData, newBurnsData });
-      
-      // ⚡ CRITICAL: Validate ALL data BEFORE updating ANY state
-      // This prevents users from seeing inconsistent/mixed old+new data
-      
-      const isPriceDataValid = newPriceData && 
-                              typeof newPriceData.price === 'number' && 
-                              newPriceData.price > 0 &&
-                              typeof newPriceData.marketCap === 'number' &&
-                              newPriceData.marketCap > 0 &&
-                              typeof newPriceData.circulatingSupply === 'number' &&
-                              newPriceData.circulatingSupply > 0 &&
-                              typeof newPriceData.totalSupply === 'number' &&
-                              newPriceData.totalSupply > 0;
-      
-      const isTotalBurnedDataValid = newTotalBurnedData && 
-                                    typeof newTotalBurnedData.totalBurned === 'number' &&
-                                    newTotalBurnedData.totalBurned > 0;
-      
-      const isBurnsDataValid = newBurnsData && 
-                              Array.isArray(newBurnsData.transactions);
-                              // Note: Allow empty arrays - valid during quiet periods
-      
-      // Log validation results
-      console.log('🔍 Data validation:', {
-        price: isPriceDataValid,
-        totalBurned: isTotalBurnedDataValid,
-        burns: isBurnsDataValid
-      });
-      
-      // ⚡ ATOMIC UPDATE: Only update state if ALL data is valid
-      // This ensures users never see partial/inconsistent data
-      if (isPriceDataValid && isTotalBurnedDataValid && isBurnsDataValid) {
-        console.log('✅ All data valid - performing atomic update');
-        
-        // Update all state atomically
-        setPriceData(newPriceData);
-        setTotalBurnedData(newTotalBurnedData);
-        setBurnsData(newBurnsData);
-        setLastUpdate(new Date());
-        
-        if (!isLive) setIsLive(true);
-        if (isInitialLoad) setIsInitialLoad(false); // Mark initial load complete
-        
-        console.log(`💰 ATOMIC UPDATE COMPLETE - Price: $${newPriceData.price}, MarketCap: $${(newPriceData.marketCap / 1e9).toFixed(2)}B, CircSupply: ${(newPriceData.circulatingSupply / 1e12).toFixed(0)}T, Burns: ${newBurnsData.transactions.length} transactions`);
-        
-      } else {
-        // If ANY data is invalid, keep ALL old data (prevents inconsistency)
-        console.warn('❌ ATOMIC UPDATE REJECTED - keeping existing data to prevent inconsistency');
-        console.warn('Failed validations:', {
-          priceData: isPriceDataValid ? 'OK' : `FAIL - price: ${newPriceData?.price}, marketCap: ${newPriceData?.marketCap}, circSupply: ${newPriceData?.circulatingSupply}, totalSupply: ${newPriceData?.totalSupply}`,
-          totalBurnedData: isTotalBurnedDataValid ? 'OK' : `FAIL - totalBurned: ${newTotalBurnedData?.totalBurned}`,
-          burnsData: isBurnsDataValid ? 'OK' : `FAIL - transactions: ${newBurnsData?.transactions?.length || 'undefined'}, isArray: ${Array.isArray(newBurnsData?.transactions)}`
-        });
-      }
-      
-    } catch (error) {
-      console.error('💥 Error fetching data - keeping existing data:', error);
-      // On error, existing state is preserved (no inconsistent data shown)
-    } finally {
-      if (showLoading) setIsUpdating(false);
-    }
-  }, [isLive, fetchFreshData]);
-
-  // Manual refresh handler for RefreshButton
-  const handleManualRefresh = useCallback(async () => {
-    console.log('🔄 Manual refresh triggered - forcing fresh data');
-    await fetchAllData(true, true); // Force fresh data with loading indicator
-  }, [fetchAllData]);
-
-  // Initial data load and real-time polling setup
-  useEffect(() => {
-    console.log('🔄 Starting real-time updates system with ATOMIC UPDATES...');
-    // Load data immediately on mount with AGGRESSIVE fresh data fetch
-    console.log('🚀 Initial load: forcing fresh data on page mount...');
-    fetchAllData(true, true); // Force fresh data on initial load
-    
-    // Set up polling for real-time updates (every 45 seconds)
-    console.log('⏰ Setting up 45-second polling interval with atomic updates...');
-    const interval = setInterval(() => {
-      // Only poll if page is visible
-      if (!document.hidden) {
-        console.log('🔔 45-second timer: fetching fresh data with atomic validation...');
-        fetchAllData(false, false);
-      } else {
-        console.log('👁️ Page hidden, skipping poll');
-      }
-    }, 45000);
-    
-    // Enhanced Page visibility change handler with better caching control
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Page became hidden - track this state
-        setPageWasHidden(true);
-        console.log('📱 Page hidden - pausing real-time updates');
-      } else {
-        // Page became visible
-        console.log('👁️ Page visible - resuming with fresh data');
-        
-        // If page was hidden, force fresh data to prevent stale pricing
-        if (pageWasHidden) {
-          console.log('🔄 Forcing fresh data after page was hidden');
-          fetchAllData(true, true); // Force fresh data with cache busting
-          setPageWasHidden(false);
-        } else {
-          // Normal visibility change, regular fetch
-          fetchAllData(false, false);
-        }
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Also listen for focus events as additional fallback
-    const handleFocus = () => {
-      if (pageWasHidden) {
-        console.log('🎯 Window focused after being hidden - forcing fresh data');
-        fetchAllData(true, true);
-        setPageWasHidden(false);
-      }
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [fetchAllData, pageWasHidden]);
-
-  // Calculate derived data - all data is ALWAYS available now due to bulletproof fallbacks
+  // Calculate all metrics from server-side data for instant display
   const burns = burnsData.transactions;
-  
-  // Calculate burns to display: either last 10 OR all burns in last 24 hours (whichever is greater)
+  const totalBurned = totalBurnedData.totalBurned;
+  const priceChange = priceData.priceChange24h;
+  const marketCap = priceData.marketCap;
+  const circulatingSupply = priceData.circulatingSupply;
+  const totalSupply = priceData.totalSupply;
   const now = Date.now();
   const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
   const fortyEightHoursAgo = now - (48 * 60 * 60 * 1000);
   
-  // Filter burns from last 24 hours
-  const last24HourBurns = burns.filter(tx => {
+  // Filter for actual 24H burn activity
+  const last24HourBurns = burns.filter((tx: BurnTransaction) => {
     const txTime = parseInt(tx.timeStamp) * 1000;
     return txTime >= twentyFourHoursAgo;
   });
   
-  // Filter burns from previous 24 hours (24-48 hours ago) for day-over-day comparison
-  const previous24HourBurns = burns.filter(tx => {
+  // Filter for previous 24H (24-48 hours ago) for comparison
+  const previous24HourBurns = burns.filter((tx: BurnTransaction) => {
     const txTime = parseInt(tx.timeStamp) * 1000;
     return txTime >= fortyEightHoursAgo && txTime < twentyFourHoursAgo;
   });
@@ -502,33 +235,25 @@ export default function Home() {
     // Format large percentage changes appropriately
     let formattedChange;
     if (Math.abs(dayOverDayChange) >= 1000) {
-      // For very large changes (1000%+), show no decimal places
       formattedChange = `${Math.round(dayOverDayChange).toLocaleString()}`;
     } else if (Math.abs(dayOverDayChange) >= 100) {
-      // For large changes (100-999%), show 1 decimal place
       formattedChange = dayOverDayChange.toFixed(1);
     } else {
-      // For smaller changes (<100%), show 1 decimal place
       formattedChange = dayOverDayChange.toFixed(1);
     }
     
     dayOverDayText = `${sign}${formattedChange}% vs yesterday`;
   } else if (twentyFourHourBurnAmount > 0) {
-    // If there were no burns yesterday but there are burns today, it's technically infinite increase
     dayOverDayText = '🚀 New activity today';
   }
   
   const burnRate = twentyFourHourBurnAmount / 24; // SHIB per hour
   const mostRecentBurn = burns[0];
+  const timeSinceLastBurn = mostRecentBurn ? formatTimeAgo(mostRecentBurn.timeStamp) : 'Unknown';
 
-  // Calculate proper time since last burn
-  const timeSinceLastBurn = mostRecentBurn ? 
-    formatTimeAgo(mostRecentBurn.timeStamp) : 'Unknown';
-
-  // Use market cap from CoinGecko API and calculate burn percentage - data is ALWAYS available now
-  const totalSupply = 1000000000000000; // Original total supply: 1 quadrillion SHIB
-  const marketCap = priceData.marketCap; // Market cap from CoinGecko API for accuracy
-  const burnPercentage = (totalBurnedData.totalBurned / totalSupply) * 100;
+  // Calculate burn percentage
+  const totalSupplyOriginal = 1000000000000000; // Original total supply: 1 quadrillion SHIB
+  const burnPercentage = (totalBurned / totalSupplyOriginal) * 100;
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -538,155 +263,74 @@ export default function Home() {
           <div className="flex items-center justify-center mb-4">
             <h1 className="text-4xl md:text-6xl font-bold text-white">🔥 SHIBMETRICS</h1>
             
-            {/* Live Status Indicator */}
-            {isLive && (
-              <div className="ml-4 flex items-center gap-2 bg-green-900/20 border border-green-500/30 rounded-full px-3 py-1">
-                <div className={`w-2 h-2 rounded-full ${isUpdating ? 'bg-orange-400 animate-pulse' : 'bg-green-400 animate-pulse'}`}></div>
-                <span className={`text-xs font-medium ${isUpdating ? 'text-orange-400' : 'text-green-400'}`}>
-                  {isUpdating ? 'UPDATING...' : 'LIVE'}
-                </span>
-              </div>
-            )}
-            
-            <RefreshButton onRefresh={handleManualRefresh} />
+            {/* Real-time updater component - handles live status */}
+            <RealTimeUpdater 
+              initialData={{ priceData, totalBurnedData, burnsData }}
+            />
           </div>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-2">
+          
+          <p className="text-xl text-gray-300 mb-4">
             Track SHIBA INU token burns in real-time. Monitor burn transactions, rates, and supply reduction.
           </p>
-          {isLive && (
-            <p className="text-sm text-gray-400 mb-4">
-              Auto-updates every 45 seconds • Last updated: {lastUpdate.toLocaleTimeString()}
-            </p>
-          )}
-          <div className="inline-flex items-center gap-2 bg-green-900/20 border border-green-500/30 rounded-full px-4 py-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-green-400 text-sm font-medium">
-              ✨ Always Ad-Free • No Annoying Popups • Clean Experience
-            </span>
+          
+          <div className="flex items-center justify-center space-x-4">
+            <RefreshButton />
           </div>
         </div>
 
-        {/* All Stats - Tight 2x3 Grid */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 transition-opacity duration-200 ${isUpdating ? 'opacity-90' : ''}`}>
-          {/* 24H Burn Activity - ALWAYS available now */}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <StatCard
+            title="SHIB Price"
+            value={`$${priceData.price?.toFixed(8) || '0.00000000'}`}
+            change={`${priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2) || '0.00'}%`}
+            icon={DollarSign}
+          />
+
           <StatCard
             title="24H Burn Activity"
-            value={`${formatBurnedAmountDetailed(twentyFourHourBurnAmount)} SHIB`}
+            value={formatBurnedAmountDetailed(twentyFourHourBurnAmount)}
             change={dayOverDayText}
             icon={dayOverDayChange > 0 ? TrendingUp : dayOverDayChange < 0 ? TrendingDown : Flame}
-            changeType={dayOverDayChange > 0 ? "positive" : dayOverDayChange < 0 ? "negative" : "neutral"}
-            loading={isInitialLoad}
           />
- 
-           {/* SHIB Price - ALWAYS available now */}
-           <StatCard
-             title="SHIB Price"
-             value={`$${priceData.price.toFixed(8)}`}
-             change={`${priceData.priceChange24h >= 0 ? '+' : ''}${priceData.priceChange24h.toFixed(2)}% (24h)`}
-             icon={DollarSign}
-             changeType={priceData.priceChange24h >= 0 ? "positive" : "negative"}
-           />
 
-           {/* Burnt from Initial Supply - NEW */}
-           <StatCard
-             title="Burnt from Initial Supply"
-             value={`${formatBurnedAmountHighPrecision(totalBurnedData.totalBurned)} SHIB`}
-             change={`${burnPercentage.toFixed(6)}% of 1Q initial supply`}
-             icon={Flame}
-             changeType="positive"
-           />
- 
-           {/* Last Burn - ALWAYS available now */}
-           <StatCard
-             title="Last Burn"
-             value={`${timeSinceLastBurn}`}
-             change="Most recent activity"
-             icon={Clock}
-             changeType="neutral"
-             loading={isInitialLoad}
-           />
- 
-           {/* Burn Rate - ALWAYS available now */}
-           <StatCard
-             title="Burn Rate"
-             value={`${formatBurnedAmount(burnRate)} SHIB/hr`}
-             change={`${formatBurnedAmount(twentyFourHourBurnAmount)} SHIB in past day`}
-             icon={Flame}
-             changeType="neutral"
-             loading={isInitialLoad}
-           />
- 
-           {/* Market Cap - ALWAYS available now */}
-           <StatCard
-             title="Market Cap"
-             value={`$${formatMarketCap(marketCap)}B`}
-             change="Current valuation"
-             icon={TrendingUp}
-             changeType="neutral"
-           />
+          <StatCard
+            title="Burnt from Initial Supply"
+            value={formatBurnedAmountHighPrecision(totalBurned)}
+            change={`${burnPercentage.toFixed(6)}% of total supply`}
+            icon={Flame}
+          />
 
-           {/* Circulating Supply - NEW */}
-           <StatCard
-             title="Circulating Supply"
-             value={`${formatSupplyNumber(priceData.circulatingSupply)} SHIB`}
-             change="Currently in circulation"
-             icon={TrendingUp}
-             changeType="neutral"
-           />
+          <StatCard
+            title="Market Cap"
+            value={`$${formatMarketCap(marketCap)}B`}
+            change="From CoinGecko"
+            icon={DollarSign}
+          />
 
-           {/* Total Supply - NEW */}
-           <StatCard
-             title="Total Supply"
-             value={`${formatSupplyNumber(priceData.totalSupply)} SHIB`}
-             change="Maximum ever created"
-             icon={Flame}
-             changeType="neutral"
-           />
-        </div>
+          <StatCard
+            title="Circulating Supply"
+            value={formatSupplyNumber(circulatingSupply)}
+            change="SHIB tokens"
+            icon={Clock}
+          />
 
-        {/* Burn Progress - ALWAYS available now */}
-        <div className="bg-gray-800 rounded-xl shadow-lg p-8 mb-12 border border-gray-700">
-          <h2 className="text-2xl font-bold text-white mb-8 text-center">🔥 Burn Progress</h2>
-          <div className="space-y-8">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-orange-400 mb-2">{burnPercentage.toFixed(4)}%</div>
-              <div className="text-gray-300 text-lg">of total supply permanently burned</div>
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-medium text-gray-300">Progress to Next Milestone</span>
-                <span className="text-lg text-orange-400 font-bold">{formatBurnedAmount(totalBurnedData.totalBurned)}T SHIB</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-6 shadow-inner">
-                <div 
-                  className="bg-gradient-to-r from-orange-500 to-red-500 h-6 rounded-full transition-all duration-1000 shadow-lg"
-                  style={{ width: `${Math.min(burnPercentage, 100)}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-sm text-gray-400 mt-2">
-                <span>0 SHIB</span>
-                <span>1 Quadrillion SHIB</span>
-              </div>
-            </div>
-          </div>
+          <StatCard
+            title="Total Supply"
+            value={formatSupplyNumber(totalSupply)}
+            change="SHIB tokens"
+            icon={Clock}
+          />
         </div>
 
         {/* Latest Burn Transactions */}
-        <div className={`bg-gray-800 rounded-lg border border-gray-700 relative ${isUpdating ? 'opacity-95' : ''}`}>
+        <div className="bg-gray-800 rounded-lg border border-gray-700">
           <div className="px-6 py-4 border-b border-gray-700">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">
-                {last24HourBurns.length > 10 
-                  ? `Recent Burn Transactions (${last24HourBurns.length} in last 24h)` 
-                  : 'Latest Burn Transactions (Last 10)'}
-              </h3>
-              {isUpdating && (
-                <div className="flex items-center gap-2 text-orange-400 text-xs">
-                  <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>
-                  <span>Refreshing...</span>
-                </div>
-              )}
-            </div>
+            <h3 className="text-lg font-semibold text-white">
+              {last24HourBurns.length > 10 
+                ? `Recent Burn Transactions (${last24HourBurns.length} in last 24h)` 
+                : 'Latest Burn Transactions (Last 10)'}
+            </h3>
           </div>
           <BurnTransactionTable transactions={burnsToShow} loading={false} />
         </div>
