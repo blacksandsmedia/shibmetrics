@@ -26,13 +26,11 @@ interface BurnTransaction {
   tokenDecimal: string;
 }
 
-// SHIB burn destination addresses (matches actual historical data)
+// SHIB burn destination addresses - ONLY the 3 official addresses (matches other pages)
 const BURN_DESTINATIONS = {
-  '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce': 'CA', // Community Address
-  '0xdead000000000000000042069420694206942069': 'BA-1', // Vitalik Burn Alt
-  '0x000000000000000000000000000000000000dead': 'BA-2', // Dead Address (actual data)
-  '0x0000000000000000000000000000000000000000': 'BA-3', // Null Address  
-  '0xd7b7df10cb1dc2d1d15e7d00bcb244a7cfac61cc': 'VB-Original', // Original Vitalik burn address
+  '0xdead000000000000000042069420694206942069': 'BA-1', // Vitalik Burn (BA-1)
+  '0x000000000000000000000000000000000000dead': 'BA-2', // Dead Address (BA-2)
+  '0x0000000000000000000000000000000000000000': 'BA-3', // Genesis/Black Hole (BA-3)
 };
 
 // Helper functions
@@ -101,15 +99,15 @@ export default function BurnHistoryPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
-  // Fetch comprehensive burn data - RECENT + HISTORICAL for complete consistency
+  // Fetch burn data - FAST single API call (same as burn tracker for consistency)
   const fetchBurnHistory = useCallback(async (forceFresh: boolean = false) => {
     setLoading(true);
     try {
-      console.log(`🔥 Fetching RECENT burn data for consistency with homepage/burn-tracker (forceFresh=${forceFresh})...`);
+      console.log(`🔥 Fetching burn data from same API as burn tracker (forceFresh=${forceFresh})...`);
       
-      // CRITICAL: Use the SAME API endpoint as homepage and burn tracker for consistency
+      // Use the SAME API endpoint as burn tracker for consistency and speed
       const cacheParam = forceFresh ? '?force=true' : '';
-      const recentResponse = await fetch(`/api/burns${cacheParam}`, {
+      const response = await fetch(`/api/burns${cacheParam}`, {
         cache: 'no-cache',
         method: 'GET',
         headers: {
@@ -117,51 +115,23 @@ export default function BurnHistoryPage() {
         },
       });
       
-      if (!recentResponse.ok) {
-        throw new Error(`Recent burns API failed: ${recentResponse.status} ${recentResponse.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Burns API failed: ${response.status} ${response.statusText}`);
       }
       
-      const recentData = await recentResponse.json();
-      console.log(`🔥 Got ${recentData.transactions?.length || 0} RECENT transactions from same API as homepage`);
+      const data = await response.json();
+      console.log(`🔥 Got ${data.transactions?.length || 0} transactions from burns API`);
       
-      // Use recent data as primary source (same as homepage/burn-tracker)
-      let allTransactions = recentData.transactions || [];
+      const transactions = data.transactions || [];
       
-      // Optionally try to enhance with historical data, but recent data is primary
-      try {
-        console.log('📚 Attempting to enhance with historical data...');
-        const historicalResponse = await fetch(`/api/historical/dataset?limit=10000&address=all`, {
-          cache: 'no-cache',
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (historicalResponse.ok) {
-          const historicalData = await historicalResponse.json();
-          const historicalTransactions = historicalData.burns || historicalData.transactions || [];
-          console.log(`📚 Got ${historicalTransactions.length} historical transactions`);
-          
-          // Merge recent and historical data, removing duplicates by hash
-          const recentHashes = new Set(allTransactions.map((tx: BurnTransaction) => tx.hash));
-          const uniqueHistorical = historicalTransactions.filter((tx: BurnTransaction) => !recentHashes.has(tx.hash));
-          
-          allTransactions = [...allTransactions, ...uniqueHistorical];
-          console.log(`🔥 Total after merge: ${allTransactions.length} transactions (${recentData.transactions?.length || 0} recent + ${uniqueHistorical.length} unique historical)`);
-        }
-      } catch (historicalError) {
-        console.warn('📚 Historical data enhancement failed, using recent data only:', historicalError);
-      }
-      
-      // Sort by timestamp descending (most recent first) - SAME as homepage/burn-tracker
-      const sortedTransactions = allTransactions.sort((a: BurnTransaction, b: BurnTransaction) => {
+      // Sort by timestamp descending (most recent first) - SAME as burn tracker
+      const sortedTransactions = transactions.sort((a: BurnTransaction, b: BurnTransaction) => {
         const timeA = parseInt(a.timeStamp) || 0;
         const timeB = parseInt(b.timeStamp) || 0;
         return timeB - timeA; // Descending order (newest first)
       });
       
-      // Validate transactions (same validation as other pages)
+      // Validate transactions (same validation as burn tracker)
       const validTransactions = sortedTransactions.filter((tx: BurnTransaction) => {
         try {
           BigInt(tx.value || '0');
@@ -172,24 +142,17 @@ export default function BurnHistoryPage() {
         }
       });
       
-      console.log(`✅ CONSISTENCY FIXED: Using ${validTransactions.length} transactions (same data source as homepage/burn-tracker)`);
+      console.log(`✅ FAST LOAD: Using ${validTransactions.length} transactions (same as burn tracker)`);
       setAllTransactions(validTransactions);
-      
-      if (validTransactions.length === 0) {
-        console.warn('⚠️ No valid transactions after filtering - this should not happen with recent burns API!');
-      }
-      
       setLastUpdated(new Date());
+      
     } catch (error) {
       console.error('❌ Error fetching burn history:', error);
-      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
-      // Set empty array but don't fail silently
       setAllTransactions([]);
     } finally {
-      console.log('🏁 Fetch completed, setting loading to false');
       setLoading(false);
     }
-  }, [selectedDestination]);
+  }, []);
 
 
 
@@ -245,11 +208,11 @@ export default function BurnHistoryPage() {
     fetchBurnHistory();
   }, [fetchBurnHistory]);
 
-  // Auto-refresh every 60 seconds to keep data in sync with homepage/burn-tracker
+  // Auto-refresh every 60 seconds to keep data in sync with burn tracker
   useEffect(() => {
     const interval = setInterval(() => {
       if (!document.hidden) {
-        console.log('🔄 Auto-refreshing burn history for consistency with other pages...');
+        console.log('🔄 Auto-refreshing burn history (same frequency as burn tracker)...');
         fetchBurnHistory();
       }
     }, 60 * 1000); // 60 seconds to match burn tracker frequency
@@ -375,10 +338,9 @@ export default function BurnHistoryPage() {
                   className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="all">All Destinations</option>
-                  <option value="0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce">Community Address (CA)</option>
-                  <option value="0xdead000000000000000042069420694206942069">Vitalik Burn Alt (BA-1)</option>
+                  <option value="0xdead000000000000000042069420694206942069">Vitalik Burn (BA-1)</option>
                   <option value="0x000000000000000000000000000000000000dead">Dead Address (BA-2)</option>
-                  <option value="0x0000000000000000000000000000000000000000">Null Address (BA-3)</option>
+                  <option value="0x0000000000000000000000000000000000000000">Genesis/Black Hole (BA-3)</option>
                 </select>
             </div>
             

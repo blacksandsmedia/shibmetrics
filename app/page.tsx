@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
@@ -5,13 +8,13 @@ import Link from 'next/link';
 import RealTimeUpdater from '../components/RealTimeUpdater';
 
 /*
- * ⚡ INSTANT LOADING with Server-Side Rendering + Real-time Updates!
+ * ⚡ FIXED: Real-time Updates + Fast Initial Loading!
  * 
- * This homepage uses a hybrid approach:
- * 1. SERVER-SIDE: Fetches cached data instantly for immediate display
- * 2. CLIENT-SIDE: Enhances with real-time updates using RealTimeUpdater component
+ * This homepage now properly connects RealTimeUpdater with onDataUpdate callback:
+ * 1. CLIENT-SIDE: Fetches cached data quickly on mount for fast display  
+ * 2. REAL-TIME: Updates every 45 seconds via RealTimeUpdater component
  * 
- * Result: Users see data INSTANTLY, then it updates in real-time!
+ * Result: Users see data quickly, then it updates every 45 seconds automatically!
  */
 
 interface BurnTransaction {
@@ -78,78 +81,69 @@ function formatSupplyNumber(supply: number): string {
   return Math.floor(supply).toLocaleString('en-US');
 }
 
-// Server-side data fetching functions for instant loading
-async function fetchShibPriceSSR(): Promise<ShibPriceData> {
+// Client-side data fetching functions for fast initial loading
+async function fetchShibPriceClient(): Promise<ShibPriceData> {
   try {
-    const baseUrl = process.env.NETLIFY_URL || 'https://shibmetrics.com';
-    const response = await fetch(`${baseUrl}/api/price`, {
-      next: { revalidate: 30 } // Cache for 30 seconds
-    });
+    const response = await fetch('/api/price', { cache: 'no-cache' });
     
     if (response.ok) {
       const data = await response.json();
       if (!data.error && data.price) {
-        console.log('💰 Price fetched from SSR cache');
+        console.log('💰 Price fetched from client');
         return data;
       }
     }
   } catch (error) {
-    console.warn('⚠️ SSR price API failed:', error);
+    console.warn('⚠️ Client price API failed:', error);
   }
 
   // Fallback
   return {
-    price: 0.00000800,
+    price: 0.00001200,
     priceChange24h: 0.00,
-    marketCap: 4700000000,
-    circulatingSupply: 589247070164338,
-    totalSupply: 1000000000000000,
-    source: 'ssr_fallback',
+    marketCap: 7200000000,
+    circulatingSupply: 589000000000000,
+    totalSupply: 999982000000000,
+    source: 'client_fallback',
     cached: true
   };
 }
 
-async function fetchTotalBurnedSSR(): Promise<TotalBurnedData> {
+async function fetchTotalBurnedClient(): Promise<TotalBurnedData> {
   try {
-    const baseUrl = process.env.NETLIFY_URL || 'https://shibmetrics.com';
-    const response = await fetch(`${baseUrl}/api/total-burned`, {
-      next: { revalidate: 60 } // Cache for 60 seconds
-    });
+    const response = await fetch('/api/total-burned', { cache: 'no-cache' });
     
     if (response.ok) {
       const data = await response.json();
       if (!data.error && data.totalBurned) {
-        console.log('🔥 Total burned fetched from SSR cache');
+        console.log('🔥 Total burned fetched from client');
         return data;
       }
     }
   } catch (error) {
-    console.warn('⚠️ SSR total burned API failed:', error);
+    console.warn('⚠️ Client total burned API failed:', error);
   }
 
   return {
     totalBurned: 410500000000000, // Updated to use only the 3 official burn addresses
-    source: 'ssr_fallback',
+    source: 'client_fallback',
     cached: true
   };
 }
 
-async function fetchBurnsSSR(): Promise<BurnsData> {
+async function fetchBurnsClient(): Promise<BurnsData> {
   try {
-    const baseUrl = process.env.NETLIFY_URL || 'https://shibmetrics.com';
-    const response = await fetch(`${baseUrl}/api/burns`, {
-      next: { revalidate: 30 } // Cache for 30 seconds
-    });
+    const response = await fetch('/api/burns', { cache: 'no-cache' });
     
     if (response.ok) {
       const data = await response.json();
       if (!data.error && data.transactions && Array.isArray(data.transactions)) {
-        console.log('🔥 Burns fetched from SSR cache');
+        console.log('🔥 Burns fetched from client');
         return data;
       }
     }
   } catch (error) {
-    console.warn('⚠️ SSR burns API failed:', error);
+    console.warn('⚠️ Client burns API failed:', error);
   }
 
   return {
@@ -161,28 +155,70 @@ async function fetchBurnsSSR(): Promise<BurnsData> {
       timeStamp: String(Math.floor(Date.now() / 1000) - 3600), // 1 hour ago
       blockNumber: '0'
     }],
-    source: 'ssr_fallback',
+    source: 'client_fallback',
     cached: true
   };
 }
 
-// ⚡ INSTANT LOADING with Server-Side Rendering + Real-time Updates!
-export default async function Home() {
-  // ⚡ INSTANT SERVER-SIDE DATA FETCHING - No loading delays!
-  console.log('🚀 SSR: Fetching data instantly with cached content...');
-  
-  const [priceData, totalBurnedData, burnsData] = await Promise.all([
-    fetchShibPriceSSR(),
-    fetchTotalBurnedSSR(), 
-    fetchBurnsSSR()
-  ]);
-  
-  console.log('🚀 SSR: All data fetched instantly!', {
-    priceSource: priceData.source,
-    totalBurnedSource: totalBurnedData.source,
-    burnsSource: burnsData.source,
-    burnsCount: burnsData.transactions.length
+// ⚡ FIXED: Client Component with Real-time Updates!
+export default function Home() {
+  // State management for real-time updates
+  const [priceData, setPriceData] = useState<ShibPriceData>({
+    price: 0.00001200, priceChange24h: 0.00, marketCap: 7200000000,
+    circulatingSupply: 589000000000000, totalSupply: 999982000000000,
+    source: 'initial', cached: true
   });
+  const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>({
+    totalBurned: 410500000000000, source: 'initial', cached: true
+  });
+  const [burnsData, setBurnsData] = useState<BurnsData>({
+    transactions: [], source: 'initial', cached: true
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Initial data fetch on component mount
+  useEffect(() => {
+    console.log('🚀 Client: Fetching initial data...');
+    
+    const fetchInitialData = async () => {
+      try {
+        const [priceResult, totalBurnedResult, burnsResult] = await Promise.all([
+          fetchShibPriceClient(),
+          fetchTotalBurnedClient(), 
+          fetchBurnsClient()
+        ]);
+        
+        setPriceData(priceResult);
+        setTotalBurnedData(totalBurnedResult);
+        setBurnsData(burnsResult);
+        
+        console.log('🚀 Client: Initial data loaded!', {
+          priceSource: priceResult.source,
+          totalBurnedSource: totalBurnedResult.source,
+          burnsSource: burnsResult.source,
+          burnsCount: burnsResult.transactions.length
+        });
+      } catch (error) {
+        console.error('❌ Error fetching initial data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  // Handle real-time updates from RealTimeUpdater
+  const handleDataUpdate = (data: {
+    priceData: ShibPriceData;
+    totalBurnedData: TotalBurnedData;
+    burnsData: BurnsData;
+  }) => {
+    console.log('🔄 Real-time update received');
+    setPriceData(data.priceData);
+    setTotalBurnedData(data.totalBurnedData);
+    setBurnsData(data.burnsData);
+  };
   
   // Calculate all metrics from server-side data for instant display
   const burns = burnsData.transactions;
@@ -255,8 +291,8 @@ export default async function Home() {
           <div className="flex items-center justify-center mb-4">
             <h1 className="text-4xl md:text-6xl font-bold text-white">🔥 SHIBMETRICS</h1>
             
-            {/* Real-time updater component - handles live status */}
-            <RealTimeUpdater />
+            {/* Real-time updater component - handles live status and updates */}
+            <RealTimeUpdater onDataUpdate={handleDataUpdate} />
           </div>
           
           <p className="text-xl text-gray-300 mb-4">
@@ -318,7 +354,7 @@ export default async function Home() {
                 : 'Latest Burn Transactions (Last 10)'}
             </h3>
           </div>
-          <BurnTransactionTable transactions={burnsToShow} loading={false} />
+          <BurnTransactionTable transactions={burnsToShow} loading={loading} />
         </div>
 
         {/* View Burn Tracker Button */}
