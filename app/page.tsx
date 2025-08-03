@@ -305,7 +305,7 @@ export default function Home() {
           <StatCard
             title="SHIB Price"
             value={`$${priceData.price?.toFixed(8) || '0.00000000'}`}
-            change={`${priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2) || '0.00'}%`}
+            change={`${priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2) || '0.00'}% (24h)`}
             icon={DollarSign}
           />
 
@@ -335,6 +335,7 @@ export default function Home() {
             value={formatSupplyNumber(circulatingSupply)}
             change="SHIB tokens"
             icon={Clock}
+            isSupplyCard={true}
           />
 
           <StatCard
@@ -342,6 +343,7 @@ export default function Home() {
             value={formatSupplyNumber(totalSupply)}
             change="SHIB tokens"
             icon={Clock}
+            isSupplyCard={true}
           />
         </div>
 

@@ -7,6 +7,7 @@ interface StatCardProps {
   changeType?: 'positive' | 'negative' | 'neutral';
   icon: LucideIcon;
   loading?: boolean;
+  isSupplyCard?: boolean; // Flag for supply cards that need responsive text
 }
 
 export default function StatCard({ 
@@ -15,7 +16,8 @@ export default function StatCard({
   change, 
   changeType = 'neutral', 
   icon: Icon,
-  loading = false 
+  loading = false,
+  isSupplyCard = false
 }: StatCardProps) {
   const changeColor = {
     positive: 'text-green-400',
@@ -31,7 +33,13 @@ export default function StatCard({
           {loading ? (
             <div className="mt-2 h-8 bg-gray-700 rounded animate-pulse"></div>
           ) : (
-            <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
+            <p className={`mt-2 font-semibold text-white ${
+              isSupplyCard 
+                ? 'text-xl sm:text-2xl lg:text-3xl break-all' // Responsive font for supply cards
+                : 'text-3xl' // Regular font for other cards
+            }`}>
+              {value}
+            </p>
           )}
           {change && !loading && (
             <p className={`mt-1 text-sm ${changeColor}`}>
