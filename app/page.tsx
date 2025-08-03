@@ -214,7 +214,7 @@ export default function Home() {
     totalBurnedData: TotalBurnedData;
     burnsData: BurnsData;
   }) => {
-    console.log('🔄 Real-time update received');
+    console.log('🔄 Real-time update received - deployment v2');
     setPriceData(data.priceData);
     setTotalBurnedData(data.totalBurnedData);
     setBurnsData(data.burnsData);
