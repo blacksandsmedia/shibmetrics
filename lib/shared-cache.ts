@@ -91,7 +91,7 @@ export function savePriceCache(data: PriceCache): void {
 }
 
 export function loadPriceCache(): PriceCache | null {
-  return loadCache<PriceCache>(PRICE_CACHE_FILE, 3 * 60 * 1000); // 3 min max age
+  return loadCache<PriceCache>(PRICE_CACHE_FILE, 60 * 1000); // 60 seconds max age (shorter than 45s update cycle)
 }
 
 // Total burned cache functions
@@ -101,7 +101,7 @@ export function saveTotalBurnedCache(data: TotalBurnedCache): void {
 }
 
 export function loadTotalBurnedCache(): TotalBurnedCache | null {
-  return loadCache<TotalBurnedCache>(TOTAL_BURNED_CACHE_FILE, 3 * 60 * 1000); // 3 min max age
+  return loadCache<TotalBurnedCache>(TOTAL_BURNED_CACHE_FILE, 90 * 1000); // 90 seconds max age
 }
 
 // Burns cache functions
@@ -111,7 +111,7 @@ export function saveBurnsCache(data: BurnsCache): void {
 }
 
 export function loadBurnsCache(): BurnsCache | null {
-  return loadCache<BurnsCache>(BURNS_CACHE_FILE, 4 * 60 * 1000); // 4 min max age
+  return loadCache<BurnsCache>(BURNS_CACHE_FILE, 60 * 1000); // 60 seconds max age
 }
 
 // Cache status check

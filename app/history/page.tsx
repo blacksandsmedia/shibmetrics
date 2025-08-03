@@ -208,17 +208,43 @@ export default function BurnHistoryPage() {
     fetchBurnHistory();
   }, [fetchBurnHistory]);
 
-  // Auto-refresh every 60 seconds to keep data in sync with burn tracker
+  // Smart auto-refresh: Only update if new transactions are detected
   useEffect(() => {
     const interval = setInterval(() => {
       if (!document.hidden) {
-        console.log('🔄 Auto-refreshing burn history (same frequency as burn tracker)...');
-        fetchBurnHistory();
+        console.log('🔄 Checking for new burn transactions...');
+        
+        // Check for new data without updating UI immediately
+        const checkForNewData = async () => {
+          try {
+            const response = await fetch('/api/burns', { cache: 'no-cache' });
+            if (response.ok) {
+              const data = await response.json();
+              const newTransactions = data.transactions || [];
+              
+              // Compare with current data
+              const hasNewTransactions = newTransactions.length > allTransactions.length ||
+                (newTransactions.length > 0 && allTransactions.length > 0 && 
+                 newTransactions[0].hash !== allTransactions[0].hash);
+              
+              if (hasNewTransactions) {
+                console.log('🔥 New burn transactions detected, updating history...');
+                fetchBurnHistory();
+              } else {
+                console.log('📊 No new transactions, keeping current display');
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Error checking for new transactions:', error);
+          }
+        };
+        
+        checkForNewData();
       }
     }, 60 * 1000); // 60 seconds to match burn tracker frequency
     
     return () => clearInterval(interval);
-  }, [fetchBurnHistory]);
+  }, [fetchBurnHistory, allTransactions]);
 
   // Pagination component
   const PaginationControls = () => {

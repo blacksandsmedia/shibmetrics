@@ -50,12 +50,51 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
   const [isLive, setIsLive] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [pageWasHidden, setPageWasHidden] = useState(false);
+  const [lastDataRef, setLastDataRef] = useState<{price?: number, totalBurned?: number, latestTxHash?: string}>({});
 
-  // Fetch fresh data with cache-busting
+  // Smart comparison to detect actual data changes
+  const checkForDataChanges = useCallback((priceData: ShibPriceData, totalBurnedData: TotalBurnedData, burnsData: BurnsData) => {
+    const latestTxHash = burnsData.transactions.length > 0 ? burnsData.transactions[0].hash : '';
+    
+    // Check if any critical data changed
+    const priceChanged = Math.abs(priceData.price - (lastDataRef.price || 0)) > 0.00000001; // Meaningful price change
+    const totalBurnedChanged = totalBurnedData.totalBurned !== lastDataRef.totalBurned;
+    const newTransactions = latestTxHash !== lastDataRef.latestTxHash;
+    
+    const hasChanges = priceChanged || totalBurnedChanged || newTransactions;
+    
+    if (hasChanges) {
+      console.log('🔄 Data changes detected:', {
+        priceChanged: priceChanged ? `${lastDataRef.price} → ${priceData.price}` : false,
+        totalBurnedChanged: totalBurnedChanged ? `${lastDataRef.totalBurned} → ${totalBurnedData.totalBurned}` : false,
+        newTransactions: newTransactions ? `New tx: ${latestTxHash.slice(0,10)}...` : false
+      });
+      
+      // Update reference data
+      setLastDataRef({
+        price: priceData.price,
+        totalBurned: totalBurnedData.totalBurned,
+        latestTxHash: latestTxHash
+      });
+    }
+    
+    return hasChanges;
+  }, [lastDataRef]);
+
+  // Fetch fresh data with periodic cache-busting to ensure accuracy
   const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
     const timestamp = Date.now();
-    const priceCacheParam = forceFresh ? `?_t=${timestamp}` : '';
-    const burnsCacheParam = forceFresh ? '?force=true' : '';
+    // Force fresh data every 2 minutes to prevent stale data
+    const lastForcedUpdate = localStorage.getItem('lastForcedUpdate');
+    const shouldForceFresh = forceFresh || !lastForcedUpdate || (timestamp - parseInt(lastForcedUpdate)) > 120000;
+    
+    if (shouldForceFresh && !forceFresh) {
+      localStorage.setItem('lastForcedUpdate', timestamp.toString());
+      console.log('🔄 Forcing fresh data to prevent stale cache');
+    }
+    
+    const priceCacheParam = shouldForceFresh ? `?_t=${timestamp}` : '';
+    const burnsCacheParam = shouldForceFresh ? '?force=true' : '';
     
     try {
       const [priceResponse, totalBurnedResponse, burnsResponse] = await Promise.all([
@@ -77,9 +116,16 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
                      Array.isArray(burnsData.transactions);
       
       if (isValid && onDataUpdate) {
-        console.log('✅ Real-time update: Data validated and updated');
-        onDataUpdate({ priceData, totalBurnedData, burnsData });
-        setLastUpdate(new Date());
+        // Smart update: Only update if data actually changed
+        const hasNewData = checkForDataChanges(priceData, totalBurnedData, burnsData);
+        
+        if (hasNewData) {
+          console.log('✅ Real-time update: New data detected and updated');
+          onDataUpdate({ priceData, totalBurnedData, burnsData });
+          setLastUpdate(new Date());
+        } else {
+          console.log('📊 Real-time check: No new data, keeping existing display');
+        }
         setIsLive(true);
       }
       

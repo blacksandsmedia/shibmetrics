@@ -28,11 +28,37 @@ export default function BurnTrackerPage() {
     // Start fetching data immediately
     fetchAllBurns();
     
-    // Set up automatic refresh every 60 seconds (slightly longer than homepage)
+    // Smart auto-refresh: Only update if new burns are detected
     const interval = setInterval(() => {
       if (!document.hidden) {
-        console.log('🔥 Auto-refresh: Fetching fresh burn data...');
-        fetchAllBurns(false); // Regular refresh, not forced
+        console.log('🔥 Checking for new burn transactions...');
+        
+        // Check for new data without updating UI immediately
+        const checkForNewBurns = async () => {
+          try {
+            const response = await fetch('/api/burns', { cache: 'no-cache' });
+            if (response.ok) {
+              const data = await response.json();
+              const newBurns = data.transactions || [];
+              
+              // Compare with current data  
+              const hasNewBurns = newBurns.length > allBurns.length ||
+                (newBurns.length > 0 && allBurns.length > 0 && 
+                 newBurns[0].hash !== allBurns[0].hash);
+              
+              if (hasNewBurns) {
+                console.log('🔥 New burn transactions detected, refreshing tracker...');
+                fetchAllBurns(false);
+              } else {
+                console.log('📊 No new burns, keeping current display');
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Error checking for new burns:', error);
+          }
+        };
+        
+        checkForNewBurns();
       }
     }, 60000); // 60 seconds
     
