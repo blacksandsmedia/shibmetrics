@@ -116,7 +116,11 @@ async function fetchShibPriceClient(): Promise<ShibPriceData> {
       try {
         const parsedCache = JSON.parse(cached);
         console.log('📦 Using cached price data as fallback');
-        return { ...parsedCache, source: 'cached_fallback' };
+        return { 
+          ...parsedCache, 
+          volume24h: parsedCache.volume24h || 0,
+          source: 'cached_fallback' 
+        };
       } catch (e) {
         console.warn('Failed to parse cached price data');
       }
@@ -209,7 +213,18 @@ export default function Home() {
     const cached = typeof window !== 'undefined' ? localStorage.getItem('shibmetrics_price_cache') : null;
     if (cached) {
       try {
-        return JSON.parse(cached);
+        const parsedCache = JSON.parse(cached);
+        // Clear cache if it's missing volume24h field (legacy data)
+        if (typeof parsedCache.volume24h === 'undefined') {
+          localStorage.removeItem('shibmetrics_price_cache');
+          console.log('🔄 Cleared legacy cache data - will fetch fresh data');
+        } else {
+          // Use cached data with volume24h
+          return {
+            ...parsedCache,
+            volume24h: parsedCache.volume24h || 0
+          };
+        }
       } catch (e) {
         console.warn('Failed to parse cached price data');
       }
