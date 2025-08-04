@@ -90,6 +90,10 @@ async function fetchShibPriceClient(): Promise<ShibPriceData> {
       const data = await response.json();
       if (!data.error && data.price) {
         console.log('💰 Price fetched from client');
+        // Cache successful data in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('shibmetrics_price_cache', JSON.stringify(data));
+        }
         return data;
       }
     }
@@ -97,16 +101,22 @@ async function fetchShibPriceClient(): Promise<ShibPriceData> {
     console.warn('⚠️ Client price API failed:', error);
   }
 
-  // Fallback
-  return {
-    price: 0.00001233,
-    priceChange24h: 2.16,
-    marketCap: 7265139900,
-    circulatingSupply: 589246214156011,
-    totalSupply: 589500993143526,
-    source: 'client_fallback',
-    cached: true
-  };
+  // Fallback to last cached data if available
+  if (typeof window !== 'undefined') {
+    const cached = localStorage.getItem('shibmetrics_price_cache');
+    if (cached) {
+      try {
+        const parsedCache = JSON.parse(cached);
+        console.log('📦 Using cached price data as fallback');
+        return { ...parsedCache, source: 'cached_fallback' };
+      } catch (e) {
+        console.warn('Failed to parse cached price data');
+      }
+    }
+  }
+
+  // Minimal fallback if no cache available
+  throw new Error('No price data available');
 }
 
 async function fetchTotalBurnedClient(): Promise<TotalBurnedData> {
@@ -117,6 +127,10 @@ async function fetchTotalBurnedClient(): Promise<TotalBurnedData> {
       const data = await response.json();
       if (!data.error && data.totalBurned) {
         console.log('🔥 Total burned fetched from client');
+        // Cache successful data in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data));
+        }
         return data;
       }
     }
@@ -124,11 +138,22 @@ async function fetchTotalBurnedClient(): Promise<TotalBurnedData> {
     console.warn('⚠️ Client total burned API failed:', error);
   }
 
-  return {
-    totalBurned: 410500000000000, // Updated to use only the 3 official burn addresses
-    source: 'client_fallback',
-    cached: true
-  };
+  // Fallback to last cached data if available
+  if (typeof window !== 'undefined') {
+    const cached = localStorage.getItem('shibmetrics_totalburned_cache');
+    if (cached) {
+      try {
+        const parsedCache = JSON.parse(cached);
+        console.log('📦 Using cached total burned data as fallback');
+        return { ...parsedCache, source: 'cached_fallback' };
+      } catch (e) {
+        console.warn('Failed to parse cached total burned data');
+      }
+    }
+  }
+
+  // Minimal fallback if no cache available
+  throw new Error('No total burned data available');
 }
 
 async function fetchBurnsClient(): Promise<BurnsData> {
@@ -139,6 +164,10 @@ async function fetchBurnsClient(): Promise<BurnsData> {
       const data = await response.json();
       if (!data.error && data.transactions && Array.isArray(data.transactions)) {
         console.log('🔥 Burns fetched from client');
+        // Cache successful data in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data));
+        }
         return data;
       }
     }
@@ -146,33 +175,66 @@ async function fetchBurnsClient(): Promise<BurnsData> {
     console.warn('⚠️ Client burns API failed:', error);
   }
 
-  return {
-    transactions: [{
-      hash: '0x0000000000000000000000000000000000000000000000000000000000000000',
-      from: '0x0000000000000000000000000000000000000000',
-      to: '0xdead000000000000000042069420694206942069',
-      value: '1000000000000000000000000', // 1M SHIB
-      timeStamp: String(Math.floor(Date.now() / 1000) - 3600), // 1 hour ago
-      blockNumber: '0'
-    }],
-    source: 'client_fallback',
-    cached: true
-  };
+  // Fallback to last cached data if available
+  if (typeof window !== 'undefined') {
+    const cached = localStorage.getItem('shibmetrics_burns_cache');
+    if (cached) {
+      try {
+        const parsedCache = JSON.parse(cached);
+        console.log('📦 Using cached burns data as fallback');
+        return { ...parsedCache, source: 'cached_fallback' };
+      } catch (e) {
+        console.warn('Failed to parse cached burns data');
+      }
+    }
+  }
+
+  // Minimal fallback if no cache available
+  throw new Error('No burns data available');
 }
 
 // ⚡ FIXED: Client Component with Real-time Updates!
 export default function Home() {
   // State management for real-time updates
-  const [priceData, setPriceData] = useState<ShibPriceData>({
-    price: 0.00001233, priceChange24h: 2.16, marketCap: 7265139900,
-    circulatingSupply: 589246214156011, totalSupply: 589500993143526,
-    source: 'initial', cached: true
+  const [priceData, setPriceData] = useState<ShibPriceData>(() => {
+    // Load from localStorage if available, otherwise minimal initial state
+    const cached = typeof window !== 'undefined' ? localStorage.getItem('shibmetrics_price_cache') : null;
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.warn('Failed to parse cached price data');
+      }
+    }
+    return {
+      price: 0, priceChange24h: 0, marketCap: 0,
+      circulatingSupply: 0, totalSupply: 0,
+      source: 'initial', cached: true
+    };
   });
-  const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>({
-    totalBurned: 410500000000000, source: 'initial', cached: true
+  const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>(() => {
+    // Load from localStorage if available, otherwise minimal initial state
+    const cached = typeof window !== 'undefined' ? localStorage.getItem('shibmetrics_totalburned_cache') : null;
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.warn('Failed to parse cached total burned data');
+      }
+    }
+    return { totalBurned: 0, source: 'initial', cached: true };
   });
-  const [burnsData, setBurnsData] = useState<BurnsData>({
-    transactions: [], source: 'initial', cached: true
+  const [burnsData, setBurnsData] = useState<BurnsData>(() => {
+    // Load from localStorage if available, otherwise minimal initial state
+    const cached = typeof window !== 'undefined' ? localStorage.getItem('shibmetrics_burns_cache') : null;
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.warn('Failed to parse cached burns data');
+      }
+    }
+    return { transactions: [], source: 'initial', cached: true };
   });
   const [loading, setLoading] = useState(true);
 
@@ -181,28 +243,41 @@ export default function Home() {
     console.log('🚀 Client: Fetching initial data...');
     
     const fetchInitialData = async () => {
-      try {
-        const [priceResult, totalBurnedResult, burnsResult] = await Promise.all([
-          fetchShibPriceClient(),
-          fetchTotalBurnedClient(), 
-          fetchBurnsClient()
-        ]);
-        
-        setPriceData(priceResult);
-        setTotalBurnedData(totalBurnedResult);
-        setBurnsData(burnsResult);
-        
-        console.log('🚀 Client: Initial data loaded!', {
-          priceSource: priceResult.source,
-          totalBurnedSource: totalBurnedResult.source,
-          burnsSource: burnsResult.source,
-          burnsCount: burnsResult.transactions.length
-        });
-      } catch (error) {
-        console.error('❌ Error fetching initial data:', error);
-      } finally {
-        setLoading(false);
-      }
+      // Fetch each API independently to handle individual failures
+      const fetchPrice = async () => {
+        try {
+          const result = await fetchShibPriceClient();
+          setPriceData(result);
+          console.log('💰 Price data loaded:', result.source);
+        } catch (error) {
+          console.warn('⚠️ Price data unavailable:', error.message);
+        }
+      };
+
+      const fetchTotalBurned = async () => {
+        try {
+          const result = await fetchTotalBurnedClient();
+          setTotalBurnedData(result);
+          console.log('🔥 Total burned data loaded:', result.source);
+        } catch (error) {
+          console.warn('⚠️ Total burned data unavailable:', error.message);
+        }
+      };
+
+      const fetchBurns = async () => {
+        try {
+          const result = await fetchBurnsClient();
+          setBurnsData(result);
+          console.log('📊 Burns data loaded:', result.source, `(${result.transactions.length} transactions)`);
+        } catch (error) {
+          console.warn('⚠️ Burns data unavailable:', error.message);
+        }
+      };
+
+      // Fetch all APIs independently
+      await Promise.all([fetchPrice(), fetchTotalBurned(), fetchBurns()]);
+      setLoading(false);
+      console.log('🚀 Client: Initial data fetch complete');
     };
 
     fetchInitialData();
@@ -215,9 +290,18 @@ export default function Home() {
     burnsData: BurnsData;
   }) => {
     console.log('🔄 Real-time update received - deployment v2');
+    
+    // Update state and cache the new data
     setPriceData(data.priceData);
     setTotalBurnedData(data.totalBurnedData);
     setBurnsData(data.burnsData);
+    
+    // Cache the fresh data in localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('shibmetrics_price_cache', JSON.stringify(data.priceData));
+      localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
+      localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
+    }
   };
   
   // Calculate all metrics from server-side data for instant display
