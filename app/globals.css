@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* Force rebuild - UI cleanup deployment v0.1.2 - CSS change */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
