@@ -1,6 +1,31 @@
 // High-performance in-memory cache for API responses
 // Eliminates slow disk I/O on every request
 
+import { EtherscanTx } from './burn-cache';
+
+// Define specific cache data types
+export interface BurnCacheData {
+  transactions: EtherscanTx[];
+  totalAddressesSuccess: number;
+  totalAddressesAttempted: number;
+}
+
+export interface PriceCacheData {
+  price: number;
+  priceChange24h: number;
+  marketCap: number;
+  circulatingSupply: number;
+  totalSupply: number;
+  volume24h: number;
+}
+
+export interface TotalBurnedCacheData {
+  totalBurned: number;
+}
+
+// Union type for all possible cache data
+export type CacheData = BurnCacheData | PriceCacheData | TotalBurnedCacheData;
+
 interface CacheEntry<T> {
   data: T;
   lastUpdated: number;
@@ -8,7 +33,7 @@ interface CacheEntry<T> {
 }
 
 class MemoryCache {
-  private cache: Map<string, CacheEntry<any>> = new Map();
+  private cache: Map<string, CacheEntry<CacheData>> = new Map();
   private maxAge: number = 5 * 60 * 1000; // 5 minutes default
 
   // Get data from memory cache (instant)
@@ -81,13 +106,13 @@ export type CacheKey = typeof cacheKeys[keyof typeof cacheKeys];
 
 // Type-safe cache getters
 export function getBurnData() {
-  return globalCache.get<any>(cacheKeys.BURN_DATA);
+  return globalCache.get<BurnCacheData>(cacheKeys.BURN_DATA);
 }
 
 export function getPriceData() {
-  return globalCache.get<any>(cacheKeys.PRICE_DATA);
+  return globalCache.get<PriceCacheData>(cacheKeys.PRICE_DATA);
 }
 
 export function getTotalBurnedData() {
-  return globalCache.get<any>(cacheKeys.TOTAL_BURNED);
+  return globalCache.get<TotalBurnedCacheData>(cacheKeys.TOTAL_BURNED);
 }
