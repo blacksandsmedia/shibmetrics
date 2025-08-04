@@ -17,12 +17,12 @@ export default function FlameEffect({ isActive, onComplete }: FlameEffectProps) 
       // Auto-dismiss after 3 seconds
       const timer = setTimeout(() => {
         setShow(false);
-        setTimeout(onComplete, 500); // Wait for fade out animation
+        setTimeout(() => onComplete?.(), 500); // Wait for fade out animation
       }, 3000);
 
       return () => clearTimeout(timer);
     }
-  }, [isActive, onComplete]);
+  }, [isActive]); // Remove onComplete dependency to prevent loops
 
   if (!show) return null;
 

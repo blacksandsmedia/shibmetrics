@@ -291,6 +291,16 @@ export default function Home() {
     totalBurned: number;
     priceChange: number;
   } | null>(null);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Initial data fetch on component mount
   useEffect(() => {
@@ -414,9 +424,13 @@ export default function Home() {
         console.log('🎬 Data changes detected:', Array.from(changedCards));
         setAnimatingCards(changedCards);
         
-        // Clear animations after 2 seconds
-        setTimeout(() => {
+        // Clear animations after 2 seconds using ref to prevent memory leaks
+        if (animationTimeoutRef.current) {
+          clearTimeout(animationTimeoutRef.current);
+        }
+        animationTimeoutRef.current = setTimeout(() => {
           setAnimatingCards(new Set());
+          animationTimeoutRef.current = null;
         }, 2000);
       }
     }
@@ -437,15 +451,15 @@ export default function Home() {
     }
   }, []); // Empty dependency array - use functional updates instead
   
-  // Calculate all metrics from server-side data for instant display (with comprehensive safe fallbacks)
-  const burns = Array.isArray(burnsData.transactions) ? burnsData.transactions : [];
-  const totalBurned = (typeof totalBurnedData.totalBurned === 'number' && !isNaN(totalBurnedData.totalBurned)) ? totalBurnedData.totalBurned : 0;
-  const priceChange = (typeof priceData.priceChange24h === 'number' && !isNaN(priceData.priceChange24h)) ? priceData.priceChange24h : 0;
-  const marketCap = (typeof priceData.marketCap === 'number' && !isNaN(priceData.marketCap)) ? priceData.marketCap : 0;
-  const circulatingSupply = (typeof priceData.circulatingSupply === 'number' && !isNaN(priceData.circulatingSupply)) ? priceData.circulatingSupply : 0;
-  const totalSupply = (typeof priceData.totalSupply === 'number' && !isNaN(priceData.totalSupply)) ? priceData.totalSupply : 0;
-  const volume24h = (typeof priceData.volume24h === 'number' && !isNaN(priceData.volume24h)) ? priceData.volume24h : 0;
-  const currentPrice = (typeof priceData.price === 'number' && !isNaN(priceData.price)) ? priceData.price : 0;
+  // Calculate all metrics from server-side data for instant display (with NUCLEAR-LEVEL safe fallbacks)
+  const burns = Array.isArray(burnsData?.transactions) ? burnsData.transactions : [];
+  const totalBurned = (totalBurnedData?.totalBurned != null && typeof totalBurnedData.totalBurned === 'number' && !isNaN(totalBurnedData.totalBurned) && isFinite(totalBurnedData.totalBurned)) ? totalBurnedData.totalBurned : 0;
+  const priceChange = (priceData?.priceChange24h != null && typeof priceData.priceChange24h === 'number' && !isNaN(priceData.priceChange24h) && isFinite(priceData.priceChange24h)) ? priceData.priceChange24h : 0;
+  const marketCap = (priceData?.marketCap != null && typeof priceData.marketCap === 'number' && !isNaN(priceData.marketCap) && isFinite(priceData.marketCap)) ? priceData.marketCap : 0;
+  const circulatingSupply = (priceData?.circulatingSupply != null && typeof priceData.circulatingSupply === 'number' && !isNaN(priceData.circulatingSupply) && isFinite(priceData.circulatingSupply)) ? priceData.circulatingSupply : 0;
+  const totalSupply = (priceData?.totalSupply != null && typeof priceData.totalSupply === 'number' && !isNaN(priceData.totalSupply) && isFinite(priceData.totalSupply)) ? priceData.totalSupply : 0;
+  const volume24h = (priceData?.volume24h != null && typeof priceData.volume24h === 'number' && !isNaN(priceData.volume24h) && isFinite(priceData.volume24h)) ? priceData.volume24h : 0;
+  const currentPrice = (priceData?.price != null && typeof priceData.price === 'number' && !isNaN(priceData.price) && isFinite(priceData.price)) ? priceData.price : 0;
   const now = Date.now();
   const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
   const fortyEightHoursAgo = now - (48 * 60 * 60 * 1000);
