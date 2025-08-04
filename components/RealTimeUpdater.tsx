@@ -51,6 +51,7 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [pageWasHidden, setPageWasHidden] = useState(false);
   const [lastDataRef, setLastDataRef] = useState<{price?: number, totalBurned?: number, latestTxHash?: string}>({});
+  const [isFirstUpdate, setIsFirstUpdate] = useState(true);
 
   // Smart comparison to detect actual data changes
   const checkForDataChanges = useCallback((priceData: ShibPriceData, totalBurnedData: TotalBurnedData, burnsData: BurnsData) => {
@@ -116,15 +117,31 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
                      Array.isArray(burnsData.transactions);
       
       if (isValid && onDataUpdate) {
-        // Smart update: Only update if data actually changed
-        const hasNewData = checkForDataChanges(priceData, totalBurnedData, burnsData);
-        
-        if (hasNewData) {
-          console.log('✅ Real-time update: New data detected and updated');
+        // Always update on first run, then use smart comparison
+        if (isFirstUpdate) {
+          console.log('🚀 Real-time update: First update - forcing homepage sync');
           onDataUpdate({ priceData, totalBurnedData, burnsData });
           setLastUpdate(new Date());
+          setIsFirstUpdate(false);
+          
+          // Initialize reference data
+          const latestTxHash = burnsData.transactions.length > 0 ? burnsData.transactions[0].hash : '';
+          setLastDataRef({
+            price: priceData.price,
+            totalBurned: totalBurnedData.totalBurned,
+            latestTxHash: latestTxHash
+          });
         } else {
-          console.log('📊 Real-time check: No new data, keeping existing display');
+          // Smart update: Only update if data actually changed
+          const hasNewData = checkForDataChanges(priceData, totalBurnedData, burnsData);
+          
+          if (hasNewData) {
+            console.log('✅ Real-time update: New data detected and updated');
+            onDataUpdate({ priceData, totalBurnedData, burnsData });
+            setLastUpdate(new Date());
+          } else {
+            console.log('📊 Real-time check: No new data, keeping existing display');
+          }
         }
         setIsLive(true);
       }
@@ -132,7 +149,7 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
     } catch (error) {
       console.warn('⚠️ Real-time update failed:', error);
     }
-  }, [onDataUpdate, checkForDataChanges]);
+  }, [onDataUpdate, checkForDataChanges, isFirstUpdate]);
 
   // Initial setup and polling
   useEffect(() => {
