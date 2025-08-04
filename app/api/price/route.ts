@@ -1,5 +1,6 @@
-// Use shared cache system for persistent data
+// Use shared cache system for persistent data + high-performance memory cache
 import { loadPriceCache, savePriceCache } from '../../../lib/shared-cache';
+import memoryCache, { cacheKeys } from '../../../lib/memory-cache';
 
 export async function GET(request: Request) {
   try {
@@ -8,11 +9,44 @@ export async function GET(request: Request) {
     const userAgent = request.headers.get('User-Agent') || '';
     const isScheduledRefresh = userAgent.includes('Netlify-Scheduled-Refresh');
     
-    // Always try to serve from persistent cache first for user requests
+    // STEP 1: Check memory cache first (INSTANT - no disk I/O)
+    const memoryCacheEntry = memoryCache.get(cacheKeys.PRICE_DATA);
+    if (memoryCacheEntry && !isScheduledRefresh) {
+      const age = Math.round((Date.now() - memoryCacheEntry.lastUpdated) / 1000);
+      console.log(`🏎️ INSTANT: Serving price data from MEMORY (age: ${age}s)`);
+      
+      const data = memoryCacheEntry.data as any;
+      return new Response(JSON.stringify({
+        price: data.price,
+        priceChange24h: data.priceChange24h,
+        marketCap: data.marketCap,
+        circulatingSupply: data.circulatingSupply,
+        totalSupply: data.totalSupply,
+        volume24h: data.volume24h || 0,
+        timestamp: new Date().toISOString(),
+        source: memoryCacheEntry.source + '-memory',
+        cached: true,
+        lastUpdated: new Date(memoryCacheEntry.lastUpdated).toISOString()
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=30'
+        },
+      });
+    }
+    
+    // STEP 2: Memory cache miss - load from disk (but populate memory for next time)
+    console.log('💾 Memory cache miss - loading from disk...');
     const cachedData = loadPriceCache();
     
     if (cachedData && !isScheduledRefresh) {
-      console.log('🚀 Returning cached SHIB price data (populated by scheduled function)');
+      console.log('💾 Returning cached SHIB price data from DISK (populated by scheduled function)');
+      
+      // Populate memory cache for next request (INSTANT responses)
+      memoryCache.set(cacheKeys.PRICE_DATA, cachedData, 'coingecko-cached');
+      console.log('🏎️ Populated memory cache - next requests will be INSTANT');
+      
       return new Response(JSON.stringify({
         price: cachedData.price,
         priceChange24h: cachedData.priceChange24h,
@@ -21,7 +55,7 @@ export async function GET(request: Request) {
         totalSupply: cachedData.totalSupply,
         volume24h: cachedData.volume24h || 0,
         timestamp: new Date().toISOString(),
-        source: 'coingecko-cached',
+        source: 'coingecko-cached-disk',
         cached: true,
         lastUpdated: new Date(cachedData.lastUpdated).toISOString()
       }), {
@@ -86,7 +120,7 @@ export async function GET(request: Request) {
     }
     
     // Update persistent cache
-    savePriceCache({
+    const freshData = {
       price,
       priceChange24h: change,
       marketCap,
@@ -94,7 +128,12 @@ export async function GET(request: Request) {
       totalSupply,
       volume24h,
       lastUpdated: Date.now()
-    });
+    };
+    savePriceCache(freshData);
+    
+    // Update memory cache for instant future responses
+    memoryCache.set(cacheKeys.PRICE_DATA, freshData, 'coingecko-live');
+    console.log('🏎️ Updated memory cache with fresh price data - future requests will be INSTANT');
 
     console.log(`✅ SHIB price: $${price}, 24h change: ${change.toFixed(2)}%, market cap: $${(marketCap / 1e9).toFixed(2)}B, circulating: ${(circulatingSupply / 1e12).toFixed(0)}T, total: ${(totalSupply / 1e12).toFixed(0)}T`);
     

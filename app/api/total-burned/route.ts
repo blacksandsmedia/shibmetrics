@@ -1,5 +1,6 @@
-// API route for total burned calculation
+// API route for total burned calculation - HIGH PERFORMANCE MEMORY CACHE
 import { loadTotalBurnedCache, saveTotalBurnedCache } from '../../../lib/shared-cache';
+import memoryCache, { cacheKeys } from '../../../lib/memory-cache';
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 
@@ -96,16 +97,44 @@ export async function GET(request: Request) {
     const userAgent = request.headers.get('User-Agent') || '';
     const isScheduledRefresh = userAgent.includes('Netlify-Scheduled-Refresh');
     
-    // Always try to serve from persistent cache first for user requests
+    // STEP 1: Check memory cache first (INSTANT - no disk I/O)
+    const memoryCacheEntry = memoryCache.get(cacheKeys.TOTAL_BURNED);
+    if (memoryCacheEntry && !isScheduledRefresh) {
+      const age = Math.round((Date.now() - memoryCacheEntry.lastUpdated) / 1000);
+      console.log(`🏎️ INSTANT: Serving total burned from MEMORY (age: ${age}s)`);
+      
+      const data = memoryCacheEntry.data as any;
+      return new Response(JSON.stringify({
+        totalBurned: data.totalBurned,
+        cached: true,
+        timestamp: new Date().toISOString(),
+        source: memoryCacheEntry.source + '-memory',
+        lastUpdated: new Date(memoryCacheEntry.lastUpdated).toISOString()
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=120'
+        },
+      });
+    }
+    
+    // STEP 2: Memory cache miss - load from disk (but populate memory for next time)
+    console.log('💾 Memory cache miss - loading from disk...');
     const cachedData = loadTotalBurnedCache();
     
     if (cachedData && !isScheduledRefresh) {
-      console.log('🚀 Returning cached total burned (populated by scheduled function)');
+      console.log('💾 Returning cached total burned from DISK (populated by scheduled function)');
+      
+      // Populate memory cache for next request (INSTANT responses)
+      memoryCache.set(cacheKeys.TOTAL_BURNED, cachedData, 'etherscan-cached');
+      console.log('🏎️ Populated memory cache - next requests will be INSTANT');
+      
       return new Response(JSON.stringify({
         totalBurned: cachedData.totalBurned,
         cached: true,
         timestamp: new Date().toISOString(),
-        source: 'etherscan-cached',
+        source: 'etherscan-cached-disk',
         lastUpdated: new Date(cachedData.lastUpdated).toISOString()
       }), {
         status: 200,
@@ -125,10 +154,15 @@ export async function GET(request: Request) {
     const totalBurned = await fetchRealTotalBurned();
     
     // Update persistent cache
-    saveTotalBurnedCache({
+    const freshData = {
       totalBurned,
       lastUpdated: Date.now()
-    });
+    };
+    saveTotalBurnedCache(freshData);
+    
+    // Update memory cache for instant future responses
+    memoryCache.set(cacheKeys.TOTAL_BURNED, freshData, 'etherscan-live');
+    console.log('🏎️ Updated memory cache with fresh total burned data - future requests will be INSTANT');
 
     console.log(`✅ Total burned from live API: ${totalBurned.toLocaleString()} SHIB`);
     

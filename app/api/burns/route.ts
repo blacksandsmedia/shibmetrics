@@ -1,7 +1,8 @@
-// API route for SHIB burn transactions - SMART BACKGROUND REFRESH SYSTEM
+// API route for SHIB burn transactions - HIGH PERFORMANCE MEMORY CACHE
 
 import { loadBurnCache, saveBurnCache, EtherscanTx } from '../../../lib/burn-cache';
 import { saveBurnsCache } from '../../../lib/shared-cache';
+import memoryCache, { cacheKeys } from '../../../lib/memory-cache';
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 
@@ -150,7 +151,7 @@ async function refreshBurnDataInBackground(): Promise<EtherscanTx[]> {
 }
 
 export async function GET(request: Request) {
-  console.log('⚡ Burns API - instant cache serving...');
+  console.log('🏎️ Burns API - INSTANT memory cache...');
   
   try {
     const url = new URL(request.url);
@@ -160,8 +161,34 @@ export async function GET(request: Request) {
     const userAgent = request.headers.get('User-Agent') || '';
     const isScheduledRefresh = userAgent.includes('Netlify-Scheduled-Refresh');
     
-      // Load existing cache first - ALWAYS prioritize instant response
-  let burnCache = loadBurnCache();
+    // STEP 1: Check memory cache first (INSTANT - no disk I/O)
+    const memoryCacheEntry = memoryCache.get(cacheKeys.BURN_DATA);
+    if (memoryCacheEntry && !forceRefresh && !isScheduledRefresh) {
+      const age = Math.round((Date.now() - memoryCacheEntry.lastUpdated) / 1000);
+      const data = memoryCacheEntry.data as any;
+      console.log(`🏎️ INSTANT: Serving ${data.transactions?.length || 0} transactions from MEMORY (age: ${age}s)`);
+      
+      return new Response(JSON.stringify({
+        transactions: data.transactions || [],
+        cached: true,
+        timestamp: new Date().toISOString(),
+        source: memoryCacheEntry.source + '-memory',
+        lastUpdated: new Date(memoryCacheEntry.lastUpdated).toISOString(),
+        addressesSuccess: data.totalAddressesSuccess || 0,
+        addressesAttempted: data.totalAddressesAttempted || 0,
+        refreshing: false
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=30'
+        },
+      });
+    }
+    
+    // STEP 2: Memory cache miss - load from disk (but only once)
+    console.log('💾 Memory cache miss - loading from disk...');
+    let burnCache = loadBurnCache();
   
   // CRITICAL: Check for corrupted Etherscan data (future timestamps)
   // If cache exists but has obviously wrong data, bypass it completely  
@@ -226,9 +253,13 @@ export async function GET(request: Request) {
     }
   }
   
-  // If we have cache and it's not a force refresh, return immediately
+  // STEP 3: If we have disk cache, populate memory cache and return
   if (burnCache && burnCache.transactions.length > 1 && !forceRefresh) {
-      console.log(`⚡ INSTANT: Serving ${burnCache.transactions.length} transactions from cache (age: ${Math.round((Date.now() - burnCache.lastUpdated) / 1000)}s)`);
+      console.log(`💾 Serving ${burnCache.transactions.length} transactions from DISK cache (age: ${Math.round((Date.now() - burnCache.lastUpdated) / 1000)}s)`);
+      
+      // Populate memory cache for next request (INSTANT responses)
+      memoryCache.set(cacheKeys.BURN_DATA, burnCache, burnCache.source);
+      console.log(`🏎️ Populated memory cache - next requests will be INSTANT`);
       
       // Check if cache needs refresh (older than 3 minutes) - but don't block!
       const needsRefresh = (Date.now() - burnCache.lastUpdated) > (3 * 60 * 1000);
@@ -236,7 +267,20 @@ export async function GET(request: Request) {
         console.log('🔄 Cache stale, starting background refresh (non-blocking)...');
         // Start background refresh asynchronously - doesn't block response
         setImmediate(() => {
-          refreshBurnDataInBackground().catch(console.error);
+          refreshBurnDataInBackground().then(freshData => {
+            if (freshData && freshData.length > 0) {
+              // Update memory cache with fresh data
+              const freshCache = {
+                transactions: freshData,
+                lastUpdated: Date.now(),
+                source: 'etherscan-background',
+                totalAddressesSuccess: 3,
+                totalAddressesAttempted: 3
+              };
+              memoryCache.set(cacheKeys.BURN_DATA, freshCache, 'etherscan-background');
+              console.log(`🏎️ Memory cache updated with fresh data: ${freshData.length} transactions`);
+            }
+          }).catch(console.error);
         });
       }
       
@@ -244,7 +288,7 @@ export async function GET(request: Request) {
         transactions: burnCache.transactions,
         cached: true,
         timestamp: new Date().toISOString(),
-        source: burnCache.source,
+        source: burnCache.source + '-disk',
         lastUpdated: new Date(burnCache.lastUpdated).toISOString(),
         addressesSuccess: burnCache.totalAddressesSuccess,
         addressesAttempted: burnCache.totalAddressesAttempted,
