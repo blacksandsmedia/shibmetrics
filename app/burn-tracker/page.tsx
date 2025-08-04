@@ -18,6 +18,8 @@ export default function BurnTrackerPage() {
   const [selectedAddress, setSelectedAddress] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'time' | 'amount'>('time');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  // Force re-render every minute to update "time ago" values dynamically
+  const [, forceTimeUpdate] = useState(0);
 
   // Show latest 25 burns only
   const latestBurns = filteredBurns.slice(0, 25);
@@ -63,6 +65,15 @@ export default function BurnTrackerPage() {
     }, 60000); // 60 seconds
     
     return () => clearInterval(interval);
+  }, []);
+
+  // Update time display every minute to refresh "time ago" calculations without animation
+  useEffect(() => {
+    const timeInterval = setInterval(() => {
+      forceTimeUpdate(prev => prev + 1);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timeInterval);
   }, []);
 
   const fetchAllBurns = async (forceFresh: boolean = false) => {

@@ -86,6 +86,8 @@ function truncateAddress(address: string): string {
 
 export default function BurnHistoryPage() {
   const [allTransactions, setAllTransactions] = useState<BurnTransaction[]>([]);
+  // Force re-render every minute to update "time ago" values dynamically
+  const [, forceTimeUpdate] = useState(0);
   const [filteredTransactions, setFilteredTransactions] = useState<BurnTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -245,6 +247,15 @@ export default function BurnHistoryPage() {
     
     return () => clearInterval(interval);
   }, [fetchBurnHistory, allTransactions]);
+
+  // Update time display every minute to refresh "time ago" calculations without animation
+  useEffect(() => {
+    const timeInterval = setInterval(() => {
+      forceTimeUpdate(prev => prev + 1);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timeInterval);
+  }, []);
 
   // Pagination component
   const PaginationControls = () => {

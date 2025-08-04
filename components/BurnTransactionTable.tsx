@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { BurnTransaction, formatBurnAmount, formatTimeAgo } from '@/lib/api';
 import { ExternalLink } from 'lucide-react';
 
@@ -9,6 +10,17 @@ interface BurnTransactionTableProps {
 }
 
 export default function BurnTransactionTable({ transactions, loading = false }: BurnTransactionTableProps) {
+  // Force re-render every minute to update "time ago" values dynamically
+  const [, forceUpdate] = useState(0);
+
+  // Update component every minute to refresh "time ago" calculations without animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      forceUpdate(prev => prev + 1);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
   // Deduplicate transactions by hash to avoid React key conflicts
   const uniqueTransactions = transactions.reduce((acc, current) => {
     const existingIndex = acc.findIndex(tx => tx.hash === current.hash);
@@ -93,6 +105,7 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm text-gray-300">
+                    {/* formatTimeAgo will use current Date.now() - currentTime state triggers re-renders */}
                     {formatTimeAgo(tx.timeStamp)}
                   </span>
                 </td>
