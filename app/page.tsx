@@ -363,20 +363,23 @@ export default function Home() {
       totalBurned: data.totalBurnedData.totalBurned
     });
     
-    // 🔥 FLAME EFFECT: Detect new burn transactions
+    // 🔥 FLAME EFFECT: Detect new burn transactions  
     const newTransactions = Array.isArray(data.burnsData.transactions) ? data.burnsData.transactions : [];
     const newHashes = new Set(newTransactions.map(tx => tx.hash));
     
-    // Check if there are any new transaction hashes we haven't seen before
-    const hasNewBurns = Array.from(newHashes).some(hash => !previousTransactionHashes.has(hash));
-    
-    if (hasNewBurns && previousTransactionHashes.size > 0) { // Don't trigger on initial load
-      console.log('🔥 NEW BURN DETECTED! Triggering flame effect...');
-      setShowFlameEffect(true);
-    }
-    
-    // Update the tracking set with new hashes
-    setPreviousTransactionHashes(newHashes);
+    // Use functional update to avoid dependency issues
+    setPreviousTransactionHashes(prevHashes => {
+      // Check if there are any new transaction hashes we haven't seen before
+      const hasNewBurns = Array.from(newHashes).some(hash => !prevHashes.has(hash));
+      
+      if (hasNewBurns && prevHashes.size > 0) { // Don't trigger on initial load
+        console.log('🔥 NEW BURN DETECTED! Triggering flame effect...');
+        setShowFlameEffect(true);
+      }
+      
+      // Return the new hash set
+      return newHashes;
+    });
     
     // 🎬 ANIMATION: Detect changes and trigger animations
     const newData = {
@@ -432,7 +435,7 @@ export default function Home() {
       localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
       localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
     }
-  }, [previousTransactionHashes]); // Add previousTransactionHashes as dependency
+  }, []); // Empty dependency array - use functional updates instead
   
   // Calculate all metrics from server-side data for instant display (with comprehensive safe fallbacks)
   const burns = Array.isArray(burnsData.transactions) ? burnsData.transactions : [];
