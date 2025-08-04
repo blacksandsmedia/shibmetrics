@@ -8,6 +8,7 @@ interface ShibPriceData {
   marketCap: number;
   circulatingSupply: number;
   totalSupply: number;
+  volume24h: number;
   source: string;
   cached: boolean;
 }

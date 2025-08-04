@@ -32,6 +32,7 @@ interface ShibPriceData {
   marketCap: number;
   circulatingSupply: number;
   totalSupply: number;
+  volume24h: number;
   source: string;
   cached: boolean;
 }
@@ -79,6 +80,13 @@ function formatBurnedAmountDetailed(amount: number): string {
 
 function formatSupplyNumber(supply: number): string {
   return Math.floor(supply).toLocaleString('en-US');
+}
+
+function formatVolume24h(volume: number): string {
+  if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`;
+  if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`;
+  if (volume >= 1e3) return `$${(volume / 1e3).toFixed(2)}K`;
+  return `$${volume.toFixed(2)}`;
 }
 
 // Client-side data fetching functions for fast initial loading
@@ -206,11 +214,11 @@ export default function Home() {
         console.warn('Failed to parse cached price data');
       }
     }
-    return {
-      price: 0, priceChange24h: 0, marketCap: 0,
-      circulatingSupply: 0, totalSupply: 0,
-      source: 'initial', cached: true
-    };
+          return {
+        price: 0, priceChange24h: 0, marketCap: 0,
+        circulatingSupply: 0, totalSupply: 0, volume24h: 0,
+        source: 'initial', cached: true
+      };
   });
   const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>(() => {
     // Load from localStorage if available, otherwise minimal initial state
@@ -250,7 +258,7 @@ export default function Home() {
           setPriceData(result);
           console.log('💰 Price data loaded:', result.source);
         } catch (error) {
-          console.warn('⚠️ Price data unavailable:', error.message);
+          console.warn('⚠️ Price data unavailable:', error instanceof Error ? error.message : 'Unknown error');
         }
       };
 
@@ -260,7 +268,7 @@ export default function Home() {
           setTotalBurnedData(result);
           console.log('🔥 Total burned data loaded:', result.source);
         } catch (error) {
-          console.warn('⚠️ Total burned data unavailable:', error.message);
+          console.warn('⚠️ Total burned data unavailable:', error instanceof Error ? error.message : 'Unknown error');
         }
       };
 
@@ -270,7 +278,7 @@ export default function Home() {
           setBurnsData(result);
           console.log('📊 Burns data loaded:', result.source, `(${result.transactions.length} transactions)`);
         } catch (error) {
-          console.warn('⚠️ Burns data unavailable:', error.message);
+          console.warn('⚠️ Burns data unavailable:', error instanceof Error ? error.message : 'Unknown error');
         }
       };
 
@@ -415,19 +423,18 @@ export default function Home() {
           />
 
           <StatCard
-            title="Circulating Supply"
+            title="Token Supply"
             value={formatSupplyNumber(circulatingSupply)}
-            change="SHIB tokens"
+            change={`${formatSupplyNumber(totalSupply)} total supply`}
             icon={Clock}
             isSupplyCard={true}
           />
 
           <StatCard
-            title="Total Supply"
-            value={formatSupplyNumber(totalSupply)}
-            change="SHIB tokens"
-            icon={Clock}
-            isSupplyCard={true}
+            title="24 Hour Trading Volume"
+            value={formatVolume24h(priceData.volume24h || 0)}
+            change="From CoinGecko"
+            icon={TrendingUp}
           />
         </div>
 

@@ -19,6 +19,7 @@ export async function GET(request: Request) {
           marketCap: cachedData.marketCap,
           circulatingSupply: cachedData.circulatingSupply,
           totalSupply: cachedData.totalSupply,
+          volume24h: cachedData.volume24h || 0,
           timestamp: new Date().toISOString(),
           source: 'coingecko-cached',
           cached: true,
@@ -64,6 +65,7 @@ export async function GET(request: Request) {
     const marketCap = marketData.market_cap?.usd || 0;
     const circulatingSupply = marketData.circulating_supply || 0;
     const totalSupply = marketData.total_supply || 0;
+    const volume24h = marketData.total_volume?.usd || 0;
     
     if (typeof price !== 'number' || price <= 0) {
       throw new Error('Invalid price data from CoinGecko API');
@@ -88,6 +90,7 @@ export async function GET(request: Request) {
       marketCap,
       circulatingSupply,
       totalSupply,
+      volume24h,
       lastUpdated: Date.now()
     });
 
@@ -99,6 +102,7 @@ export async function GET(request: Request) {
       marketCap: marketCap,
       circulatingSupply: circulatingSupply,
       totalSupply: totalSupply,
+      volume24h: volume24h,
       timestamp: new Date().toISOString(),
       source: 'coingecko-live',
       cached: false
