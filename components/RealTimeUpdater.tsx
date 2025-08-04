@@ -118,11 +118,13 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
                      Array.isArray(burnsData.transactions);
       
       if (isValid && onDataUpdate) {
+        // Always update timestamp on successful check
+        setLastUpdate(new Date());
+        
         // Always update on first run, then use smart comparison
         if (isFirstUpdate) {
           console.log('🚀 Real-time update: First update - forcing homepage sync');
           onDataUpdate({ priceData, totalBurnedData, burnsData });
-          setLastUpdate(new Date());
           setIsFirstUpdate(false);
           
           // Initialize reference data
@@ -139,7 +141,6 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
           if (hasNewData) {
             console.log('✅ Real-time update: New data detected and updated');
             onDataUpdate({ priceData, totalBurnedData, burnsData });
-            setLastUpdate(new Date());
           } else {
             console.log('📊 Real-time check: No new data, keeping existing display');
           }
