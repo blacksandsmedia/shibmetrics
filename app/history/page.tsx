@@ -101,15 +101,16 @@ export default function BurnHistoryPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
-  // Fetch burn data - FAST single API call (same as burn tracker for consistency)
+  // Fetch burn data - COMPLETE HISTORICAL DATASET (all burns from beginning)
   const fetchBurnHistory = useCallback(async (forceFresh: boolean = false) => {
     setLoading(true);
     try {
-      console.log(`🔥 Fetching burn data from same API as burn tracker (forceFresh=${forceFresh})...`);
+      console.log(`📚 Fetching COMPLETE historical burn dataset (forceFresh=${forceFresh})...`);
       
-      // Use the SAME API endpoint as burn tracker for consistency and speed
-      const cacheParam = forceFresh ? '?force=true' : '';
-      const response = await fetch(`/api/burns${cacheParam}`, {
+      // Use historical dataset API to get ALL burns from SHIB's beginning
+      // Request maximum limit to get all historical transactions
+      const forceParam = forceFresh ? '&force=true' : '';
+      const response = await fetch(`/api/historical/dataset?limit=25000${forceParam}`, {
         cache: 'no-cache',
         method: 'GET',
         headers: {
@@ -118,11 +119,11 @@ export default function BurnHistoryPage() {
       });
       
       if (!response.ok) {
-        throw new Error(`Burns API failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Historical dataset API failed: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log(`🔥 Got ${data.transactions?.length || 0} transactions from burns API`);
+      console.log(`📚 Got ${data.transactions?.length || 0} transactions from COMPLETE historical dataset`);
       
       const transactions = data.transactions || [];
       
@@ -144,7 +145,7 @@ export default function BurnHistoryPage() {
         }
       });
       
-      console.log(`✅ FAST LOAD: Using ${validTransactions.length} transactions (same as burn tracker)`);
+      console.log(`✅ COMPLETE HISTORY: Loaded ${validTransactions.length} transactions from ALL of SHIB history`);
       setAllTransactions(validTransactions);
       setLastUpdated(new Date());
       
@@ -219,7 +220,7 @@ export default function BurnHistoryPage() {
         // Check for new data without updating UI immediately
         const checkForNewData = async () => {
           try {
-            const response = await fetch('/api/burns', { cache: 'no-cache' });
+            const response = await fetch('/api/historical/dataset?limit=25000', { cache: 'no-cache' });
             if (response.ok) {
               const data = await response.json();
               const newTransactions = data.transactions || [];
@@ -230,14 +231,14 @@ export default function BurnHistoryPage() {
                  newTransactions[0].hash !== allTransactions[0].hash);
               
               if (hasNewTransactions) {
-                console.log('🔥 New burn transactions detected, updating history...');
+                console.log('📚 New historical burn transactions detected, updating complete history...');
                 fetchBurnHistory();
               } else {
-                console.log('📊 No new transactions, keeping current display');
+                console.log('📊 No new transactions in historical dataset, keeping current display');
               }
             }
           } catch (error) {
-            console.warn('⚠️ Error checking for new transactions:', error);
+            console.warn('⚠️ Error checking for new historical transactions:', error);
           }
         };
         
@@ -342,7 +343,7 @@ export default function BurnHistoryPage() {
                 SHIB Burn History
               </h1>
               <p className="text-gray-400 mt-2">
-                Complete history of all Shiba Inu token burn transactions
+                Complete history of all Shiba Inu token burn transactions from the very beginning
               </p>
             </div>
 
