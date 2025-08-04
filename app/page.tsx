@@ -97,7 +97,9 @@ function formatBurnedAmountDetailed(amount: number): string {
 
 function formatSupplyNumber(supply: number): string {
   const safeSupply = (typeof supply === 'number' && !isNaN(supply) && isFinite(supply)) ? supply : 0;
-  return Math.floor(safeSupply).toLocaleString('en-US');
+  const flooredValue = Math.floor(safeSupply);
+  if (isNaN(flooredValue) || !isFinite(flooredValue)) return '0';
+  return flooredValue.toLocaleString('en-US');
 }
 
 function formatVolume24h(volume: number): string {
@@ -491,27 +493,34 @@ export default function Home() {
     return total + (isNaN(value) ? 0 : value / 1e18);
   }, 0);
 
-  // Calculate day-over-day percentage change (with safe fallbacks)
+  // Calculate day-over-day percentage change (with NUCLEAR-LEVEL safe fallbacks)
   let dayOverDayChange = 0;
   let dayOverDayText = 'No previous data'; // Default safe value
   
   try {
-    if (previous24HourBurnAmount > 0) {
-      dayOverDayChange = ((twentyFourHourBurnAmount - previous24HourBurnAmount) / previous24HourBurnAmount) * 100;
+    // Ensure all values are safe numbers
+    const safeTwentyFourHour = (typeof twentyFourHourBurnAmount === 'number' && !isNaN(twentyFourHourBurnAmount) && isFinite(twentyFourHourBurnAmount)) ? twentyFourHourBurnAmount : 0;
+    const safePrevious24Hour = (typeof previous24HourBurnAmount === 'number' && !isNaN(previous24HourBurnAmount) && isFinite(previous24HourBurnAmount)) ? previous24HourBurnAmount : 0;
+    
+    if (safePrevious24Hour > 0) {
+      const rawChange = ((safeTwentyFourHour - safePrevious24Hour) / safePrevious24Hour) * 100;
+      dayOverDayChange = (typeof rawChange === 'number' && !isNaN(rawChange) && isFinite(rawChange)) ? rawChange : 0;
       const sign = dayOverDayChange >= 0 ? '+' : '';
       
       // Format large percentage changes appropriately
       let formattedChange = '0.0';
-      if (Math.abs(dayOverDayChange) >= 1000) {
-        formattedChange = `${Math.round(dayOverDayChange).toLocaleString()}`;
-      } else if (Math.abs(dayOverDayChange) >= 100) {
+      const absChange = Math.abs(dayOverDayChange);
+      if (absChange >= 1000) {
+        const rounded = Math.round(dayOverDayChange);
+        formattedChange = (typeof rounded === 'number' && !isNaN(rounded) && isFinite(rounded)) ? rounded.toLocaleString() : '0';
+      } else if (absChange >= 100) {
         formattedChange = safeToFixed(dayOverDayChange, 1);
       } else {
         formattedChange = safeToFixed(dayOverDayChange, 1);
       }
       
       dayOverDayText = `${sign}${formattedChange}% vs yesterday`;
-    } else if (twentyFourHourBurnAmount > 0) {
+    } else if (safeTwentyFourHour > 0) {
       dayOverDayText = '🚀 New activity today';
     }
     // else: dayOverDayText remains as 'No previous data'
@@ -527,18 +536,26 @@ export default function Home() {
   const totalSupplyOriginal = 1000000000000000; // Original total supply: 1 quadrillion SHIB
   const burnPercentage = (totalBurned > 0 && !isNaN(totalBurned)) ? (totalBurned / totalSupplyOriginal) * 100 : 0;
 
-  // Create safe display values to guarantee no undefined/null/NaN values reach StatCard components
+  // Create BULLETPROOF display values - NEVER allow undefined/null/NaN to reach React render
   const safeDisplayValues = {
-    price: isNaN(currentPrice) || currentPrice === null || currentPrice === undefined ? 0 : currentPrice,
-    priceChange: isNaN(priceChange) || priceChange === null || priceChange === undefined ? 0 : priceChange,
-    marketCap: isNaN(marketCap) || marketCap === null || marketCap === undefined ? 0 : marketCap,
-    circulatingSupply: isNaN(circulatingSupply) || circulatingSupply === null || circulatingSupply === undefined ? 0 : circulatingSupply,
-    totalSupply: isNaN(totalSupply) || totalSupply === null || totalSupply === undefined ? 0 : totalSupply,
-    volume24h: isNaN(volume24h) || volume24h === null || volume24h === undefined ? 0 : volume24h,
-    totalBurned: isNaN(totalBurned) || totalBurned === null || totalBurned === undefined ? 0 : totalBurned,
-    burnPercentage: isNaN(burnPercentage) || burnPercentage === null || burnPercentage === undefined ? 0 : burnPercentage,
-    twentyFourHourBurnAmount: isNaN(twentyFourHourBurnAmount) || twentyFourHourBurnAmount === null || twentyFourHourBurnAmount === undefined ? 0 : twentyFourHourBurnAmount
+    price: (typeof currentPrice === 'number' && !isNaN(currentPrice) && isFinite(currentPrice)) ? currentPrice : 0,
+    priceChange: (typeof priceChange === 'number' && !isNaN(priceChange) && isFinite(priceChange)) ? priceChange : 0,
+    marketCap: (typeof marketCap === 'number' && !isNaN(marketCap) && isFinite(marketCap)) ? marketCap : 0,
+    circulatingSupply: (typeof circulatingSupply === 'number' && !isNaN(circulatingSupply) && isFinite(circulatingSupply)) ? circulatingSupply : 0,
+    totalSupply: (typeof totalSupply === 'number' && !isNaN(totalSupply) && isFinite(totalSupply)) ? totalSupply : 0,
+    volume24h: (typeof volume24h === 'number' && !isNaN(volume24h) && isFinite(volume24h)) ? volume24h : 0,
+    totalBurned: (typeof totalBurned === 'number' && !isNaN(totalBurned) && isFinite(totalBurned)) ? totalBurned : 0,
+    burnPercentage: (typeof burnPercentage === 'number' && !isNaN(burnPercentage) && isFinite(burnPercentage)) ? burnPercentage : 0,
+    twentyFourHourBurnAmount: (typeof twentyFourHourBurnAmount === 'number' && !isNaN(twentyFourHourBurnAmount) && isFinite(twentyFourHourBurnAmount)) ? twentyFourHourBurnAmount : 0
   };
+
+  // 🐛 DEBUG: Log what values are actually being used for rendering
+  console.log('🐛 RENDER DEBUG - safeDisplayValues:', {
+    price: safeDisplayValues.price,
+    priceChange: safeDisplayValues.priceChange,
+    marketCap: safeDisplayValues.marketCap,
+    rawPriceData: { price: priceData?.price, source: priceData?.source }
+  });
 
   return (
     <div className="min-h-screen bg-gray-900">
