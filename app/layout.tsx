@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+// Force deployment - UI cleanup build v2 - Aug 4 2025 3:50 PM
+
 const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
