@@ -101,16 +101,16 @@ export default function BurnHistoryPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
-  // Fetch burn data - SAME as homepage and burn-tracker for consistency
+  // Fetch burn data - COMPLETE HISTORICAL DATASET (5+ years of SHIB burns)
   const fetchBurnHistory = useCallback(async (forceFresh: boolean = false) => {
     setLoading(true);
     try {
-      console.log(`📚 Fetching recent burn data for history page (forceFresh=${forceFresh})...`);
+      console.log(`📚 Fetching COMPLETE SHIB burn history (5+ years of data)...`);
       
-      // Use the SAME data source as homepage and burn-tracker for consistency
-      // This ensures ALL tables show the SAME recent burn data
-      const forceParam = forceFresh ? '?force=true' : '';
-      const response = await fetch(`/api/burns${forceParam}`, {
+      // Use historical dataset API for COMPLETE burn history - not just recent burns
+      // This gives us ALL SHIB burns from 2020 onwards, not just recent ~300 transactions
+      const cacheParam = forceFresh ? '?_t=' + Date.now() : '';
+      const response = await fetch(`/api/historical/dataset${cacheParam}`, {
         cache: forceFresh ? 'no-cache' : 'default',
         method: 'GET',
         headers: {
@@ -119,11 +119,11 @@ export default function BurnHistoryPage() {
       });
       
       if (!response.ok) {
-        throw new Error(`Burns API failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Historical dataset API failed: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log(`📚 Got ${data.transactions?.length || 0} transactions from burns API (same as other tables)`);
+      console.log(`📚 Got ${data.transactions?.length || 0} transactions from COMPLETE historical dataset`);
       
       const transactions = data.transactions || [];
       
@@ -145,7 +145,7 @@ export default function BurnHistoryPage() {
         }
       });
       
-      console.log(`✅ COMPLETE HISTORY: Loaded ${validTransactions.length} transactions from ALL of SHIB history`);
+      console.log(`✅ COMPLETE HISTORY: Loaded ${validTransactions.length} transactions from ALL of SHIB history (5+ years)`);
       setAllTransactions(validTransactions);
       setLastUpdated(new Date());
       
@@ -220,7 +220,7 @@ export default function BurnHistoryPage() {
         // Check for new data without updating UI immediately
         const checkForNewData = async () => {
           try {
-            const response = await fetch('/api/historical/dataset?limit=25000', { cache: 'no-cache' });
+            const response = await fetch('/api/historical/dataset?_t=' + Date.now(), { cache: 'no-cache' });
             if (response.ok) {
               const data = await response.json();
               const newTransactions = data.transactions || [];
@@ -232,7 +232,7 @@ export default function BurnHistoryPage() {
               
               if (hasNewTransactions) {
                 console.log('📚 New historical burn transactions detected, updating complete history...');
-                fetchBurnHistory();
+                fetchBurnHistory(true); // Force fresh fetch
               } else {
                 console.log('📊 No new transactions in historical dataset, keeping current display');
               }
@@ -343,21 +343,19 @@ export default function BurnHistoryPage() {
                 SHIB Burn History
               </h1>
               <p className="text-gray-400 mt-2">
-                Recent Shiba Inu token burn transactions (same data as homepage and burn tracker)
+                Complete 5+ year history of ALL Shiba Inu token burn transactions (2020-present)
               </p>
             </div>
 
           </div>
           
           <div className="mt-4 flex items-center text-sm text-gray-400">
-            <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
-            <span className="mx-2">•</span>
             <span>{filteredTransactions.length} transactions</span>
             <span className="mx-2">•</span>
             <span>
               {formatNumber(filteredTransactions.reduce((sum, tx) => 
                 sum + (parseInt(tx.value) / Math.pow(10, 18)), 0
-              ))} SHIB total
+              ))} SHIB total burned
             </span>
           </div>
         </div>
