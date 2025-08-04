@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
@@ -289,6 +289,9 @@ export default function Home() {
     latestTxHash: ''
   });
 
+  // Reference to track animation timeout to prevent multiple timeouts
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Initial data fetch on component mount
   useEffect(() => {
     console.log('🚀 Client: Fetching initial data...');
@@ -332,6 +335,15 @@ export default function Home() {
     };
 
     fetchInitialData();
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Function to detect changes and trigger animations (memoized to prevent render loops)
@@ -378,17 +390,26 @@ export default function Home() {
     // Update changed cards state
     setChangedCards(changes);
 
-    // Clear animations after 2 seconds
-    setTimeout(() => {
-      setChangedCards({
-        price: false,
-        burnActivity: false,
-        totalBurned: false,
-        marketCap: false,
-        supply: false,
-        volume: false
-      });
-    }, 2000);
+    // Clear animations after 2 seconds (only if changes were detected)
+    if (hasAnyChanges) {
+      // Clear any existing animation timeout to prevent multiple timeouts
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+      
+      // Set new timeout
+      animationTimeoutRef.current = setTimeout(() => {
+        setChangedCards({
+          price: false,
+          burnActivity: false,
+          totalBurned: false,
+          marketCap: false,
+          supply: false,
+          volume: false
+        });
+        animationTimeoutRef.current = null;
+      }, 2000);
+    }
 
     // Update previous values reference
     prevDataRef.current = {
@@ -530,7 +551,9 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold text-white">🔥 SHIBMETRICS</h1>
             
             {/* Real-time updater component - handles live status and updates */}
-            <RealTimeUpdater onDataUpdate={handleDataUpdate} />
+            {useMemo(() => (
+              <RealTimeUpdater onDataUpdate={handleDataUpdate} />
+            ), [handleDataUpdate])}
           </div>
           
           <p className="text-xl text-gray-300 mb-4">

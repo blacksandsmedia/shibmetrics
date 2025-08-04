@@ -23,6 +23,10 @@ export default function StatCard({
   hasChanged = false,
   animationType = 'flash'
 }: StatCardProps) {
+  // Bulletproof safety for all props to prevent React error #418
+  const safeTitle = (typeof title === 'string' && title) ? title : 'Loading...';
+  const safeValue = (typeof value === 'string' && value) ? value : '0';
+  const safeChange = (typeof change === 'string' && change) ? change : undefined;
   const changeColor = {
     positive: 'text-green-400',
     negative: 'text-red-400',
@@ -49,7 +53,7 @@ export default function StatCard({
     <div className={`bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-700 ease-in-out ${getAnimationClasses()}`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-400">{title}</p>
+          <p className="text-sm font-medium text-gray-400">{safeTitle}</p>
           {loading ? (
             <div className="mt-2 h-8 bg-gray-700 rounded animate-pulse"></div>
           ) : (
@@ -58,12 +62,12 @@ export default function StatCard({
                 ? 'text-xl sm:text-2xl lg:text-3xl break-all' // Responsive font for supply cards
                 : 'text-3xl' // Regular font for other cards
             } ${hasChanged ? 'scale-105 text-orange-300' : ''}`}>
-              {value}
+              {safeValue}
             </p>
           )}
-          {change && !loading && (
+          {safeChange && !loading && (
             <p className={`mt-1 text-sm ${changeColor}`}>
-              {change}
+              {safeChange}
             </p>
           )}
         </div>
