@@ -1,7 +1,7 @@
-import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
+import type { Config } from "@netlify/functions";
 
 // Netlify scheduled function to refresh all data every 2 minutes
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export default async (request: Request) => {
   console.log('🕐 Scheduled refresh starting...');
   
   try {
@@ -66,6 +66,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   }
 };
 
-export const config = {
+// Modern Netlify Functions scheduled configuration
+export const config: Config = {
   schedule: "*/2 * * * *"  // Every 2 minutes
 }; 
