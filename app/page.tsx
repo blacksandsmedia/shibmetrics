@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
@@ -261,6 +261,28 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
 
+  // Animation state tracking for changed values
+  const [changedCards, setChangedCards] = useState({
+    price: false,
+    burnActivity: false,
+    totalBurned: false,
+    marketCap: false,
+    supply: false,
+    volume: false
+  });
+
+  // References to track previous values for change detection
+  const prevDataRef = useRef({
+    price: 0,
+    priceChange24h: 0,
+    marketCap: 0,
+    circulatingSupply: 0,
+    totalSupply: 0,
+    volume24h: 0,
+    totalBurned: 0,
+    latestTxHash: ''
+  });
+
   // Initial data fetch on component mount
   useEffect(() => {
     console.log('🚀 Client: Fetching initial data...');
@@ -306,6 +328,48 @@ export default function Home() {
     fetchInitialData();
   }, []);
 
+  // Function to detect changes and trigger animations
+  const detectChangesAndAnimate = (newPriceData: ShibPriceData, newTotalBurnedData: TotalBurnedData, newBurnsData: BurnsData) => {
+    const prev = prevDataRef.current;
+    const changes = {
+      price: newPriceData.price !== prev.price,
+      burnActivity: newBurnsData.transactions.length > 0 && 
+                   (newBurnsData.transactions[0]?.hash !== prev.latestTxHash),
+      totalBurned: newTotalBurnedData.totalBurned !== prev.totalBurned,
+      marketCap: newPriceData.marketCap !== prev.marketCap,
+      supply: newPriceData.circulatingSupply !== prev.circulatingSupply || 
+              newPriceData.totalSupply !== prev.totalSupply,
+      volume: newPriceData.volume24h !== prev.volume24h
+    };
+
+    // Update changed cards state
+    setChangedCards(changes);
+
+    // Clear animations after 2 seconds
+    setTimeout(() => {
+      setChangedCards({
+        price: false,
+        burnActivity: false,
+        totalBurned: false,
+        marketCap: false,
+        supply: false,
+        volume: false
+      });
+    }, 2000);
+
+    // Update previous values reference
+    prevDataRef.current = {
+      price: newPriceData.price,
+      priceChange24h: newPriceData.priceChange24h,
+      marketCap: newPriceData.marketCap,
+      circulatingSupply: newPriceData.circulatingSupply,
+      totalSupply: newPriceData.totalSupply,
+      volume24h: newPriceData.volume24h,
+      totalBurned: newTotalBurnedData.totalBurned,
+      latestTxHash: newBurnsData.transactions.length > 0 ? newBurnsData.transactions[0].hash : ''
+    };
+  };
+
   // Handle real-time updates from RealTimeUpdater
   const handleDataUpdate = (data: {
     priceData: ShibPriceData;
@@ -313,6 +377,9 @@ export default function Home() {
     burnsData: BurnsData;
   }) => {
     console.log('🔄 Real-time update received - deployment v2');
+    
+    // Detect changes and trigger animations before updating state
+    detectChangesAndAnimate(data.priceData, data.totalBurnedData, data.burnsData);
     
     // Update state and cache the new data
     setPriceData(data.priceData);
@@ -414,6 +481,8 @@ export default function Home() {
             value={`$${priceData.price?.toFixed(8) || '0.00000000'}`}
             change={`${priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2) || '0.00'}% (24h)`}
             icon={DollarSign}
+            hasChanged={changedCards.price}
+            animationType="flash"
           />
 
           <StatCard
@@ -421,6 +490,8 @@ export default function Home() {
             value={formatBurnedAmountDetailed(twentyFourHourBurnAmount)}
             change={dayOverDayText}
             icon={dayOverDayChange > 0 ? TrendingUp : dayOverDayChange < 0 ? TrendingDown : Flame}
+            hasChanged={changedCards.burnActivity}
+            animationType="pulse"
           />
 
           <StatCard
@@ -428,6 +499,8 @@ export default function Home() {
             value={formatBurnedAmountHighPrecision(totalBurned)}
             change={`${burnPercentage.toFixed(6)}% of total supply`}
             icon={Flame}
+            hasChanged={changedCards.totalBurned}
+            animationType="glow"
           />
 
           <StatCard
@@ -435,6 +508,8 @@ export default function Home() {
             value={`$${formatMarketCap(marketCap)}B`}
             change="From CoinGecko"
             icon={DollarSign}
+            hasChanged={changedCards.marketCap}
+            animationType="flash"
           />
 
           <StatCard
@@ -443,6 +518,8 @@ export default function Home() {
             change={`${formatSupplyNumber(totalSupply)} total supply`}
             icon={Clock}
             isSupplyCard={true}
+            hasChanged={changedCards.supply}
+            animationType="pulse"
           />
 
           <StatCard
@@ -450,6 +527,8 @@ export default function Home() {
             value={formatVolume24h(priceData.volume24h || 0)}
             change="From CoinGecko"
             icon={TrendingUp}
+            hasChanged={changedCards.volume}
+            animationType="glow"
           />
         </div>
 
