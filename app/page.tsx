@@ -49,50 +49,62 @@ interface BurnsData {
   cached: boolean;
 }
 
+// Safe .toFixed() wrapper to prevent React error #418
+function safeToFixed(num: number, decimals: number): string {
+  if (typeof num !== 'number' || isNaN(num) || !isFinite(num)) {
+    return '0.' + '0'.repeat(decimals);
+  }
+  try {
+    return num.toFixed(decimals);
+  } catch (e) {
+    return '0.' + '0'.repeat(decimals);
+  }
+}
+
 // Format large numbers for display (with null/undefined protection)
 function formatNumber(num: number): string {
   const safeNum = (typeof num === 'number' && !isNaN(num)) ? num : 0;
-  if (safeNum >= 1e12) return (safeNum / 1e12).toFixed(2) + 'T';
-  if (safeNum >= 1e9) return (safeNum / 1e9).toFixed(2) + 'B';
-  if (safeNum >= 1e6) return (safeNum / 1e6).toFixed(2) + 'M';
-  if (safeNum >= 1e3) return (safeNum / 1e3).toFixed(2) + 'K';
-  return safeNum.toFixed(2);
+  if (safeNum >= 1e12) return safeToFixed(safeNum / 1e12, 2) + 'T';
+  if (safeNum >= 1e9) return safeToFixed(safeNum / 1e9, 2) + 'B';
+  if (safeNum >= 1e6) return safeToFixed(safeNum / 1e6, 2) + 'M';
+  if (safeNum >= 1e3) return safeToFixed(safeNum / 1e3, 2) + 'K';
+  return safeToFixed(safeNum, 2);
 }
 
 function formatBurnedAmountHighPrecision(amount: number): string {
   const safeAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 0;
-  if (safeAmount >= 1e12) return (safeAmount / 1e12).toFixed(5) + 'T';
-  if (safeAmount >= 1e9) return (safeAmount / 1e9).toFixed(5) + 'B';
-  if (safeAmount >= 1e6) return (safeAmount / 1e6).toFixed(5) + 'M';
-  if (safeAmount >= 1e3) return (safeAmount / 1e3).toFixed(5) + 'K';
-  return safeAmount.toFixed(5);
+  if (safeAmount >= 1e12) return safeToFixed(safeAmount / 1e12, 5) + 'T';
+  if (safeAmount >= 1e9) return safeToFixed(safeAmount / 1e9, 5) + 'B';
+  if (safeAmount >= 1e6) return safeToFixed(safeAmount / 1e6, 5) + 'M';
+  if (safeAmount >= 1e3) return safeToFixed(safeAmount / 1e3, 5) + 'K';
+  return safeToFixed(safeAmount, 5);
 }
 
 function formatMarketCap(marketCap: number): string {
   const safeCap = (typeof marketCap === 'number' && !isNaN(marketCap)) ? marketCap : 0;
-  return (safeCap / 1e9).toFixed(5); // Convert to billions with 5 decimal places
+  return safeToFixed(safeCap / 1e9, 5); // Convert to billions with 5 decimal places
 }
 
 function formatBurnedAmountDetailed(amount: number): string {
   const safeAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 0;
-  if (safeAmount >= 1e12) return (safeAmount / 1e12).toFixed(4) + 'T';
-  if (safeAmount >= 1e9) return (safeAmount / 1e9).toFixed(4) + 'B';
-  if (safeAmount >= 1e6) return (safeAmount / 1e6).toFixed(4) + 'M';
-  if (safeAmount >= 1e3) return (safeAmount / 1e3).toFixed(4) + 'K';
-  return safeAmount.toFixed(4);
+  if (safeAmount >= 1e12) return safeToFixed(safeAmount / 1e12, 4) + 'T';
+  if (safeAmount >= 1e9) return safeToFixed(safeAmount / 1e9, 4) + 'B';
+  if (safeAmount >= 1e6) return safeToFixed(safeAmount / 1e6, 4) + 'M';
+  if (safeAmount >= 1e3) return safeToFixed(safeAmount / 1e3, 4) + 'K';
+  return safeToFixed(safeAmount, 4);
 }
 
 function formatSupplyNumber(supply: number): string {
-  const safeSupply = (typeof supply === 'number' && !isNaN(supply)) ? supply : 0;
+  const safeSupply = (typeof supply === 'number' && !isNaN(supply) && isFinite(supply)) ? supply : 0;
   return Math.floor(safeSupply).toLocaleString('en-US');
 }
 
 function formatVolume24h(volume: number): string {
   const safeVolume = (typeof volume === 'number' && !isNaN(volume)) ? volume : 0;
-  if (safeVolume >= 1e9) return `$${(safeVolume / 1e9).toFixed(2)}B`;
-  if (safeVolume >= 1e6) return `$${(safeVolume / 1e6).toFixed(2)}M`;
-  if (safeVolume >= 1e3) return `$${(safeVolume / 1e3).toFixed(2)}K`;
-  return `$${safeVolume.toFixed(2)}`;
+  if (safeVolume >= 1e9) return `$${safeToFixed(safeVolume / 1e9, 2)}B`;
+  if (safeVolume >= 1e6) return `$${safeToFixed(safeVolume / 1e6, 2)}M`;
+  if (safeVolume >= 1e3) return `$${safeToFixed(safeVolume / 1e3, 2)}K`;
+  return `$${safeToFixed(safeVolume, 2)}`;
 }
 
 // Client-side data fetching functions for fast initial loading
@@ -400,9 +412,9 @@ export default function Home() {
       if (Math.abs(dayOverDayChange) >= 1000) {
         formattedChange = `${Math.round(dayOverDayChange).toLocaleString()}`;
       } else if (Math.abs(dayOverDayChange) >= 100) {
-        formattedChange = dayOverDayChange.toFixed(1);
+        formattedChange = safeToFixed(dayOverDayChange, 1);
       } else {
-        formattedChange = dayOverDayChange.toFixed(1);
+        formattedChange = safeToFixed(dayOverDayChange, 1);
       }
       
       dayOverDayText = `${sign}${formattedChange}% vs yesterday`;
@@ -456,8 +468,8 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
             title="SHIB Price"
-            value={`$${safeDisplayValues.price.toFixed(8)}`}
-            change={`${safeDisplayValues.priceChange > 0 ? '+' : ''}${safeDisplayValues.priceChange.toFixed(2)}% (24h)`}
+            value={`$${safeToFixed(safeDisplayValues.price, 8)}`}
+            change={`${safeDisplayValues.priceChange > 0 ? '+' : ''}${safeToFixed(safeDisplayValues.priceChange, 2)}% (24h)`}
             icon={DollarSign}
           />
 
@@ -471,7 +483,7 @@ export default function Home() {
           <StatCard
             title="Burnt from Initial Supply"
             value={formatBurnedAmountHighPrecision(safeDisplayValues.totalBurned)}
-            change={`${safeDisplayValues.burnPercentage.toFixed(6)}% of total supply`}
+            change={`${safeToFixed(safeDisplayValues.burnPercentage, 6)}% of total supply`}
             icon={Flame}
           />
 
