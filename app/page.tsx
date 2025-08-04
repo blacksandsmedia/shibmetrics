@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
@@ -397,8 +397,8 @@ export default function Home() {
     };
   };
 
-  // Handle real-time updates from RealTimeUpdater
-  const handleDataUpdate = (data: {
+  // Handle real-time updates from RealTimeUpdater (memoized to prevent render loops)
+  const handleDataUpdate = useCallback((data: {
     priceData: ShibPriceData;
     totalBurnedData: TotalBurnedData;
     burnsData: BurnsData;
@@ -424,15 +424,15 @@ export default function Home() {
       localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
       localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
     }
-  };
+  }, [detectChangesAndAnimate]);
   
-  // Calculate all metrics from server-side data for instant display
-  const burns = burnsData.transactions;
-  const totalBurned = totalBurnedData.totalBurned;
-  const priceChange = priceData.priceChange24h;
-  const marketCap = priceData.marketCap;
-  const circulatingSupply = priceData.circulatingSupply;
-  const totalSupply = priceData.totalSupply;
+  // Calculate all metrics from server-side data for instant display (with safe fallbacks)
+  const burns = burnsData.transactions || [];
+  const totalBurned = totalBurnedData.totalBurned || 0;
+  const priceChange = priceData.priceChange24h || 0;
+  const marketCap = priceData.marketCap || 0;
+  const circulatingSupply = priceData.circulatingSupply || 0;
+  const totalSupply = priceData.totalSupply || 0;
   const now = Date.now();
   const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
   const fortyEightHoursAgo = now - (48 * 60 * 60 * 1000);
@@ -452,15 +452,19 @@ export default function Home() {
   // Show either last 10 burns or all 24h burns (whichever is greater)
   const burnsToShow = last24HourBurns.length > 10 ? last24HourBurns : burns.slice(0, 10);
   
-  // Calculate 24H burn activity from actual 24H burns
-  const twentyFourHourBurnAmount = last24HourBurns.reduce((total: number, tx: BurnTransaction) => 
-    total + (parseInt(tx.value) / 1e18), 0);
+  // Calculate 24H burn activity from actual 24H burns (with safe fallbacks)
+  const twentyFourHourBurnAmount = last24HourBurns.reduce((total: number, tx: BurnTransaction) => {
+    const value = parseInt(tx.value || '0');
+    return total + (isNaN(value) ? 0 : value / 1e18);
+  }, 0);
 
-  // Calculate previous 24H burn activity for comparison
-  const previous24HourBurnAmount = previous24HourBurns.reduce((total: number, tx: BurnTransaction) => 
-    total + (parseInt(tx.value) / 1e18), 0);
+  // Calculate previous 24H burn activity for comparison (with safe fallbacks)
+  const previous24HourBurnAmount = previous24HourBurns.reduce((total: number, tx: BurnTransaction) => {
+    const value = parseInt(tx.value || '0');
+    return total + (isNaN(value) ? 0 : value / 1e18);
+  }, 0);
 
-  // Calculate day-over-day percentage change
+  // Calculate day-over-day percentage change (with safe fallbacks)
   let dayOverDayChange = 0;
   let dayOverDayText = 'No previous data';
   
@@ -485,9 +489,9 @@ export default function Home() {
   
   // Additional calculations can be added here if needed
 
-  // Calculate burn percentage
+  // Calculate burn percentage (with safe fallbacks)
   const totalSupplyOriginal = 1000000000000000; // Original total supply: 1 quadrillion SHIB
-  const burnPercentage = (totalBurned / totalSupplyOriginal) * 100;
+  const burnPercentage = totalBurned > 0 ? (totalBurned / totalSupplyOriginal) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -510,8 +514,8 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
             title="SHIB Price"
-            value={`$${priceData.price?.toFixed(8) || '0.00000000'}`}
-            change={`${priceChange > 0 ? '+' : ''}${priceChange?.toFixed(2) || '0.00'}% (24h)`}
+            value={`$${(priceData.price || 0).toFixed(8)}`}
+            change={`${priceChange > 0 ? '+' : ''}${(priceChange || 0).toFixed(2)}% (24h)`}
             icon={DollarSign}
             hasChanged={changedCards.price}
             animationType="flash"
@@ -529,7 +533,7 @@ export default function Home() {
           <StatCard
             title="Burnt from Initial Supply"
             value={formatBurnedAmountHighPrecision(totalBurned)}
-            change={`${burnPercentage.toFixed(6)}% of total supply`}
+            change={`${(burnPercentage || 0).toFixed(6)}% of total supply`}
             icon={Flame}
             hasChanged={changedCards.totalBurned}
             animationType="glow"
@@ -537,7 +541,7 @@ export default function Home() {
 
           <StatCard
             title="Market Cap"
-            value={`$${formatMarketCap(marketCap)}B`}
+            value={`$${formatMarketCap(marketCap || 0)}B`}
             change="From CoinGecko"
             icon={DollarSign}
             hasChanged={changedCards.marketCap}
