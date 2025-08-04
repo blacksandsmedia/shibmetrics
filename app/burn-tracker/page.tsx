@@ -110,16 +110,9 @@ export default function BurnTrackerPage() {
       const beforeFilter = filtered.length;
       const filterAddress = selectedAddress.toLowerCase();
       
-      // Community Address can be either source (from) OR destination (to), others are destinations (to)  
-      if (filterAddress === BURN_ADDRESSES['Community Address'].toLowerCase()) {
-        filtered = filtered.filter(burn => 
-          burn.from.toLowerCase() === filterAddress || burn.to.toLowerCase() === filterAddress
-        );
-        console.log(`🔥 After CA source/destination filter: ${filtered.length} (was ${beforeFilter})`);
-      } else {
-        filtered = filtered.filter(burn => burn.to.toLowerCase() === filterAddress);
-        console.log(`🔥 After destination filter (${selectedAddress}): ${filtered.length} (was ${beforeFilter})`);
-      }
+      // All burn addresses are destinations (to)
+      filtered = filtered.filter(burn => burn.to.toLowerCase() === filterAddress);
+      console.log(`🔥 After destination filter (${selectedAddress}): ${filtered.length} (was ${beforeFilter})`);
     }
 
     // Sort
@@ -143,16 +136,13 @@ export default function BurnTrackerPage() {
   // Get friendly name for burn address  
   const getAddressName = (address: string): string => {
     const lowerAddress = address.toLowerCase();
-    // Check if it's the Community Address (source)
-    if (lowerAddress === BURN_ADDRESSES['Community Address'].toLowerCase()) {
-      return 'CA';
-    }
+    // No longer tracking Community Address as a burn destination
     // Check burn destinations
     for (const [name, addr] of Object.entries(BURN_ADDRESSES)) {
       if ((addr as string).toLowerCase() === lowerAddress) {
-        if (name === 'Vitalik Burn Alt') return 'BA-1';
-        if (name === 'Dead Address 1') return 'BA-2';  
-        if (name === 'Null Address') return 'BA-3';
+        if (name === 'Vitalik Burn (BA-1)') return 'BA-1';
+        if (name === 'Dead Address (BA-2)') return 'BA-2';  
+        if (name === 'Black Hole (BA-3)') return 'BA-3';
         return name;
       }
     }
@@ -206,10 +196,9 @@ export default function BurnTrackerPage() {
                   className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="all">All Addresses</option>
-                  <option value={BURN_ADDRESSES['Community Address']}>Community Address (CA)</option>
-                  <option value={BURN_ADDRESSES['Vitalik Burn Alt']}>Vitalik Burn Alt (BA-1)</option>
-                  <option value={BURN_ADDRESSES['Dead Address 1']}>Dead Address (BA-2)</option>
-                  <option value={BURN_ADDRESSES['Null Address']}>Null Address (BA-3)</option>
+                  <option value={BURN_ADDRESSES['Vitalik Burn (BA-1)']}>Vitalik Burn (BA-1)</option>
+                  <option value={BURN_ADDRESSES['Dead Address (BA-2)']}>Dead Address (BA-2)</option>
+                  <option value={BURN_ADDRESSES['Black Hole (BA-3)']}>Black Hole (BA-3)</option>
                 </select>
             </div>
             
