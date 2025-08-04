@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Force rebuild for UI cleanup deployment - v0.1.1 - Aug 4 2025
+// Force rebuild for UI cleanup deployment - v0.1.2 - Aug 4 2025 - AGGRESSIVE CACHE BUST
 const nextConfig: NextConfig = {
   async headers() {
     return [
