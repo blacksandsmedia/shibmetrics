@@ -99,11 +99,11 @@ async function fetchShibPriceClient(): Promise<ShibPriceData> {
 
   // Fallback
   return {
-    price: 0.00001200,
-    priceChange24h: 0.00,
-    marketCap: 7200000000,
-    circulatingSupply: 589000000000000,
-    totalSupply: 999982000000000,
+    price: 0.00001233,
+    priceChange24h: 2.16,
+    marketCap: 7265139900,
+    circulatingSupply: 589246214156011,
+    totalSupply: 589500993143526,
     source: 'client_fallback',
     cached: true
   };
@@ -164,8 +164,8 @@ async function fetchBurnsClient(): Promise<BurnsData> {
 export default function Home() {
   // State management for real-time updates
   const [priceData, setPriceData] = useState<ShibPriceData>({
-    price: 0.00001200, priceChange24h: 0.00, marketCap: 7200000000,
-    circulatingSupply: 589000000000000, totalSupply: 999982000000000,
+    price: 0.00001233, priceChange24h: 2.16, marketCap: 7265139900,
+    circulatingSupply: 589246214156011, totalSupply: 589500993143526,
     source: 'initial', cached: true
   });
   const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>({
