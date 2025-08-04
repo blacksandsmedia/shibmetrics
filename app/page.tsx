@@ -549,13 +549,7 @@ export default function Home() {
     twentyFourHourBurnAmount: (typeof twentyFourHourBurnAmount === 'number' && !isNaN(twentyFourHourBurnAmount) && isFinite(twentyFourHourBurnAmount)) ? twentyFourHourBurnAmount : 0
   };
 
-  // 🐛 DEBUG: Log what values are actually being used for rendering
-  console.log('🐛 RENDER DEBUG - safeDisplayValues:', {
-    price: safeDisplayValues.price,
-    priceChange: safeDisplayValues.priceChange,
-    marketCap: safeDisplayValues.marketCap,
-    rawPriceData: { price: priceData?.price, source: priceData?.source }
-  });
+  // Values are now safely processed and ready for rendering
 
   return (
     <div className="min-h-screen bg-gray-900">
