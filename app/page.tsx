@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
@@ -267,30 +267,9 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Animation state tracking for changed values
-  const [changedCards, setChangedCards] = useState({
-    price: false,
-    burnActivity: false,
-    totalBurned: false,
-    marketCap: false,
-    supply: false,
-    volume: false
-  });
+  // REMOVED: Complex animation state - keeping it simple
 
-  // References to track previous values for change detection
-  const prevDataRef = useRef({
-    price: 0,
-    priceChange24h: 0,
-    marketCap: 0,
-    circulatingSupply: 0,
-    totalSupply: 0,
-    volume24h: 0,
-    totalBurned: 0,
-    latestTxHash: ''
-  });
-
-  // Reference to track animation timeout to prevent multiple timeouts
-  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // REMOVED: Complex refs for change detection - keeping it simple
 
   // Initial data fetch on component mount
   useEffect(() => {
@@ -337,110 +316,24 @@ export default function Home() {
     fetchInitialData();
   }, []);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-      }
-    };
-  }, []);
+  // REMOVED: Cleanup logic for animations - keeping it simple
 
-  // Function to detect changes and trigger animations (memoized to prevent render loops)
-  const detectChangesAndAnimate = useCallback((newPriceData: ShibPriceData, newTotalBurnedData: TotalBurnedData, newBurnsData: BurnsData) => {
-    const prev = prevDataRef.current;
-    
-    // Check if this is the first run (prevData is still zeros/empty)
-    const isFirstRun = prev.price === 0 && prev.marketCap === 0 && prev.totalBurned === 0;
-    
-    if (isFirstRun) {
-      // First run: just initialize the reference, no animations
-      console.log('🎯 First data load: initializing reference data');
-      prevDataRef.current = {
-        price: newPriceData.price,
-        priceChange24h: newPriceData.priceChange24h,
-        marketCap: newPriceData.marketCap,
-        circulatingSupply: newPriceData.circulatingSupply,
-        totalSupply: newPriceData.totalSupply,
-        volume24h: newPriceData.volume24h,
-        totalBurned: newTotalBurnedData.totalBurned,
-        latestTxHash: newBurnsData.transactions.length > 0 ? newBurnsData.transactions[0].hash : ''
-      };
-      return; // Skip animation logic on first run
-    }
+  // REMOVED: Complex animation logic - keeping it simple
 
-    // Detect actual changes for animations
-    const changes = {
-      price: newPriceData.price !== prev.price,
-      burnActivity: newBurnsData.transactions.length > 0 && 
-                   (newBurnsData.transactions[0]?.hash !== prev.latestTxHash),
-      totalBurned: newTotalBurnedData.totalBurned !== prev.totalBurned,
-      marketCap: newPriceData.marketCap !== prev.marketCap,
-      supply: newPriceData.circulatingSupply !== prev.circulatingSupply || 
-              newPriceData.totalSupply !== prev.totalSupply,
-      volume: newPriceData.volume24h !== prev.volume24h
-    };
-
-    // Log detected changes
-    const hasAnyChanges = Object.values(changes).some(Boolean);
-    if (hasAnyChanges) {
-      console.log('🎨 Data changes detected, triggering animations:', changes);
-    }
-
-    // Update changed cards state
-    setChangedCards(changes);
-
-    // Clear animations after 2 seconds (only if changes were detected)
-    if (hasAnyChanges) {
-      // Clear any existing animation timeout to prevent multiple timeouts
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-      }
-      
-      // Set new timeout
-      animationTimeoutRef.current = setTimeout(() => {
-        setChangedCards({
-          price: false,
-          burnActivity: false,
-          totalBurned: false,
-          marketCap: false,
-          supply: false,
-          volume: false
-        });
-        animationTimeoutRef.current = null;
-      }, 2000);
-    }
-
-    // Update previous values reference
-    prevDataRef.current = {
-      price: newPriceData.price,
-      priceChange24h: newPriceData.priceChange24h,
-      marketCap: newPriceData.marketCap,
-      circulatingSupply: newPriceData.circulatingSupply,
-      totalSupply: newPriceData.totalSupply,
-      volume24h: newPriceData.volume24h,
-      totalBurned: newTotalBurnedData.totalBurned,
-      latestTxHash: newBurnsData.transactions.length > 0 ? newBurnsData.transactions[0].hash : ''
-    };
-  }, []); // Empty dependency array since it only uses refs and setState
-
-  // Handle real-time updates from RealTimeUpdater (memoized to prevent render loops)
+  // Handle real-time updates from RealTimeUpdater - SIMPLIFIED
   const handleDataUpdate = useCallback((data: {
     priceData: ShibPriceData;
     totalBurnedData: TotalBurnedData;
     burnsData: BurnsData;
   }) => {
-    console.log('🔄 Real-time update received - deployment v3', {
+    console.log('🔄 Real-time update received - SIMPLIFIED', {
       price: data.priceData.price,
       marketCap: data.priceData.marketCap,
       volume: data.priceData.volume24h,
       totalBurned: data.totalBurnedData.totalBurned
     });
     
-    // Detect changes and trigger animations before updating state
-    detectChangesAndAnimate(data.priceData, data.totalBurnedData, data.burnsData);
-    
-    // Update state and cache the new data
+    // SIMPLIFIED: Just update the data - no complex animations or change detection
     setPriceData(data.priceData);
     setTotalBurnedData(data.totalBurnedData);
     setBurnsData(data.burnsData);
@@ -451,7 +344,7 @@ export default function Home() {
       localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
       localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
     }
-  }, []); // No dependencies - uses refs and stable state setters only
+  }, []); // No dependencies
   
   // Calculate all metrics from server-side data for instant display (with comprehensive safe fallbacks)
   const burns = Array.isArray(burnsData.transactions) ? burnsData.transactions : [];
@@ -551,9 +444,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold text-white">🔥 SHIBMETRICS</h1>
             
             {/* Real-time updater component - handles live status and updates */}
-            {useMemo(() => (
-              <RealTimeUpdater onDataUpdate={handleDataUpdate} />
-            ), [handleDataUpdate])}
+            <RealTimeUpdater onDataUpdate={handleDataUpdate} />
           </div>
           
           <p className="text-xl text-gray-300 mb-4">
@@ -568,8 +459,6 @@ export default function Home() {
             value={`$${safeDisplayValues.price.toFixed(8)}`}
             change={`${safeDisplayValues.priceChange > 0 ? '+' : ''}${safeDisplayValues.priceChange.toFixed(2)}% (24h)`}
             icon={DollarSign}
-            hasChanged={changedCards.price}
-            animationType="flash"
           />
 
           <StatCard
@@ -577,8 +466,6 @@ export default function Home() {
             value={formatBurnedAmountDetailed(safeDisplayValues.twentyFourHourBurnAmount)}
             change={dayOverDayText || 'No data'}
             icon={dayOverDayChange > 0 ? TrendingUp : dayOverDayChange < 0 ? TrendingDown : Flame}
-            hasChanged={changedCards.burnActivity}
-            animationType="pulse"
           />
 
           <StatCard
@@ -586,8 +473,6 @@ export default function Home() {
             value={formatBurnedAmountHighPrecision(safeDisplayValues.totalBurned)}
             change={`${safeDisplayValues.burnPercentage.toFixed(6)}% of total supply`}
             icon={Flame}
-            hasChanged={changedCards.totalBurned}
-            animationType="glow"
           />
 
           <StatCard
@@ -595,8 +480,6 @@ export default function Home() {
             value={`$${formatMarketCap(safeDisplayValues.marketCap)}B`}
             change="From CoinGecko"
             icon={DollarSign}
-            hasChanged={changedCards.marketCap}
-            animationType="flash"
           />
 
           <StatCard
@@ -605,8 +488,6 @@ export default function Home() {
             change={`${formatSupplyNumber(safeDisplayValues.totalSupply)} total supply`}
             icon={Clock}
             isSupplyCard={true}
-            hasChanged={changedCards.supply}
-            animationType="pulse"
           />
 
           <StatCard
@@ -614,8 +495,6 @@ export default function Home() {
             value={formatVolume24h(safeDisplayValues.volume24h)}
             change="From CoinGecko"
             icon={TrendingUp}
-            hasChanged={changedCards.volume}
-            animationType="glow"
           />
         </div>
 

@@ -51,76 +51,30 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
   const [isLive, setIsLive] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [pageWasHidden, setPageWasHidden] = useState(false);
-  const lastDataRef = useRef<{price?: number, totalBurned?: number, latestTxHash?: string}>({});
-  const [isFirstUpdate, setIsFirstUpdate] = useState(true);
 
-  // Smart comparison to detect actual data changes (fixed: using ref to prevent stale closures)
-  const checkForDataChanges = useCallback((priceData: ShibPriceData, totalBurnedData: TotalBurnedData, burnsData: BurnsData) => {
-    const latestTxHash = burnsData.transactions.length > 0 ? burnsData.transactions[0].hash : '';
-    
-    // Get current reference data from ref (no stale closure issues)
-    const currentRef = lastDataRef.current;
-    
-    // Check if any critical data changed
-    const priceChanged = Math.abs(priceData.price - (currentRef.price || 0)) > 0.00000001; // Meaningful price change
-    const totalBurnedChanged = totalBurnedData.totalBurned !== currentRef.totalBurned;
-    const newTransactions = latestTxHash !== currentRef.latestTxHash;
-    
-    // Log comparison details for debugging
-    console.log('🔍 Change detection debug:', {
-      currentPrice: currentRef.price,
-      newPrice: priceData.price,
-      priceChanged,
-      currentTotalBurned: currentRef.totalBurned,
-      newTotalBurned: totalBurnedData.totalBurned,
-      totalBurnedChanged,
-      currentTxHash: currentRef.latestTxHash?.slice(0,10),
-      newTxHash: latestTxHash.slice(0,10),
-      newTransactions
-    });
-    
-    const hasChanges = priceChanged || totalBurnedChanged || newTransactions;
-    
-    if (hasChanges) {
-      console.log('🔄 Data changes detected:', {
-        priceChanged: priceChanged ? `${currentRef.price} → ${priceData.price}` : false,
-        totalBurnedChanged: totalBurnedChanged ? `${currentRef.totalBurned} → ${totalBurnedData.totalBurned}` : false,
-        newTransactions: newTransactions ? `New tx: ${latestTxHash.slice(0,10)}...` : false
-      });
-      
-      // Update reference data directly via ref
-      lastDataRef.current = {
-        price: priceData.price,
-        totalBurned: totalBurnedData.totalBurned,
-        latestTxHash: latestTxHash
-      };
-    } else {
-      console.log('📊 No meaningful changes detected');
-    }
-    
-    return hasChanges;
-  }, []); // Empty dependency array - uses refs only
 
-  // Fetch fresh data with periodic cache-busting to ensure accuracy
+
+  // Fetch fresh data with aggressive cache-busting to ensure real-time accuracy
   const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
     const timestamp = Date.now();
-    // Force fresh data every 2 minutes to prevent stale data
-    const lastForcedUpdate = localStorage.getItem('lastForcedUpdate');
-    const shouldForceFresh = forceFresh || !lastForcedUpdate || (timestamp - parseInt(lastForcedUpdate)) > 120000;
     
-    if (shouldForceFresh && !forceFresh) {
-      localStorage.setItem('lastForcedUpdate', timestamp.toString());
-      console.log('🔄 Forcing fresh data to prevent stale cache');
-    }
-    
-    const priceCacheParam = shouldForceFresh ? `?_t=${timestamp}` : '';
-    const burnsCacheParam = shouldForceFresh ? '?force=true' : '';
+    // ALWAYS use cache busting for real-time data - this was the problem!
+    console.log('🔄 Fetching fresh data with aggressive cache busting');
     
     try {
       const [priceResponse, totalBurnedResponse, burnsResponse] = await Promise.all([
-        fetch(`/api/price${priceCacheParam}`, { cache: 'no-cache' }),
-        fetch(`/api/total-burned`, { cache: forceFresh ? 'no-cache' : 'default' }),
-        fetch(`/api/burns${burnsCacheParam}`, { cache: 'no-cache' })
+        fetch(`/api/price?_t=${timestamp}`, { 
+          cache: 'no-cache',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        }),
+        fetch(`/api/total-burned?_t=${timestamp}`, { 
+          cache: 'no-cache',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        }),
+        fetch(`/api/burns?force=true&_t=${timestamp}`, { 
+          cache: 'no-cache',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        })
       ]);
       
       const [priceData, totalBurnedData, burnsData] = await Promise.all([
@@ -139,37 +93,23 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
         // Always update timestamp on successful check
         setLastUpdate(new Date());
         
-        // Always update on first run, then use smart comparison
-        if (isFirstUpdate) {
-          console.log('🚀 Real-time update: First update - forcing homepage sync');
-          onDataUpdate({ priceData, totalBurnedData, burnsData });
-          setIsFirstUpdate(false);
-          
-          // Initialize reference data
-          const latestTxHash = burnsData.transactions.length > 0 ? burnsData.transactions[0].hash : '';
-          lastDataRef.current = {
-            price: priceData.price,
-            totalBurned: totalBurnedData.totalBurned,
-            latestTxHash: latestTxHash
-          };
-        } else {
-          // Smart update: Only update if data actually changed
-          const hasNewData = checkForDataChanges(priceData, totalBurnedData, burnsData);
-          
-          if (hasNewData) {
-            console.log('✅ Real-time update: New data detected and updated');
-            onDataUpdate({ priceData, totalBurnedData, burnsData });
-          } else {
-            console.log('📊 Real-time check: No new data, keeping existing display');
-          }
-        }
+        // SIMPLIFIED: Always update with fresh data - no complex comparison needed
+        console.log('✅ Real-time update: Fresh data received', {
+          price: priceData.price,
+          marketCap: priceData.marketCap,
+          volume: priceData.volume24h,
+          totalBurned: totalBurnedData.totalBurned,
+          transactions: burnsData.transactions.length
+        });
+        
+        onDataUpdate({ priceData, totalBurnedData, burnsData });
         setIsLive(true);
       }
       
     } catch (error) {
       console.warn('⚠️ Real-time update failed:', error);
     }
-  }, [onDataUpdate, checkForDataChanges, isFirstUpdate]);
+  }, [onDataUpdate]); // Simplified dependencies
 
   // Initial setup and polling
   useEffect(() => {
