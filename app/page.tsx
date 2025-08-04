@@ -331,6 +331,27 @@ export default function Home() {
   // Function to detect changes and trigger animations
   const detectChangesAndAnimate = (newPriceData: ShibPriceData, newTotalBurnedData: TotalBurnedData, newBurnsData: BurnsData) => {
     const prev = prevDataRef.current;
+    
+    // Check if this is the first run (prevData is still zeros/empty)
+    const isFirstRun = prev.price === 0 && prev.marketCap === 0 && prev.totalBurned === 0;
+    
+    if (isFirstRun) {
+      // First run: just initialize the reference, no animations
+      console.log('🎯 First data load: initializing reference data');
+      prevDataRef.current = {
+        price: newPriceData.price,
+        priceChange24h: newPriceData.priceChange24h,
+        marketCap: newPriceData.marketCap,
+        circulatingSupply: newPriceData.circulatingSupply,
+        totalSupply: newPriceData.totalSupply,
+        volume24h: newPriceData.volume24h,
+        totalBurned: newTotalBurnedData.totalBurned,
+        latestTxHash: newBurnsData.transactions.length > 0 ? newBurnsData.transactions[0].hash : ''
+      };
+      return; // Skip animation logic on first run
+    }
+
+    // Detect actual changes for animations
     const changes = {
       price: newPriceData.price !== prev.price,
       burnActivity: newBurnsData.transactions.length > 0 && 
@@ -341,6 +362,12 @@ export default function Home() {
               newPriceData.totalSupply !== prev.totalSupply,
       volume: newPriceData.volume24h !== prev.volume24h
     };
+
+    // Log detected changes
+    const hasAnyChanges = Object.values(changes).some(Boolean);
+    if (hasAnyChanges) {
+      console.log('🎨 Data changes detected, triggering animations:', changes);
+    }
 
     // Update changed cards state
     setChangedCards(changes);
@@ -376,7 +403,12 @@ export default function Home() {
     totalBurnedData: TotalBurnedData;
     burnsData: BurnsData;
   }) => {
-    console.log('🔄 Real-time update received - deployment v2');
+    console.log('🔄 Real-time update received - deployment v3', {
+      price: data.priceData.price,
+      marketCap: data.priceData.marketCap,
+      volume: data.priceData.volume24h,
+      totalBurned: data.totalBurnedData.totalBurned
+    });
     
     // Detect changes and trigger animations before updating state
     detectChangesAndAnimate(data.priceData, data.totalBurnedData, data.burnsData);
