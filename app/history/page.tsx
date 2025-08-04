@@ -109,8 +109,9 @@ export default function BurnHistoryPage() {
       
       // Use historical dataset API for COMPLETE burn history - not just recent burns
       // This gives us ALL SHIB burns from 2020 onwards, not just recent ~300 transactions
-      const cacheParam = forceFresh ? '?_t=' + Date.now() : '';
-      const response = await fetch(`/api/historical/dataset${cacheParam}`, {
+      // Request maximum transactions (25,000 limit) - NOT the default 100!
+      const params = forceFresh ? `?limit=25000&_t=${Date.now()}` : '?limit=25000';
+      const response = await fetch(`/api/historical/dataset${params}`, {
         cache: forceFresh ? 'no-cache' : 'default',
         method: 'GET',
         headers: {
@@ -220,7 +221,7 @@ export default function BurnHistoryPage() {
         // Check for new data without updating UI immediately
         const checkForNewData = async () => {
           try {
-            const response = await fetch('/api/historical/dataset?_t=' + Date.now(), { cache: 'no-cache' });
+            const response = await fetch(`/api/historical/dataset?limit=25000&_t=${Date.now()}`, { cache: 'no-cache' });
             if (response.ok) {
               const data = await response.json();
               const newTransactions = data.transactions || [];
