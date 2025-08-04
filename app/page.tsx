@@ -294,7 +294,8 @@ export default function Home() {
           console.log('🔄 Cleared legacy cache data - will fetch fresh data');
         } else {
           // Use cached data with volume24h
-  return {
+          console.log('🗄️ Loaded cached price data:', parsedCache.price ? `$${parsedCache.price}` : 'invalid');
+          return {
             ...parsedCache,
             volume24h: parsedCache.volume24h || 0
           };
@@ -303,22 +304,26 @@ export default function Home() {
         console.warn('Failed to parse cached price data');
       }
     }
-          return {
-        price: 0, priceChange24h: 0, marketCap: 0,
-        circulatingSupply: 0, totalSupply: 0, volume24h: 0,
-        source: 'initial', cached: true
-      };
+    console.log('🗄️ No cached price data - starting with defaults');
+    return {
+      price: 0, priceChange24h: 0, marketCap: 0,
+      circulatingSupply: 0, totalSupply: 0, volume24h: 0,
+      source: 'initial', cached: true
+    };
   });
   const [totalBurnedData, setTotalBurnedData] = useState<TotalBurnedData>(() => {
     // Load from localStorage if available, otherwise minimal initial state
     const cached = typeof window !== 'undefined' ? localStorage.getItem('shibmetrics_totalburned_cache') : null;
     if (cached) {
       try {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        console.log('🗄️ Loaded cached total burned data:', parsed.totalBurned || 'invalid');
+        return parsed;
       } catch (e) {
         console.warn('Failed to parse cached total burned data');
       }
     }
+    console.log('🗄️ No cached total burned data - starting with defaults');
     return { totalBurned: 0, source: 'initial', cached: true };
   });
   const [burnsData, setBurnsData] = useState<BurnsData>(() => {
@@ -326,11 +331,14 @@ export default function Home() {
     const cached = typeof window !== 'undefined' ? localStorage.getItem('shibmetrics_burns_cache') : null;
     if (cached) {
       try {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        console.log('🗄️ Loaded cached burns data:', parsed.transactions?.length || 0, 'transactions');
+        return parsed;
       } catch (e) {
         console.warn('Failed to parse cached burns data');
       }
     }
+    console.log('🗄️ No cached burns data - starting with empty array');
     return { transactions: [], source: 'initial', cached: true };
   });
   const [loading, setLoading] = useState(true);
@@ -357,61 +365,117 @@ export default function Home() {
     };
   }, []);
 
-  // Initial data fetch on component mount
+  // Initial data fetch on component mount - ONLY if cached data is missing/invalid
   useEffect(() => {
-    console.log('🚀 Client: Fetching initial data...');
+    console.log('🚀 Client: Checking if fresh data is needed...');
     
     const fetchInitialData = async () => {
-      // Fetch each API independently to handle individual failures
-      const fetchPrice = async () => {
-        try {
-          const result = await fetchShibPriceClient();
-          setPriceData(result);
-          console.log('💰 Price data loaded:', result.source);
-        } catch (error) {
-          console.warn('⚠️ Price data unavailable:', error instanceof Error ? error.message : 'Unknown error');
-        }
-      };
+      // Check if we already have valid cached data
+      const hasValidPriceData = priceData.price > 0;
+      const hasValidTotalBurned = totalBurnedData.totalBurned > 0;
+      const hasValidBurnsData = Array.isArray(burnsData.transactions) && burnsData.transactions.length > 0;
+      
+      console.log('📊 Cached data status:', {
+        price: hasValidPriceData ? `$${priceData.price}` : 'missing',
+        totalBurned: hasValidTotalBurned ? totalBurnedData.totalBurned : 'missing',
+        transactions: hasValidBurnsData ? `${burnsData.transactions.length} txs` : 'missing'
+      });
 
-      const fetchTotalBurned = async () => {
-        try {
-          const result = await fetchTotalBurnedClient();
-          setTotalBurnedData(result);
-          console.log('🔥 Total burned data loaded:', result.source);
-        } catch (error) {
-          console.warn('⚠️ Total burned data unavailable:', error instanceof Error ? error.message : 'Unknown error');
-        }
-      };
+      // Only fetch data that's missing or invalid
+      const fetchPromises: Promise<void>[] = [];
 
-      const fetchBurns = async () => {
-        try {
-          const result = await fetchBurnsClient();
-          setBurnsData(result);
-          console.log('📊 Burns data loaded:', result.source, `(${result.transactions.length} transactions)`);
-        } catch (error) {
-          console.warn('⚠️ Burns data unavailable:', error instanceof Error ? error.message : 'Unknown error');
-        }
-      };
+      if (!hasValidPriceData) {
+        console.log('💰 Price data missing - fetching...');
+        fetchPromises.push(
+          fetchShibPriceClient()
+            .then(result => {
+              setPriceData(result);
+              console.log('💰 Price data loaded:', result.source);
+            })
+            .catch(error => console.warn('⚠️ Price data unavailable:', error instanceof Error ? error.message : 'Unknown error'))
+        );
+      } else {
+        console.log('💰 Price data already cached - skipping fetch');
+      }
 
-      // Fetch all APIs independently
-      await Promise.all([fetchPrice(), fetchTotalBurned(), fetchBurns()]);
+      if (!hasValidTotalBurned) {
+        console.log('🔥 Total burned data missing - fetching...');
+        fetchPromises.push(
+          fetchTotalBurnedClient()
+            .then(result => {
+              setTotalBurnedData(result);
+              console.log('🔥 Total burned data loaded:', result.source);
+            })
+            .catch(error => console.warn('⚠️ Total burned data unavailable:', error instanceof Error ? error.message : 'Unknown error'))
+        );
+      } else {
+        console.log('🔥 Total burned data already cached - skipping fetch');
+      }
+
+      if (!hasValidBurnsData) {
+        console.log('📊 Burns data missing - fetching...');
+        fetchPromises.push(
+          fetchBurnsClient()
+            .then(result => {
+              setBurnsData(result);
+              console.log('📊 Burns data loaded:', result.source, `(${result.transactions.length} transactions)`);
+            })
+            .catch(error => console.warn('⚠️ Burns data unavailable:', error instanceof Error ? error.message : 'Unknown error'))
+        );
+      } else {
+        console.log('📊 Burns data already cached - skipping fetch');
+      }
+
+      // Only fetch what we need
+      if (fetchPromises.length > 0) {
+        await Promise.all(fetchPromises);
+        console.log(`🚀 Client: Fetched ${fetchPromises.length} missing data sources`);
+      } else {
+        console.log('🚀 Client: All data already cached - ready to display!');
+      }
+      
       setLoading(false);
-      console.log('🚀 Client: Initial data fetch complete');
     };
 
     fetchInitialData();
-  }, []);
+  }, [priceData.price, totalBurnedData.totalBurned, burnsData.transactions]);
 
-  // Initialize transaction hashes tracking for flame effect (ONLY ONCE)
+  // Initialize transaction hashes tracking for flame effect immediately with cached data
   const hasInitializedHashTracking = useRef(false);
   useEffect(() => {
-    if (!hasInitializedHashTracking.current && Array.isArray(burnsData.transactions) && burnsData.transactions.length > 0) {
-      const initialHashes = new Set(burnsData.transactions.map(tx => tx.hash));
-      setPreviousTransactionHashes(initialHashes);
-      hasInitializedHashTracking.current = true;
-      console.log('📝 Initialized transaction hash tracking ONCE with', initialHashes.size, 'transactions');
+    if (!hasInitializedHashTracking.current) {
+      // Initialize immediately with any available data (including cached)
+      const initialTransactions = Array.isArray(burnsData.transactions) ? burnsData.transactions : [];
+      if (initialTransactions.length > 0) {
+        const initialHashes = new Set(initialTransactions.map(tx => tx.hash));
+        setPreviousTransactionHashes(initialHashes);
+        hasInitializedHashTracking.current = true;
+        console.log('📝 Initialized hash tracking with', initialHashes.size, 'cached transactions - flame effect baseline set');
+      } else {
+        console.log('📝 No cached transactions available yet - hash tracking will initialize when data loads');
+      }
     }
   }, [burnsData.transactions]);
+
+  // ADDITIONAL: Initialize hash tracking even earlier if we have localStorage data
+  useEffect(() => {
+    if (!hasInitializedHashTracking.current && typeof window !== 'undefined') {
+      const cachedBurns = localStorage.getItem('shibmetrics_burns_cache');
+      if (cachedBurns) {
+        try {
+          const parsed = JSON.parse(cachedBurns);
+          if (Array.isArray(parsed.transactions) && parsed.transactions.length > 0) {
+            const cachedHashes = new Set<string>(parsed.transactions.map((tx: BurnTransaction) => tx.hash));
+            setPreviousTransactionHashes(cachedHashes);
+            hasInitializedHashTracking.current = true;
+            console.log('📝 EARLY hash tracking initialization with', cachedHashes.size, 'localStorage transactions');
+          }
+        } catch (e) {
+          console.warn('Failed to parse localStorage for hash tracking initialization');
+        }
+      }
+    }
+  }, []); // Run once on mount
 
   // REMOVED: Cleanup logic for animations - keeping it simple
 
@@ -445,9 +509,22 @@ export default function Home() {
         console.log(`🔍 Flame effect check: ${newBurnCount} new burns detected out of ${newHashes.size} total transactions`);
         
         if (newBurnCount > 0) {
-          console.log('🔥 GENUINE NEW BURN DETECTED! Triggering flame effect for', newBurnCount, 'new burns');
-          console.log('🔥 New burn hashes:', genuinelyNewHashes.slice(0, 3)); // Log first 3 for debugging
-          setShowFlameEffect(true);
+          // ADDITIONAL CHECK: Only trigger flame effect if the new transactions are actually recent
+          // Check if any of the new transactions happened in the last 10 minutes
+          const tenMinutesAgo = Math.floor(Date.now() / 1000) - (10 * 60);
+          const recentNewTransactions = newTransactions.filter(tx => 
+            genuinelyNewHashes.includes(tx.hash) && 
+            parseInt(tx.timeStamp) > tenMinutesAgo
+          );
+          
+          if (recentNewTransactions.length > 0) {
+            console.log('🔥 GENUINE RECENT BURN DETECTED! Triggering flame effect for', recentNewTransactions.length, 'recent burns');
+            console.log('🔥 Recent burn times:', recentNewTransactions.map(tx => new Date(parseInt(tx.timeStamp) * 1000).toLocaleTimeString()));
+            setShowFlameEffect(true);
+          } else {
+            console.log('⏰ New transactions detected, but they are old (not within last 10 minutes) - no flame effect');
+            console.log('⏰ Oldest new transaction:', Math.floor((Date.now()/1000 - Math.min(...newTransactions.filter(tx => genuinelyNewHashes.includes(tx.hash)).map(tx => parseInt(tx.timeStamp)))) / 60), 'minutes ago');
+          }
         } else {
           console.log('✅ No new burns - same transactions as before');
         }
