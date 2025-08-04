@@ -51,7 +51,7 @@ interface BurnsData {
 }
 
 // BULLETPROOF .toFixed() wrapper to prevent React error #418 
-function safeToFixed(num: any, decimals: number): string {
+function safeToFixed(num: number | null | undefined | string, decimals: number): string {
   // Handle all possible bad inputs that could cause React error #418
   if (num === null || num === undefined || num === '' || typeof num !== 'number') {
     return '0.' + '0'.repeat(Math.max(0, decimals));
@@ -66,21 +66,12 @@ function safeToFixed(num: any, decimals: number): string {
       return '0.' + '0'.repeat(Math.max(0, decimals));
     }
     return result;
-  } catch (e) {
+  } catch {
     console.warn('safeToFixed error:', e, 'for input:', num);
     return '0.' + '0'.repeat(Math.max(0, decimals));
   }
 }
 
-// Format large numbers for display (with null/undefined protection)
-function formatNumber(num: number): string {
-  const safeNum = (typeof num === 'number' && !isNaN(num)) ? num : 0;
-  if (safeNum >= 1e12) return safeToFixed(safeNum / 1e12, 2) + 'T';
-  if (safeNum >= 1e9) return safeToFixed(safeNum / 1e9, 2) + 'B';
-  if (safeNum >= 1e6) return safeToFixed(safeNum / 1e6, 2) + 'M';
-  if (safeNum >= 1e3) return safeToFixed(safeNum / 1e3, 2) + 'K';
-  return safeToFixed(safeNum, 2);
-}
 
 function formatBurnedAmountHighPrecision(amount: number): string {
   const safeAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 0;
@@ -158,7 +149,7 @@ async function fetchShibPriceClient(): Promise<ShibPriceData> {
           source: 'cached_fallback',
           cached: true
         };
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse cached price data');
       }
     }
@@ -210,7 +201,7 @@ async function fetchTotalBurnedClient(): Promise<TotalBurnedData> {
           source: 'cached_fallback',
           cached: true
         };
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse cached total burned data');
       }
     }
@@ -257,7 +248,7 @@ async function fetchBurnsClient(): Promise<BurnsData> {
           source: 'cached_fallback',
           cached: true
         };
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse cached burns data');
       }
     }
@@ -300,7 +291,7 @@ export default function Home() {
             volume24h: parsedCache.volume24h || 0
           };
         }
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse cached price data');
       }
     }
@@ -319,7 +310,7 @@ export default function Home() {
         const parsed = JSON.parse(cached);
         console.log('🗄️ Loaded cached total burned data:', parsed.totalBurned || 'invalid');
         return parsed;
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse cached total burned data');
       }
     }
@@ -334,7 +325,7 @@ export default function Home() {
         const parsed = JSON.parse(cached);
         console.log('🗄️ Loaded cached burns data:', parsed.transactions?.length || 0, 'transactions');
         return parsed;
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse cached burns data');
       }
     }
@@ -343,7 +334,7 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
   const [showFlameEffect, setShowFlameEffect] = useState(false);
-  const [previousTransactionHashes, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
+  const [_previousTransactionHashes, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
   
   // Track if we're in initial data sync to prevent false flame effects
   const [isInitialDataSync, setIsInitialDataSync] = useState(() => {
@@ -489,7 +480,7 @@ export default function Home() {
             hasInitializedHashTracking.current = true;
             console.log('📝 EARLY hash tracking initialization with', cachedHashes.size, 'localStorage transactions');
           }
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse localStorage for hash tracking initialization');
         }
       }

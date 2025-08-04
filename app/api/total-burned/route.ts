@@ -103,7 +103,9 @@ export async function GET(request: Request) {
       const age = Math.round((Date.now() - memoryCacheEntry.lastUpdated) / 1000);
       console.log(`🏎️ INSTANT: Serving total burned from MEMORY (age: ${age}s)`);
       
-      const data = memoryCacheEntry.data as any;
+      const data = memoryCacheEntry.data as {
+        totalBurned: number;
+      };
       return new Response(JSON.stringify({
         totalBurned: data.totalBurned,
         cached: true,

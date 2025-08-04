@@ -5,7 +5,6 @@ import memoryCache, { cacheKeys } from '../../../lib/memory-cache';
 export async function GET(request: Request) {
   try {
     // Check if this is from the scheduled function (server-side)
-    const url = new URL(request.url);
     const userAgent = request.headers.get('User-Agent') || '';
     const isScheduledRefresh = userAgent.includes('Netlify-Scheduled-Refresh');
     
@@ -15,7 +14,14 @@ export async function GET(request: Request) {
       const age = Math.round((Date.now() - memoryCacheEntry.lastUpdated) / 1000);
       console.log(`🏎️ INSTANT: Serving price data from MEMORY (age: ${age}s)`);
       
-      const data = memoryCacheEntry.data as any;
+      const data = memoryCacheEntry.data as {
+        price: number;
+        priceChange24h: number;
+        marketCap: number;
+        circulatingSupply: number;
+        totalSupply: number;
+        volume24h: number;
+      };
       return new Response(JSON.stringify({
         price: data.price,
         priceChange24h: data.priceChange24h,

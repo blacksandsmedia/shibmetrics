@@ -165,7 +165,11 @@ export async function GET(request: Request) {
     const memoryCacheEntry = memoryCache.get(cacheKeys.BURN_DATA);
     if (memoryCacheEntry && !forceRefresh && !isScheduledRefresh) {
       const age = Math.round((Date.now() - memoryCacheEntry.lastUpdated) / 1000);
-      const data = memoryCacheEntry.data as any;
+      const data = memoryCacheEntry.data as {
+        transactions: EtherscanTx[];
+        totalAddressesSuccess: number;
+        totalAddressesAttempted: number;
+      };
       console.log(`🏎️ INSTANT: Serving ${data.transactions?.length || 0} transactions from MEMORY (age: ${age}s)`);
       
       return new Response(JSON.stringify({

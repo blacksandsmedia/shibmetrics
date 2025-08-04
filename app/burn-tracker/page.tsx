@@ -65,7 +65,7 @@ export default function BurnTrackerPage() {
     }, 60000); // 60 seconds
     
     return () => clearInterval(interval);
-  }, []);
+  }, [allBurns, fetchAllBurns]);
 
   // Update time display every minute to refresh "time ago" calculations without animation
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function BurnTrackerPage() {
     return () => clearInterval(timeInterval);
   }, []);
 
-  const fetchAllBurns = async (forceFresh: boolean = false) => {
+  const fetchAllBurns = useCallback(async (forceFresh: boolean = false) => {
     setLoading(true);
     console.log(`🔥 Burn Tracker: Starting to fetch burns from API (forceFresh=${forceFresh})...`);
     try {
@@ -110,7 +110,7 @@ export default function BurnTrackerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setAllBurns, setLoading, setLastUpdated]);
 
   const filterAndSortBurns = useCallback(() => {
     let filtered = [...allBurns];
