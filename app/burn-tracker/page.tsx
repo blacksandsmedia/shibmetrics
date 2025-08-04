@@ -24,6 +24,43 @@ export default function BurnTrackerPage() {
   // Show latest 25 burns only
   const latestBurns = filteredBurns.slice(0, 25);
 
+  // Fetch all burns function - moved above useEffect to avoid hoisting issues
+  const fetchAllBurns = useCallback(async (forceFresh: boolean = false) => {
+    setLoading(true);
+    console.log(`🔥 Burn Tracker: Starting to fetch burns from API (forceFresh=${forceFresh})...`);
+    try {
+      // Fetch from our internal API endpoint with cache-busting when needed
+      const cacheParam = forceFresh ? '?force=true' : '';
+      const response = await fetch(`/api/burns${cacheParam}`, {
+        cache: 'no-cache',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('🔥 API Response:', data);
+      
+      if (data.transactions && Array.isArray(data.transactions)) {
+        console.log(`🔥 Got ${data.transactions.length} burns from API`);
+        setAllBurns(data.transactions);
+      } else {
+        console.log('⚠️  No transactions in API response');
+        setAllBurns([]);
+      }
+      
+      setLastUpdated(new Date());
+      
+    } catch (error) {
+      console.error('🔥 Error fetching burns:', error);
+      setAllBurns([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [setAllBurns, setLoading, setLastUpdated]);
+
   // Initialize with immediate data fetch and setup auto-refresh
   useEffect(() => {
     console.log('🔥 Burn Tracker: Component mounted, fetching initial data...');
@@ -75,42 +112,6 @@ export default function BurnTrackerPage() {
 
     return () => clearInterval(timeInterval);
   }, []);
-
-  const fetchAllBurns = useCallback(async (forceFresh: boolean = false) => {
-    setLoading(true);
-    console.log(`🔥 Burn Tracker: Starting to fetch burns from API (forceFresh=${forceFresh})...`);
-    try {
-      // Fetch from our internal API endpoint with cache-busting when needed
-      const cacheParam = forceFresh ? '?force=true' : '';
-      const response = await fetch(`/api/burns${cacheParam}`, {
-        cache: 'no-cache',
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('🔥 API Response:', data);
-      
-      if (data.transactions && Array.isArray(data.transactions)) {
-        console.log(`🔥 Got ${data.transactions.length} burns from API`);
-        setAllBurns(data.transactions);
-      } else {
-        console.log('⚠️  No transactions in API response');
-        setAllBurns([]);
-      }
-      
-      setLastUpdated(new Date());
-      
-    } catch (error) {
-      console.error('🔥 Error fetching burns:', error);
-      setAllBurns([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [setAllBurns, setLoading, setLastUpdated]);
 
   const filterAndSortBurns = useCallback(() => {
     let filtered = [...allBurns];

@@ -67,7 +67,7 @@ function safeToFixed(num: number | null | undefined | string, decimals: number):
     }
     return result;
   } catch {
-    console.warn('safeToFixed error:', e, 'for input:', num);
+    console.warn('safeToFixed error for input:', num);
     return '0.' + '0'.repeat(Math.max(0, decimals));
   }
 }

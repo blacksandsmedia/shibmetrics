@@ -33,7 +33,7 @@ interface CacheEntry<T> {
 }
 
 class MemoryCache {
-  private cache: Map<string, CacheEntry<CacheData>> = new Map();
+  private cache: Map<string, CacheEntry<unknown>> = new Map();
   private maxAge: number = 5 * 60 * 1000; // 5 minutes default
 
   // Get data from memory cache (instant)
