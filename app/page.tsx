@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
+import FlameEffect from '../components/FlameEffect';
 import Link from 'next/link';
 import RealTimeUpdater from '../components/RealTimeUpdater';
 
@@ -278,6 +279,8 @@ export default function Home() {
     return { transactions: [], source: 'initial', cached: true };
   });
   const [loading, setLoading] = useState(true);
+  const [showFlameEffect, setShowFlameEffect] = useState(false);
+  const [previousTransactionHashes, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
 
   // REMOVED: Complex animation state - keeping it simple
 
@@ -328,11 +331,20 @@ export default function Home() {
     fetchInitialData();
   }, []);
 
+  // Initialize transaction hashes tracking for flame effect
+  useEffect(() => {
+    if (Array.isArray(burnsData.transactions) && burnsData.transactions.length > 0) {
+      const initialHashes = new Set(burnsData.transactions.map(tx => tx.hash));
+      setPreviousTransactionHashes(initialHashes);
+      console.log('📝 Initialized transaction hash tracking with', initialHashes.size, 'transactions');
+    }
+  }, [burnsData.transactions]);
+
   // REMOVED: Cleanup logic for animations - keeping it simple
 
   // REMOVED: Complex animation logic - keeping it simple
 
-  // Handle real-time updates from RealTimeUpdater - SIMPLIFIED
+  // Handle real-time updates from RealTimeUpdater - WITH FLAME EFFECT ON NEW BURNS
   const handleDataUpdate = useCallback((data: {
     priceData: ShibPriceData;
     totalBurnedData: TotalBurnedData;
@@ -345,6 +357,21 @@ export default function Home() {
       totalBurned: data.totalBurnedData.totalBurned
     });
     
+    // 🔥 FLAME EFFECT: Detect new burn transactions
+    const newTransactions = Array.isArray(data.burnsData.transactions) ? data.burnsData.transactions : [];
+    const newHashes = new Set(newTransactions.map(tx => tx.hash));
+    
+    // Check if there are any new transaction hashes we haven't seen before
+    const hasNewBurns = Array.from(newHashes).some(hash => !previousTransactionHashes.has(hash));
+    
+    if (hasNewBurns && previousTransactionHashes.size > 0) { // Don't trigger on initial load
+      console.log('🔥 NEW BURN DETECTED! Triggering flame effect...');
+      setShowFlameEffect(true);
+    }
+    
+    // Update the tracking set with new hashes
+    setPreviousTransactionHashes(newHashes);
+    
     // SIMPLIFIED: Just update the data - no complex animations or change detection
     setPriceData(data.priceData);
     setTotalBurnedData(data.totalBurnedData);
@@ -356,7 +383,7 @@ export default function Home() {
       localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
       localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
     }
-  }, []); // No dependencies
+  }, [previousTransactionHashes]); // Add previousTransactionHashes as dependency
   
   // Calculate all metrics from server-side data for instant display (with comprehensive safe fallbacks)
   const burns = Array.isArray(burnsData.transactions) ? burnsData.transactions : [];
@@ -533,6 +560,12 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {/* 🔥 FLAME EFFECT: Triggered when new burns are detected */}
+      <FlameEffect 
+        isActive={showFlameEffect} 
+        onComplete={() => setShowFlameEffect(false)} 
+      />
     </div>
   );
 }
