@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
@@ -281,10 +281,16 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showFlameEffect, setShowFlameEffect] = useState(false);
   const [previousTransactionHashes, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
-
-  // REMOVED: Complex animation state - keeping it simple
-
-  // REMOVED: Complex refs for change detection - keeping it simple
+  
+  // Animation state for number changes
+  const [animatingCards, setAnimatingCards] = useState<Set<string>>(new Set());
+  const previousDataRef = useRef<{
+    price: number;
+    marketCap: number;
+    volume24h: number;
+    totalBurned: number;
+    priceChange: number;
+  } | null>(null);
 
   // Initial data fetch on component mount
   useEffect(() => {
@@ -372,7 +378,50 @@ export default function Home() {
     // Update the tracking set with new hashes
     setPreviousTransactionHashes(newHashes);
     
-    // SIMPLIFIED: Just update the data - no complex animations or change detection
+    // 🎬 ANIMATION: Detect changes and trigger animations
+    const newData = {
+      price: (typeof data.priceData.price === 'number' && !isNaN(data.priceData.price)) ? data.priceData.price : 0,
+      marketCap: (typeof data.priceData.marketCap === 'number' && !isNaN(data.priceData.marketCap)) ? data.priceData.marketCap : 0,
+      volume24h: (typeof data.priceData.volume24h === 'number' && !isNaN(data.priceData.volume24h)) ? data.priceData.volume24h : 0,
+      totalBurned: (typeof data.totalBurnedData.totalBurned === 'number' && !isNaN(data.totalBurnedData.totalBurned)) ? data.totalBurnedData.totalBurned : 0,
+      priceChange: (typeof data.priceData.priceChange24h === 'number' && !isNaN(data.priceData.priceChange24h)) ? data.priceData.priceChange24h : 0
+    };
+    
+    // Check for changes and trigger animations
+    if (previousDataRef.current) {
+      const changedCards = new Set<string>();
+      
+      if (Math.abs(newData.price - previousDataRef.current.price) > 0.000000001) {
+        changedCards.add('price');
+      }
+      if (Math.abs(newData.marketCap - previousDataRef.current.marketCap) > 1000) {
+        changedCards.add('marketCap');
+      }
+      if (Math.abs(newData.volume24h - previousDataRef.current.volume24h) > 1000) {
+        changedCards.add('volume24h');
+      }
+      if (Math.abs(newData.totalBurned - previousDataRef.current.totalBurned) > 1) {
+        changedCards.add('totalBurned');
+      }
+      if (Math.abs(newData.priceChange - previousDataRef.current.priceChange) > 0.01) {
+        changedCards.add('priceChange');  
+      }
+      
+      if (changedCards.size > 0) {
+        console.log('🎬 Data changes detected:', Array.from(changedCards));
+        setAnimatingCards(changedCards);
+        
+        // Clear animations after 2 seconds
+        setTimeout(() => {
+          setAnimatingCards(new Set());
+        }, 2000);
+      }
+    }
+    
+    // Store current data for next comparison
+    previousDataRef.current = newData;
+    
+    // Update React state
     setPriceData(data.priceData);
     setTotalBurnedData(data.totalBurnedData);
     setBurnsData(data.burnsData);
@@ -498,6 +547,7 @@ export default function Home() {
             value={`$${safeToFixed(safeDisplayValues.price, 8)}`}
             change={`${safeDisplayValues.priceChange > 0 ? '+' : ''}${safeToFixed(safeDisplayValues.priceChange, 2)}% (24h)`}
             icon={DollarSign}
+            isAnimating={animatingCards.has('price') || animatingCards.has('priceChange')}
           />
 
           <StatCard
@@ -505,6 +555,7 @@ export default function Home() {
             value={formatBurnedAmountDetailed(safeDisplayValues.twentyFourHourBurnAmount)}
             change={dayOverDayText || 'No data'}
             icon={dayOverDayChange > 0 ? TrendingUp : dayOverDayChange < 0 ? TrendingDown : Flame}
+            isAnimating={false} // This uses calculated data, not direct from API
           />
 
           <StatCard
@@ -512,6 +563,7 @@ export default function Home() {
             value={formatBurnedAmountHighPrecision(safeDisplayValues.totalBurned)}
             change={`${safeToFixed(safeDisplayValues.burnPercentage, 6)}% of total supply`}
             icon={Flame}
+            isAnimating={animatingCards.has('totalBurned')}
           />
 
           <StatCard
@@ -519,6 +571,7 @@ export default function Home() {
             value={`$${formatMarketCap(safeDisplayValues.marketCap)}B`}
             change="From CoinGecko"
             icon={DollarSign}
+            isAnimating={animatingCards.has('marketCap')}
           />
 
           <StatCard
@@ -527,6 +580,7 @@ export default function Home() {
             change={`${formatSupplyNumber(safeDisplayValues.totalSupply)} total supply`}
             icon={Clock}
             isSupplyCard={true}
+            isAnimating={false} // Supply doesn't change frequently
           />
 
           <StatCard
@@ -534,6 +588,7 @@ export default function Home() {
             value={formatVolume24h(safeDisplayValues.volume24h)}
             change="From CoinGecko"
             icon={TrendingUp}
+            isAnimating={animatingCards.has('volume24h')}
           />
         </div>
 

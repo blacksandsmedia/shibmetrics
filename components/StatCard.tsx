@@ -8,8 +8,7 @@ interface StatCardProps {
   icon: LucideIcon;
   loading?: boolean;
   isSupplyCard?: boolean; // Flag for supply cards that need responsive text
-  hasChanged?: boolean; // Flag to trigger animation when value changes
-  animationType?: 'flash' | 'pulse' | 'glow'; // Type of animation to apply
+  isAnimating?: boolean; // Flag to trigger animation when value changes
 }
 
 export default function StatCard({ 
@@ -20,8 +19,7 @@ export default function StatCard({
   icon: Icon,
   loading = false,
   isSupplyCard = false,
-  hasChanged = false,
-  animationType = 'flash'
+  isAnimating = false
 }: StatCardProps) {
   // Bulletproof safety for all props to prevent React error #418
   const safeTitle = (typeof title === 'string' && title) ? title : 'Loading...';
@@ -35,18 +33,8 @@ export default function StatCard({
 
   // Animation classes based on type and state
   const getAnimationClasses = () => {
-    if (!hasChanged) return '';
-    
-    switch (animationType) {
-      case 'flash':
-        return 'animate-pulse bg-orange-500/20 border-orange-400 shadow-lg shadow-orange-500/20';
-      case 'pulse':
-        return 'animate-pulse scale-105 border-blue-400 shadow-lg shadow-blue-500/20';
-      case 'glow':
-        return 'border-green-400 shadow-lg shadow-green-500/30 bg-green-500/10';
-      default:
-        return 'animate-pulse bg-orange-500/20 border-orange-400 shadow-lg shadow-orange-500/20';
-    }
+    if (!isAnimating) return '';
+    return 'animate-pulse bg-orange-500/20 border-orange-400 shadow-lg shadow-orange-500/20 scale-105 transform transition-all duration-500';
   };
 
   return (
@@ -61,7 +49,7 @@ export default function StatCard({
               isSupplyCard 
                 ? 'text-xl sm:text-2xl lg:text-3xl break-all' // Responsive font for supply cards
                 : 'text-3xl' // Regular font for other cards
-            } ${hasChanged ? 'scale-105 text-orange-300' : ''}`}>
+            } ${isAnimating ? 'scale-110 text-orange-300 font-bold' : ''}`}>
               {safeValue}
             </p>
           )}
