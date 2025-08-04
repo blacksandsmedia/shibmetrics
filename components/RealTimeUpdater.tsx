@@ -132,7 +132,7 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
     } catch (error) {
       console.warn('⚠️ Real-time update failed:', error);
     }
-  }, [onDataUpdate]);
+  }, [onDataUpdate, checkForDataChanges]);
 
   // Initial setup and polling
   useEffect(() => {
