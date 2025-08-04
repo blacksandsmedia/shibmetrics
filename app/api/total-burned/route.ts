@@ -90,13 +90,17 @@ async function fetchRealTotalBurned(): Promise<number> {
   return totalBurned;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Always try to serve from persistent cache first
+    // Check if this is from the scheduled function (server-side)
+    const userAgent = request.headers.get('User-Agent') || '';
+    const isScheduledRefresh = userAgent.includes('Netlify-Scheduled-Refresh');
+    
+    // Always try to serve from persistent cache first for user requests
     const cachedData = loadTotalBurnedCache();
     
-    if (cachedData) {
-      console.log('🚀 Returning cached total burned from persistent cache');
+    if (cachedData && !isScheduledRefresh) {
+      console.log('🚀 Returning cached total burned (populated by scheduled function)');
       return new Response(JSON.stringify({
         totalBurned: cachedData.totalBurned,
         cached: true,
@@ -112,7 +116,13 @@ export async function GET() {
       });
     }
 
-    // Fetch fresh data
+    // Only fetch from external API if this is the scheduled refresh
+    if (!isScheduledRefresh) {
+      console.log('⚠️ No cached data available for user request - returning error');
+      throw new Error('No cached data available - scheduled refresh may not have run yet');
+    }
+
+    // Fetch fresh data from external API (scheduled refresh only)
     const totalBurned = await fetchRealTotalBurned();
     
     // Update persistent cache

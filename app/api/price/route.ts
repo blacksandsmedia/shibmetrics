@@ -3,37 +3,40 @@ import { loadPriceCache, savePriceCache } from '../../../lib/shared-cache';
 
 export async function GET(request: Request) {
   try {
-    // Check for cache-busting parameter
+    // Check if this is from the scheduled function (server-side)
     const url = new URL(request.url);
-    const forceFresh = url.searchParams.has('_t');
+    const userAgent = request.headers.get('User-Agent') || '';
+    const isScheduledRefresh = userAgent.includes('Netlify-Scheduled-Refresh');
     
-    // Try to serve from persistent cache first (unless force refresh is requested)
-    if (!forceFresh) {
-      const cachedData = loadPriceCache();
-      
-      if (cachedData) {
-        console.log('🚀 Returning cached SHIB price, market cap, and supply data from persistent cache');
-        return new Response(JSON.stringify({
-          price: cachedData.price,
-          priceChange24h: cachedData.priceChange24h,
-          marketCap: cachedData.marketCap,
-          circulatingSupply: cachedData.circulatingSupply,
-          totalSupply: cachedData.totalSupply,
-          volume24h: cachedData.volume24h || 0,
-          timestamp: new Date().toISOString(),
-          source: 'coingecko-cached',
-          cached: true,
-          lastUpdated: new Date(cachedData.lastUpdated).toISOString()
-        }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=30'
-          },
-        });
-      }
-    } else {
-      console.log('🔄 Cache-busting parameter detected - forcing fresh data from CoinGecko');
+    // Always try to serve from persistent cache first for user requests
+    const cachedData = loadPriceCache();
+    
+    if (cachedData && !isScheduledRefresh) {
+      console.log('🚀 Returning cached SHIB price data (populated by scheduled function)');
+      return new Response(JSON.stringify({
+        price: cachedData.price,
+        priceChange24h: cachedData.priceChange24h,
+        marketCap: cachedData.marketCap,
+        circulatingSupply: cachedData.circulatingSupply,
+        totalSupply: cachedData.totalSupply,
+        volume24h: cachedData.volume24h || 0,
+        timestamp: new Date().toISOString(),
+        source: 'coingecko-cached',
+        cached: true,
+        lastUpdated: new Date(cachedData.lastUpdated).toISOString()
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=30'
+        },
+      });
+    }
+    
+    // Only fetch from external API if this is the scheduled refresh
+    if (!isScheduledRefresh) {
+      console.log('⚠️ No cached data available for user request - returning error');
+      throw new Error('No cached data available - scheduled refresh may not have run yet');
     }
 
     console.log('💰 Fetching fresh SHIB price and market cap from CoinGecko...');

@@ -156,6 +156,10 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const forceRefresh = url.searchParams.get('force') === 'true';
     
+    // Check if this is from the scheduled function (server-side)
+    const userAgent = request.headers.get('User-Agent') || '';
+    const isScheduledRefresh = userAgent.includes('Netlify-Scheduled-Refresh');
+    
       // Load existing cache first - ALWAYS prioritize instant response
   let burnCache = loadBurnCache();
   
@@ -258,10 +262,12 @@ export async function GET(request: Request) {
     if (forceRefresh && burnCache && burnCache.transactions.length > 1) {
       console.log('🔄 Force refresh requested - serving stale data while refreshing...');
       
-      // Start refresh in background
-      setImmediate(() => {
-        refreshBurnDataInBackground().catch(console.error);
-      });
+      // Only start background refresh if this is from scheduled function
+      if (isScheduledRefresh) {
+        setImmediate(() => {
+          refreshBurnDataInBackground().catch(console.error);
+        });
+      }
       
       return new Response(JSON.stringify({
         transactions: burnCache.transactions,
@@ -282,8 +288,14 @@ export async function GET(request: Request) {
       });
     }
     
-    // No cache available - fetch directly from Etherscan (serverless-friendly)
-    console.log('🛡️ No cache found - fetching directly from Etherscan...');
+    // Only fetch from external API if this is the scheduled refresh
+    if (!isScheduledRefresh) {
+      console.log('⚠️ No cached data available for user request - returning error');
+      throw new Error('No cached data available - scheduled refresh may not have run yet');
+    }
+    
+    // No cache available - fetch directly from Etherscan (scheduled refresh only)
+    console.log('🛡️ No cache found - fetching directly from Etherscan (scheduled refresh)...');
     
     try {
       const freshData = await refreshBurnDataInBackground();
