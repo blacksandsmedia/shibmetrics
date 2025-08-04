@@ -1,4 +1,6 @@
-# SHIBMETRICS 🔥
+# SHIBMETRICS
+
+<!-- Deploy test: Aug 4 2025 4:30 PM PST --> 🔥
 
 A real-time Shiba Inu (SHIB) burn tracker and analytics platform, inspired by LuncMetrics but focused on the SHIB ecosystem.
 
