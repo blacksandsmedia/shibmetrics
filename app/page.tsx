@@ -50,15 +50,25 @@ interface BurnsData {
   cached: boolean;
 }
 
-// Safe .toFixed() wrapper to prevent React error #418
-function safeToFixed(num: number, decimals: number): string {
-  if (typeof num !== 'number' || isNaN(num) || !isFinite(num)) {
-    return '0.' + '0'.repeat(decimals);
+// BULLETPROOF .toFixed() wrapper to prevent React error #418 
+function safeToFixed(num: any, decimals: number): string {
+  // Handle all possible bad inputs that could cause React error #418
+  if (num === null || num === undefined || num === '' || typeof num !== 'number') {
+    return '0.' + '0'.repeat(Math.max(0, decimals));
+  }
+  if (isNaN(num) || !isFinite(num) || num === Infinity || num === -Infinity) {
+    return '0.' + '0'.repeat(Math.max(0, decimals));
   }
   try {
-    return num.toFixed(decimals);
+    const result = num.toFixed(Math.max(0, decimals));
+    // Double-check the result isn't somehow still invalid
+    if (typeof result !== 'string' || result === 'NaN' || result === 'Infinity' || result === '-Infinity') {
+      return '0.' + '0'.repeat(Math.max(0, decimals));
+    }
+    return result;
   } catch (e) {
-    return '0.' + '0'.repeat(decimals);
+    console.warn('safeToFixed error:', e, 'for input:', num);
+    return '0.' + '0'.repeat(Math.max(0, decimals));
   }
 }
 
@@ -392,12 +402,14 @@ export default function Home() {
     fetchInitialData();
   }, []);
 
-  // Initialize transaction hashes tracking for flame effect
+  // Initialize transaction hashes tracking for flame effect (ONLY ONCE)
+  const hasInitializedHashTracking = useRef(false);
   useEffect(() => {
-    if (Array.isArray(burnsData.transactions) && burnsData.transactions.length > 0) {
+    if (!hasInitializedHashTracking.current && Array.isArray(burnsData.transactions) && burnsData.transactions.length > 0) {
       const initialHashes = new Set(burnsData.transactions.map(tx => tx.hash));
       setPreviousTransactionHashes(initialHashes);
-      console.log('📝 Initialized transaction hash tracking with', initialHashes.size, 'transactions');
+      hasInitializedHashTracking.current = true;
+      console.log('📝 Initialized transaction hash tracking ONCE with', initialHashes.size, 'transactions');
     }
   }, [burnsData.transactions]);
 
@@ -418,18 +430,29 @@ export default function Home() {
       totalBurned: data.totalBurnedData.totalBurned
     });
     
-    // 🔥 FLAME EFFECT: Detect new burn transactions  
+    // 🔥 FLAME EFFECT: Detect GENUINELY new burn transactions  
     const newTransactions = Array.isArray(data.burnsData.transactions) ? data.burnsData.transactions : [];
     const newHashes = new Set(newTransactions.map(tx => tx.hash));
     
     // Use functional update to avoid dependency issues
     setPreviousTransactionHashes(prevHashes => {
-      // Check if there are any new transaction hashes we haven't seen before
-      const hasNewBurns = Array.from(newHashes).some(hash => !prevHashes.has(hash));
-      
-      if (hasNewBurns && prevHashes.size > 0) { // Don't trigger on initial load
-        console.log('🔥 NEW BURN DETECTED! Triggering flame effect...');
-        setShowFlameEffect(true);
+      // Only check for new burns if we have previous hash data AND it's not empty
+      if (prevHashes.size > 0) {
+        // Find truly new hashes that we haven't seen before
+        const genuinelyNewHashes = Array.from(newHashes).filter(hash => !prevHashes.has(hash));
+        const newBurnCount = genuinelyNewHashes.length;
+        
+        console.log(`🔍 Flame effect check: ${newBurnCount} new burns detected out of ${newHashes.size} total transactions`);
+        
+        if (newBurnCount > 0) {
+          console.log('🔥 GENUINE NEW BURN DETECTED! Triggering flame effect for', newBurnCount, 'new burns');
+          console.log('🔥 New burn hashes:', genuinelyNewHashes.slice(0, 3)); // Log first 3 for debugging
+          setShowFlameEffect(true);
+        } else {
+          console.log('✅ No new burns - same transactions as before');
+        }
+      } else {
+        console.log('📝 Skipping flame effect check - hash tracking not yet initialized');
       }
       
       // Return the new hash set
