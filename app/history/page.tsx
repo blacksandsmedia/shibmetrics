@@ -101,17 +101,17 @@ export default function BurnHistoryPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
-  // Fetch burn data - COMPLETE HISTORICAL DATASET (all burns from beginning)
+  // Fetch burn data - SAME as homepage and burn-tracker for consistency
   const fetchBurnHistory = useCallback(async (forceFresh: boolean = false) => {
     setLoading(true);
     try {
-      console.log(`📚 Fetching COMPLETE historical burn dataset (forceFresh=${forceFresh})...`);
+      console.log(`📚 Fetching recent burn data for history page (forceFresh=${forceFresh})...`);
       
-      // Use historical dataset API to get ALL burns from SHIB's beginning
-      // Request maximum limit to get all historical transactions
-      const forceParam = forceFresh ? '&force=true' : '';
-      const response = await fetch(`/api/historical/dataset?limit=25000${forceParam}`, {
-        cache: 'no-cache',
+      // Use the SAME data source as homepage and burn-tracker for consistency
+      // This ensures ALL tables show the SAME recent burn data
+      const forceParam = forceFresh ? '?force=true' : '';
+      const response = await fetch(`/api/burns${forceParam}`, {
+        cache: forceFresh ? 'no-cache' : 'default',
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -119,11 +119,11 @@ export default function BurnHistoryPage() {
       });
       
       if (!response.ok) {
-        throw new Error(`Historical dataset API failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Burns API failed: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log(`📚 Got ${data.transactions?.length || 0} transactions from COMPLETE historical dataset`);
+      console.log(`📚 Got ${data.transactions?.length || 0} transactions from burns API (same as other tables)`);
       
       const transactions = data.transactions || [];
       
@@ -343,7 +343,7 @@ export default function BurnHistoryPage() {
                 SHIB Burn History
               </h1>
               <p className="text-gray-400 mt-2">
-                Complete history of all Shiba Inu token burn transactions from the very beginning
+                Recent Shiba Inu token burn transactions (same data as homepage and burn tracker)
               </p>
             </div>
 
