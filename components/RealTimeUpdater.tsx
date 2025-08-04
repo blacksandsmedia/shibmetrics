@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 interface ShibPriceData {
   price: number;
@@ -51,37 +51,55 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
   const [isLive, setIsLive] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [pageWasHidden, setPageWasHidden] = useState(false);
-  const [lastDataRef, setLastDataRef] = useState<{price?: number, totalBurned?: number, latestTxHash?: string}>({});
+  const lastDataRef = useRef<{price?: number, totalBurned?: number, latestTxHash?: string}>({});
   const [isFirstUpdate, setIsFirstUpdate] = useState(true);
 
-  // Smart comparison to detect actual data changes
+  // Smart comparison to detect actual data changes (fixed: using ref to prevent stale closures)
   const checkForDataChanges = useCallback((priceData: ShibPriceData, totalBurnedData: TotalBurnedData, burnsData: BurnsData) => {
     const latestTxHash = burnsData.transactions.length > 0 ? burnsData.transactions[0].hash : '';
     
+    // Get current reference data from ref (no stale closure issues)
+    const currentRef = lastDataRef.current;
+    
     // Check if any critical data changed
-    const priceChanged = Math.abs(priceData.price - (lastDataRef.price || 0)) > 0.00000001; // Meaningful price change
-    const totalBurnedChanged = totalBurnedData.totalBurned !== lastDataRef.totalBurned;
-    const newTransactions = latestTxHash !== lastDataRef.latestTxHash;
+    const priceChanged = Math.abs(priceData.price - (currentRef.price || 0)) > 0.00000001; // Meaningful price change
+    const totalBurnedChanged = totalBurnedData.totalBurned !== currentRef.totalBurned;
+    const newTransactions = latestTxHash !== currentRef.latestTxHash;
+    
+    // Log comparison details for debugging
+    console.log('🔍 Change detection debug:', {
+      currentPrice: currentRef.price,
+      newPrice: priceData.price,
+      priceChanged,
+      currentTotalBurned: currentRef.totalBurned,
+      newTotalBurned: totalBurnedData.totalBurned,
+      totalBurnedChanged,
+      currentTxHash: currentRef.latestTxHash?.slice(0,10),
+      newTxHash: latestTxHash.slice(0,10),
+      newTransactions
+    });
     
     const hasChanges = priceChanged || totalBurnedChanged || newTransactions;
     
     if (hasChanges) {
       console.log('🔄 Data changes detected:', {
-        priceChanged: priceChanged ? `${lastDataRef.price} → ${priceData.price}` : false,
-        totalBurnedChanged: totalBurnedChanged ? `${lastDataRef.totalBurned} → ${totalBurnedData.totalBurned}` : false,
+        priceChanged: priceChanged ? `${currentRef.price} → ${priceData.price}` : false,
+        totalBurnedChanged: totalBurnedChanged ? `${currentRef.totalBurned} → ${totalBurnedData.totalBurned}` : false,
         newTransactions: newTransactions ? `New tx: ${latestTxHash.slice(0,10)}...` : false
       });
       
-      // Update reference data
-      setLastDataRef({
+      // Update reference data directly via ref
+      lastDataRef.current = {
         price: priceData.price,
         totalBurned: totalBurnedData.totalBurned,
         latestTxHash: latestTxHash
-      });
+      };
+    } else {
+      console.log('📊 No meaningful changes detected');
     }
     
     return hasChanges;
-  }, [lastDataRef]);
+  }, []); // Empty dependency array - uses refs only
 
   // Fetch fresh data with periodic cache-busting to ensure accuracy
   const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
@@ -129,11 +147,11 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
           
           // Initialize reference data
           const latestTxHash = burnsData.transactions.length > 0 ? burnsData.transactions[0].hash : '';
-          setLastDataRef({
+          lastDataRef.current = {
             price: priceData.price,
             totalBurned: totalBurnedData.totalBurned,
             latestTxHash: latestTxHash
-          });
+          };
         } else {
           // Smart update: Only update if data actually changed
           const hasNewData = checkForDataChanges(priceData, totalBurnedData, burnsData);

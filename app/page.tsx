@@ -474,25 +474,32 @@ export default function Home() {
 
   // Calculate day-over-day percentage change (with safe fallbacks)
   let dayOverDayChange = 0;
-  let dayOverDayText = 'No previous data';
+  let dayOverDayText = 'No previous data'; // Default safe value
   
-  if (previous24HourBurnAmount > 0) {
-    dayOverDayChange = ((twentyFourHourBurnAmount - previous24HourBurnAmount) / previous24HourBurnAmount) * 100;
-    const sign = dayOverDayChange >= 0 ? '+' : '';
-    
-    // Format large percentage changes appropriately
-    let formattedChange;
-    if (Math.abs(dayOverDayChange) >= 1000) {
-      formattedChange = `${Math.round(dayOverDayChange).toLocaleString()}`;
-    } else if (Math.abs(dayOverDayChange) >= 100) {
-      formattedChange = dayOverDayChange.toFixed(1);
-    } else {
-      formattedChange = dayOverDayChange.toFixed(1);
+  try {
+    if (previous24HourBurnAmount > 0) {
+      dayOverDayChange = ((twentyFourHourBurnAmount - previous24HourBurnAmount) / previous24HourBurnAmount) * 100;
+      const sign = dayOverDayChange >= 0 ? '+' : '';
+      
+      // Format large percentage changes appropriately
+      let formattedChange = '0.0';
+      if (Math.abs(dayOverDayChange) >= 1000) {
+        formattedChange = `${Math.round(dayOverDayChange).toLocaleString()}`;
+      } else if (Math.abs(dayOverDayChange) >= 100) {
+        formattedChange = dayOverDayChange.toFixed(1);
+      } else {
+        formattedChange = dayOverDayChange.toFixed(1);
+      }
+      
+      dayOverDayText = `${sign}${formattedChange}% vs yesterday`;
+    } else if (twentyFourHourBurnAmount > 0) {
+      dayOverDayText = '🚀 New activity today';
     }
-    
-    dayOverDayText = `${sign}${formattedChange}% vs yesterday`;
-  } else if (twentyFourHourBurnAmount > 0) {
-    dayOverDayText = '🚀 New activity today';
+    // else: dayOverDayText remains as 'No previous data'
+  } catch (error) {
+    console.warn('Error calculating day-over-day change:', error);
+    dayOverDayText = 'No data available';
+    dayOverDayChange = 0;
   }
   
   // Additional calculations can be added here if needed

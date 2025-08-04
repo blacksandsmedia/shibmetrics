@@ -458,11 +458,28 @@ export function formatTimestamp(timestamp: string): string {
   return date.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
 }
 
-// Format timestamp to "time ago" format like Etherscan and shibburn.com
+// Format timestamp to "time ago" format like Etherscan and shibburn.com (with null/undefined protection)
 export function formatTimeAgo(timestamp: string): string {
+  // Safety check for invalid timestamps
+  if (!timestamp || typeof timestamp !== 'string') {
+    return 'Unknown time';
+  }
+  
   const now = Date.now();
-  const txTime = parseInt(timestamp) * 1000;
+  const parsedTimestamp = parseInt(timestamp);
+  
+  // Additional safety for invalid parsing
+  if (isNaN(parsedTimestamp)) {
+    return 'Unknown time';
+  }
+  
+  const txTime = parsedTimestamp * 1000;
   const diffMs = now - txTime;
+  
+  // Safety check for negative or invalid time differences
+  if (diffMs < 0 || isNaN(diffMs)) {
+    return 'Unknown time';
+  }
   
   // Convert to minutes, hours, days
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
@@ -479,7 +496,11 @@ export function formatTimeAgo(timestamp: string): string {
     return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
   } else {
     // For older transactions, show the date
-    const date = new Date(txTime);
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(txTime);
+      return date.toLocaleDateString() || 'Unknown date';
+    } catch (e) {
+      return 'Unknown date';
+    }
   }
 } 
