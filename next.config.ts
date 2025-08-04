@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Force rebuild for UI cleanup deployment
+// Force rebuild for UI cleanup deployment - v0.1.1 - Aug 4 2025
 const nextConfig: NextConfig = {
   async headers() {
     return [
