@@ -49,44 +49,50 @@ interface BurnsData {
   cached: boolean;
 }
 
-// Format large numbers for display
+// Format large numbers for display (with null/undefined protection)
 function formatNumber(num: number): string {
-  if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-  if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-  if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-  if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-  return num.toFixed(2);
+  const safeNum = (typeof num === 'number' && !isNaN(num)) ? num : 0;
+  if (safeNum >= 1e12) return (safeNum / 1e12).toFixed(2) + 'T';
+  if (safeNum >= 1e9) return (safeNum / 1e9).toFixed(2) + 'B';
+  if (safeNum >= 1e6) return (safeNum / 1e6).toFixed(2) + 'M';
+  if (safeNum >= 1e3) return (safeNum / 1e3).toFixed(2) + 'K';
+  return safeNum.toFixed(2);
 }
 
 function formatBurnedAmountHighPrecision(amount: number): string {
-  if (amount >= 1e12) return (amount / 1e12).toFixed(5) + 'T';
-  if (amount >= 1e9) return (amount / 1e9).toFixed(5) + 'B';
-  if (amount >= 1e6) return (amount / 1e6).toFixed(5) + 'M';
-  if (amount >= 1e3) return (amount / 1e3).toFixed(5) + 'K';
-  return amount.toFixed(5);
+  const safeAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 0;
+  if (safeAmount >= 1e12) return (safeAmount / 1e12).toFixed(5) + 'T';
+  if (safeAmount >= 1e9) return (safeAmount / 1e9).toFixed(5) + 'B';
+  if (safeAmount >= 1e6) return (safeAmount / 1e6).toFixed(5) + 'M';
+  if (safeAmount >= 1e3) return (safeAmount / 1e3).toFixed(5) + 'K';
+  return safeAmount.toFixed(5);
 }
 
 function formatMarketCap(marketCap: number): string {
-  return (marketCap / 1e9).toFixed(5); // Convert to billions with 5 decimal places
+  const safeCap = (typeof marketCap === 'number' && !isNaN(marketCap)) ? marketCap : 0;
+  return (safeCap / 1e9).toFixed(5); // Convert to billions with 5 decimal places
 }
 
 function formatBurnedAmountDetailed(amount: number): string {
-  if (amount >= 1e12) return (amount / 1e12).toFixed(4) + 'T';
-  if (amount >= 1e9) return (amount / 1e9).toFixed(4) + 'B';
-  if (amount >= 1e6) return (amount / 1e6).toFixed(4) + 'M';
-  if (amount >= 1e3) return (amount / 1e3).toFixed(4) + 'K';
-  return amount.toFixed(4);
+  const safeAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 0;
+  if (safeAmount >= 1e12) return (safeAmount / 1e12).toFixed(4) + 'T';
+  if (safeAmount >= 1e9) return (safeAmount / 1e9).toFixed(4) + 'B';
+  if (safeAmount >= 1e6) return (safeAmount / 1e6).toFixed(4) + 'M';
+  if (safeAmount >= 1e3) return (safeAmount / 1e3).toFixed(4) + 'K';
+  return safeAmount.toFixed(4);
 }
 
 function formatSupplyNumber(supply: number): string {
-  return Math.floor(supply).toLocaleString('en-US');
+  const safeSupply = (typeof supply === 'number' && !isNaN(supply)) ? supply : 0;
+  return Math.floor(safeSupply).toLocaleString('en-US');
 }
 
 function formatVolume24h(volume: number): string {
-  if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`;
-  if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`;
-  if (volume >= 1e3) return `$${(volume / 1e3).toFixed(2)}K`;
-  return `$${volume.toFixed(2)}`;
+  const safeVolume = (typeof volume === 'number' && !isNaN(volume)) ? volume : 0;
+  if (safeVolume >= 1e9) return `$${(safeVolume / 1e9).toFixed(2)}B`;
+  if (safeVolume >= 1e6) return `$${(safeVolume / 1e6).toFixed(2)}M`;
+  if (safeVolume >= 1e3) return `$${(safeVolume / 1e3).toFixed(2)}K`;
+  return `$${safeVolume.toFixed(2)}`;
 }
 
 // Client-side data fetching functions for fast initial loading
@@ -424,7 +430,7 @@ export default function Home() {
       localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
       localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
     }
-  }, [detectChangesAndAnimate]);
+  }, []); // No dependencies - uses refs and stable state setters only
   
   // Calculate all metrics from server-side data for instant display (with comprehensive safe fallbacks)
   const burns = Array.isArray(burnsData.transactions) ? burnsData.transactions : [];
@@ -495,6 +501,19 @@ export default function Home() {
   const totalSupplyOriginal = 1000000000000000; // Original total supply: 1 quadrillion SHIB
   const burnPercentage = (totalBurned > 0 && !isNaN(totalBurned)) ? (totalBurned / totalSupplyOriginal) * 100 : 0;
 
+  // Create safe display values to guarantee no undefined/null/NaN values reach StatCard components
+  const safeDisplayValues = {
+    price: isNaN(currentPrice) || currentPrice === null || currentPrice === undefined ? 0 : currentPrice,
+    priceChange: isNaN(priceChange) || priceChange === null || priceChange === undefined ? 0 : priceChange,
+    marketCap: isNaN(marketCap) || marketCap === null || marketCap === undefined ? 0 : marketCap,
+    circulatingSupply: isNaN(circulatingSupply) || circulatingSupply === null || circulatingSupply === undefined ? 0 : circulatingSupply,
+    totalSupply: isNaN(totalSupply) || totalSupply === null || totalSupply === undefined ? 0 : totalSupply,
+    volume24h: isNaN(volume24h) || volume24h === null || volume24h === undefined ? 0 : volume24h,
+    totalBurned: isNaN(totalBurned) || totalBurned === null || totalBurned === undefined ? 0 : totalBurned,
+    burnPercentage: isNaN(burnPercentage) || burnPercentage === null || burnPercentage === undefined ? 0 : burnPercentage,
+    twentyFourHourBurnAmount: isNaN(twentyFourHourBurnAmount) || twentyFourHourBurnAmount === null || twentyFourHourBurnAmount === undefined ? 0 : twentyFourHourBurnAmount
+  };
+
   return (
     <div className="min-h-screen bg-gray-900">
       <div className="container mx-auto px-4 py-8">
@@ -516,8 +535,8 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
             title="SHIB Price"
-            value={`$${currentPrice.toFixed(8)}`}
-            change={`${priceChange > 0 ? '+' : ''}${priceChange.toFixed(2)}% (24h)`}
+            value={`$${safeDisplayValues.price.toFixed(8)}`}
+            change={`${safeDisplayValues.priceChange > 0 ? '+' : ''}${safeDisplayValues.priceChange.toFixed(2)}% (24h)`}
             icon={DollarSign}
             hasChanged={changedCards.price}
             animationType="flash"
@@ -525,8 +544,8 @@ export default function Home() {
 
           <StatCard
             title="24H Burn Activity"
-            value={formatBurnedAmountDetailed(twentyFourHourBurnAmount)}
-            change={dayOverDayText}
+            value={formatBurnedAmountDetailed(safeDisplayValues.twentyFourHourBurnAmount)}
+            change={dayOverDayText || 'No data'}
             icon={dayOverDayChange > 0 ? TrendingUp : dayOverDayChange < 0 ? TrendingDown : Flame}
             hasChanged={changedCards.burnActivity}
             animationType="pulse"
@@ -534,8 +553,8 @@ export default function Home() {
 
           <StatCard
             title="Burnt from Initial Supply"
-            value={formatBurnedAmountHighPrecision(totalBurned)}
-            change={`${burnPercentage.toFixed(6)}% of total supply`}
+            value={formatBurnedAmountHighPrecision(safeDisplayValues.totalBurned)}
+            change={`${safeDisplayValues.burnPercentage.toFixed(6)}% of total supply`}
             icon={Flame}
             hasChanged={changedCards.totalBurned}
             animationType="glow"
@@ -543,7 +562,7 @@ export default function Home() {
 
           <StatCard
             title="Market Cap"
-            value={`$${formatMarketCap(marketCap)}B`}
+            value={`$${formatMarketCap(safeDisplayValues.marketCap)}B`}
             change="From CoinGecko"
             icon={DollarSign}
             hasChanged={changedCards.marketCap}
@@ -552,8 +571,8 @@ export default function Home() {
 
           <StatCard
             title="Token Supply"
-            value={formatSupplyNumber(circulatingSupply)}
-            change={`${formatSupplyNumber(totalSupply)} total supply`}
+            value={formatSupplyNumber(safeDisplayValues.circulatingSupply)}
+            change={`${formatSupplyNumber(safeDisplayValues.totalSupply)} total supply`}
             icon={Clock}
             isSupplyCard={true}
             hasChanged={changedCards.supply}
@@ -562,7 +581,7 @@ export default function Home() {
 
           <StatCard
             title="24 Hour Trading Volume"
-            value={formatVolume24h(volume24h)}
+            value={formatVolume24h(safeDisplayValues.volume24h)}
             change="From CoinGecko"
             icon={TrendingUp}
             hasChanged={changedCards.volume}
@@ -574,12 +593,12 @@ export default function Home() {
         <div className="bg-gray-800 rounded-lg border border-gray-700">
           <div className="px-6 py-4 border-b border-gray-700">
             <h3 className="text-lg font-semibold text-white">
-              {last24HourBurns.length > 10 
+              {(last24HourBurns && last24HourBurns.length > 10)
                 ? `Recent Burn Transactions (${last24HourBurns.length} in last 24h)` 
                 : 'Latest Burn Transactions (Last 10)'}
             </h3>
           </div>
-          <BurnTransactionTable transactions={burnsToShow} loading={loading} />
+          <BurnTransactionTable transactions={burnsToShow || []} loading={loading} />
         </div>
 
         {/* View Burn Tracker Button */}
