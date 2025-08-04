@@ -345,6 +345,13 @@ export default function Home() {
   const [showFlameEffect, setShowFlameEffect] = useState(false);
   const [previousTransactionHashes, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
   
+  // Track if we're in initial data sync to prevent false flame effects
+  const [isInitialDataSync, setIsInitialDataSync] = useState(() => {
+    console.log('🚫 Initial data sync period started - flame effects disabled for 30 seconds');
+    return true;
+  });
+  const initialSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Animation state for number changes
   const [animatingCards, setAnimatingCards] = useState<Set<string>>(new Set());
   const previousDataRef = useRef<{
@@ -361,6 +368,9 @@ export default function Home() {
     return () => {
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+      }
+      if (initialSyncTimeoutRef.current) {
+        clearTimeout(initialSyncTimeoutRef.current);
       }
     };
   }, []);
@@ -435,6 +445,15 @@ export default function Home() {
       }
       
       setLoading(false);
+      
+      // End initial data sync period after 30 seconds to allow for complete data loading
+      if (initialSyncTimeoutRef.current) {
+        clearTimeout(initialSyncTimeoutRef.current);
+      }
+      initialSyncTimeoutRef.current = setTimeout(() => {
+        setIsInitialDataSync(false);
+        console.log('🎯 Initial data sync period ended - flame effects now enabled');
+      }, 30000); // 30 seconds to allow complete data sync
     };
 
     fetchInitialData();
@@ -500,6 +519,12 @@ export default function Home() {
     
     // Use functional update to avoid dependency issues
     setPreviousTransactionHashes(prevHashes => {
+      // CRITICAL: Skip flame effect entirely during initial data sync period
+      if (isInitialDataSync) {
+        console.log('🚫 Skipping flame effect check - in initial data sync period (preventing false triggers)');
+        return newHashes; // Update hashes but don't trigger flame
+      }
+      
       // Only check for new burns if we have previous hash data AND it's not empty
       if (prevHashes.size > 0) {
         // Find truly new hashes that we haven't seen before
@@ -510,11 +535,11 @@ export default function Home() {
         
         if (newBurnCount > 0) {
           // ADDITIONAL CHECK: Only trigger flame effect if the new transactions are actually recent
-          // Check if any of the new transactions happened in the last 10 minutes
-          const tenMinutesAgo = Math.floor(Date.now() / 1000) - (10 * 60);
+          // Check if any of the new transactions happened in the last 5 minutes (reduced from 10)
+          const fiveMinutesAgo = Math.floor(Date.now() / 1000) - (5 * 60);
           const recentNewTransactions = newTransactions.filter(tx => 
             genuinelyNewHashes.includes(tx.hash) && 
-            parseInt(tx.timeStamp) > tenMinutesAgo
+            parseInt(tx.timeStamp) > fiveMinutesAgo
           );
           
           if (recentNewTransactions.length > 0) {
@@ -522,8 +547,11 @@ export default function Home() {
             console.log('🔥 Recent burn times:', recentNewTransactions.map(tx => new Date(parseInt(tx.timeStamp) * 1000).toLocaleTimeString()));
             setShowFlameEffect(true);
           } else {
-            console.log('⏰ New transactions detected, but they are old (not within last 10 minutes) - no flame effect');
-            console.log('⏰ Oldest new transaction:', Math.floor((Date.now()/1000 - Math.min(...newTransactions.filter(tx => genuinelyNewHashes.includes(tx.hash)).map(tx => parseInt(tx.timeStamp)))) / 60), 'minutes ago');
+            console.log('⏰ New transactions detected, but they are old (not within last 5 minutes) - no flame effect');
+            if (genuinelyNewHashes.length > 0) {
+              const oldestNewTx = Math.min(...newTransactions.filter(tx => genuinelyNewHashes.includes(tx.hash)).map(tx => parseInt(tx.timeStamp)));
+              console.log('⏰ Oldest new transaction:', Math.floor((Date.now()/1000 - oldestNewTx) / 60), 'minutes ago');
+            }
           }
         } else {
           console.log('✅ No new burns - same transactions as before');
@@ -594,7 +622,7 @@ export default function Home() {
       localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
       localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
     }
-  }, []); // Empty dependency array - use functional updates instead
+  }, [isInitialDataSync]); // Include isInitialDataSync dependency
   
   // Calculate all metrics from server-side data for instant display (with NUCLEAR-LEVEL safe fallbacks)
   const burns = Array.isArray(burnsData?.transactions) ? burnsData.transactions : [];
