@@ -144,12 +144,7 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
         </div>
       )}
       
-      {/* Last updated timestamp */}
-      {isLive && (
-        <div className="text-xs text-gray-400 mt-2">
-          Last updated: {lastUpdate.toLocaleTimeString()}
-        </div>
-      )}
+
     </>
   );
 }

@@ -768,7 +768,7 @@ export default function Home() {
           <StatCard
             title="Market Cap"
             value={`$${formatMarketCap(safeDisplayValues.marketCap)}B`}
-            change="From CoinGecko"
+            change=""
             icon={DollarSign}
             isAnimating={animatingCards.has('marketCap')}
           />
@@ -785,7 +785,7 @@ export default function Home() {
           <StatCard
             title="24 Hour Trading Volume"
             value={formatVolume24h(safeDisplayValues.volume24h)}
-            change="From CoinGecko"
+            change=""
             icon={TrendingUp}
             isAnimating={animatingCards.has('volume24h')}
           />
