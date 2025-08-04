@@ -90,7 +90,11 @@ export default function BurnTransactionTable({ transactions, loading = false }: 
               <tr key={`${tx.hash}-${index}`} className="hover:bg-gray-750 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm font-medium text-white">
-                    🔥 {formatBurnAmount(parseInt(tx.value) / Math.pow(10, 18))}
+                    🔥 {formatBurnAmount(
+                      (tx.value && !isNaN(parseInt(tx.value))) 
+                        ? parseInt(tx.value) / Math.pow(10, 18) 
+                        : 0
+                    )}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

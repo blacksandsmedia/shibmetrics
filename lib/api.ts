@@ -413,42 +413,64 @@ export async function fetchLatestBurns(limit = 20): Promise<CachedResponse<BurnT
 
 // Format large numbers for display
 export function formatNumber(num: number, decimals = 2): string {
+  // Safety check for invalid inputs
+  if (typeof num !== 'number' || isNaN(num) || !isFinite(num)) {
+    return '0.' + '0'.repeat(decimals);
+  }
+  
   if (num >= 1e12) {
-    return (num / 1e12).toFixed(decimals) + 'T';
+    return safeToFixed(num / 1e12, decimals) + 'T';
   }
   if (num >= 1e9) {
-    return (num / 1e9).toFixed(decimals) + 'B';
+    return safeToFixed(num / 1e9, decimals) + 'B';
   }
   if (num >= 1e6) {
-    return (num / 1e6).toFixed(decimals) + 'M';
+    return safeToFixed(num / 1e6, decimals) + 'M';
   }
   if (num >= 1e3) {
-    return (num / 1e3).toFixed(decimals) + 'K';
+    return safeToFixed(num / 1e3, decimals) + 'K';
   }
-  return num.toFixed(decimals);
+  return safeToFixed(num, decimals);
+}
+
+// Safe .toFixed() wrapper to prevent React error #418
+function safeToFixed(num: number, decimals: number): string {
+  if (typeof num !== 'number' || isNaN(num) || !isFinite(num)) {
+    return '0.' + '0'.repeat(decimals);
+  }
+  try {
+    return num.toFixed(decimals);
+  } catch (e) {
+    return '0.' + '0'.repeat(decimals);
+  }
 }
 
 // Format burn amounts specifically - shows "<1" for very small amounts instead of "0.00"
 export function formatBurnAmount(num: number, decimals = 2): string {
+  // Safety check for invalid inputs
+  if (typeof num !== 'number' || isNaN(num) || !isFinite(num)) {
+    return '0.' + '0'.repeat(decimals);
+  }
+  
   // For very small positive amounts that would show as "0.00", show "<1" instead
   if (num > 0 && num < 1) {
     return '<1';
   }
   
-  // Use regular formatting for all other amounts
+  // Use regular formatting for all other amounts with safe .toFixed()
   if (num >= 1e12) {
-    return (num / 1e12).toFixed(decimals) + 'T';
+    return safeToFixed(num / 1e12, decimals) + 'T';
   }
   if (num >= 1e9) {
-    return (num / 1e9).toFixed(decimals) + 'B';
+    return safeToFixed(num / 1e9, decimals) + 'B';
   }
   if (num >= 1e6) {
-    return (num / 1e6).toFixed(decimals) + 'M';
+    return safeToFixed(num / 1e6, decimals) + 'M';
   }
   if (num >= 1e3) {
-    return (num / 1e3).toFixed(decimals) + 'K';
+    return safeToFixed(num / 1e3, decimals) + 'K';
   }
-  return num.toFixed(decimals);
+  return safeToFixed(num, decimals);
 }
 
 // Format timestamp to readable date with consistent format
