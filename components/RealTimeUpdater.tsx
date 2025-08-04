@@ -54,27 +54,15 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
 
 
 
-  // Fetch fresh data with aggressive cache-busting to ensure real-time accuracy
+  // Fetch data from server cache (refreshed every 2 minutes by scheduled function)
   const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
-    const timestamp = Date.now();
-    
-    // ALWAYS use cache busting for real-time data - this was the problem!
-    console.log('🔄 Fetching fresh data with aggressive cache busting');
+    console.log('🔄 Fetching data from server cache (updated every 2 minutes by scheduled function)');
     
     try {
       const [priceResponse, totalBurnedResponse, burnsResponse] = await Promise.all([
-        fetch(`/api/price?_t=${timestamp}`, { 
-          cache: 'no-cache',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-        }),
-        fetch(`/api/total-burned?_t=${timestamp}`, { 
-          cache: 'no-cache',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-        }),
-        fetch(`/api/burns?force=true&_t=${timestamp}`, { 
-          cache: 'no-cache',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-        })
+        fetch('/api/price'),
+        fetch('/api/total-burned'), 
+        fetch('/api/burns')
       ]);
       
       const [priceData, totalBurnedData, burnsData] = await Promise.all([
