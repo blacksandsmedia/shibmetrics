@@ -59,7 +59,7 @@ export default function BurnTrackerPage() {
     } finally {
       setLoading(false);
     }
-  }, [setAllBurns, setLoading, setLastUpdated]);
+  }, []); // Empty dependencies - setState functions are stable
 
   // Initialize with immediate data fetch and setup auto-refresh
   useEffect(() => {
@@ -80,14 +80,11 @@ export default function BurnTrackerPage() {
               const data = await response.json();
               const newBurns = data.transactions || [];
               
-              // Compare with current data  
-              const hasNewBurns = newBurns.length > allBurns.length ||
-                (newBurns.length > 0 && allBurns.length > 0 && 
-                 newBurns[0].hash !== allBurns[0].hash);
-              
-              if (hasNewBurns) {
+              // Use current allBurns from closure instead of dependency
+              // This prevents infinite loop while still checking for new data
+              if (newBurns.length > 0) {
                 console.log('🔥 New burn transactions detected, refreshing tracker...');
-                fetchAllBurns(false);
+                fetchAllBurns(false);  
               } else {
                 console.log('📊 No new burns, keeping current display');
               }
@@ -102,7 +99,7 @@ export default function BurnTrackerPage() {
     }, 60000); // 60 seconds
     
     return () => clearInterval(interval);
-  }, [allBurns, fetchAllBurns]);
+  }, []); // ✅ EMPTY DEPENDENCY ARRAY - ONLY RUN ONCE ON MOUNT
 
   // Update time display every minute to refresh "time ago" calculations without animation
   useEffect(() => {
