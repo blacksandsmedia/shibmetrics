@@ -33,10 +33,9 @@ export async function GET(request: Request) {
       });
     }
     
-    // Only fetch from external API if this is the scheduled refresh
+    // TEMPORARY: Allow user requests to call external APIs until scheduled function is fixed
     if (!isScheduledRefresh) {
-      console.log('⚠️ No cached data available for user request - returning error');
-      throw new Error('No cached data available - scheduled refresh may not have run yet');
+      console.log('⚠️ No cached data available - fetching fresh data for user request (TEMPORARY)');
     }
 
     console.log('💰 Fetching fresh SHIB price and market cap from CoinGecko...');
