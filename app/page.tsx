@@ -284,12 +284,22 @@ export default function Home() {
           localStorage.removeItem('shibmetrics_price_cache');
           console.log('🔄 Cleared legacy cache data - will fetch fresh data');
         } else {
-          // Use cached data with volume24h
-          console.log('🗄️ Loaded cached price data:', parsedCache.price ? `$${parsedCache.price}` : 'invalid');
-          return {
-            ...parsedCache,
-            volume24h: parsedCache.volume24h || 0
-          };
+          // 🚨 CRITICAL: Validate cached data types to prevent React error #418
+          const priceValid = typeof parsedCache.price === 'number' && !isNaN(parsedCache.price) && isFinite(parsedCache.price);
+          const marketCapValid = typeof parsedCache.marketCap === 'number' && !isNaN(parsedCache.marketCap) && isFinite(parsedCache.marketCap);
+          const priceChangeValid = typeof parsedCache.priceChange24h === 'number' && !isNaN(parsedCache.priceChange24h) && isFinite(parsedCache.priceChange24h);
+          
+          if (!priceValid || !marketCapValid || !priceChangeValid) {
+            console.log('🚨 CORRUPTED CACHE: Invalid data types detected, clearing cache');
+            localStorage.removeItem('shibmetrics_price_cache');
+          } else {
+            // Use cached data with volume24h
+            console.log('🗄️ Loaded cached price data:', `$${parsedCache.price} (validated number)`);
+            return {
+              ...parsedCache,
+              volume24h: parsedCache.volume24h || 0
+            };
+          }
         }
       } catch {
         console.warn('Failed to parse cached price data');
