@@ -615,6 +615,10 @@ export default function Home() {
     }
   }, [isInitialDataSync]); // Include isInitialDataSync dependency
   
+  // 🚨 CRITICAL FIX: Add transition state protection to prevent React error #418
+  // During state updates, ensure we never pass undefined/NaN to React rendering
+  const isStateTransitioning = !priceData || !totalBurnedData || !burnsData;
+  
   // Calculate all metrics from server-side data for instant display (with NUCLEAR-LEVEL safe fallbacks)
   const burns = Array.isArray(burnsData?.transactions) ? burnsData.transactions : [];
   const totalBurned = (totalBurnedData?.totalBurned != null && typeof totalBurnedData.totalBurned === 'number' && !isNaN(totalBurnedData.totalBurned) && isFinite(totalBurnedData.totalBurned)) ? totalBurnedData.totalBurned : 0;
@@ -710,6 +714,19 @@ export default function Home() {
     burnPercentage: (typeof burnPercentage === 'number' && !isNaN(burnPercentage) && isFinite(burnPercentage)) ? burnPercentage : 0,
     twentyFourHourBurnAmount: (typeof twentyFourHourBurnAmount === 'number' && !isNaN(twentyFourHourBurnAmount) && isFinite(twentyFourHourBurnAmount)) ? twentyFourHourBurnAmount : 0
   };
+
+  // 🚨 CRITICAL PROTECTION: If state is transitioning, show loading to prevent React error #418
+  if (isStateTransitioning) {
+    console.log('⏳ State transitioning - showing loading to prevent React error #418');
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mb-4"></div>
+          <p className="text-white text-lg">Loading SHIB Metrics...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Values are now safely processed and ready for rendering
 
