@@ -157,6 +157,7 @@ export default function BurnHistoryPage() {
       console.error('❌ Error fetching burn history:', error);
       setAllTransactions([]);
     } finally {
+      console.log('🔄 LOADING DEBUG: Setting loading to false');
       setLoading(false);
     }
   }, []);
@@ -190,7 +191,9 @@ export default function BurnHistoryPage() {
     // Sort
     filtered.sort((a, b) => {
       if (sortBy === 'time') {
-        return parseInt(b.timeStamp) - parseInt(a.timeStamp);
+        const timeA = parseInt(a.timeStamp);
+        const timeB = parseInt(b.timeStamp);
+        return timeB - timeA; // Descending order (newest first)
       } else {
         // Use BigInt for proper comparison of large values
         try {
@@ -204,6 +207,20 @@ export default function BurnHistoryPage() {
         }
       }
     });
+    
+    // 🚨 DEBUG: Log first few transactions after sorting to verify data quality
+    if (filtered.length > 0) {
+      console.log(`🔍 SORT DEBUG: First 3 transactions after sorting:`, 
+        filtered.slice(0, 3).map(tx => ({
+          hash: tx.hash.slice(0, 10),
+          timestamp: tx.timeStamp,
+          date: new Date(parseInt(tx.timeStamp) * 1000).toLocaleString(),
+          value: tx.value,
+          from: tx.from.slice(0, 6),
+          to: tx.to.slice(0, 6)
+        }))
+      );
+    }
     
     setFilteredTransactions(filtered);
     setCurrentPage(1); // Reset to first page when filtering
