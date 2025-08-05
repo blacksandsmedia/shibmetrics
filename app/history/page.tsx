@@ -100,6 +100,9 @@ export default function BurnHistoryPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
+  
+  // 🚨 DEBUG: Log pagination state to diagnose table display issue
+  console.log(`📊 PAGINATION DEBUG: filteredTransactions=${filteredTransactions.length}, currentPage=${currentPage}, startIndex=${startIndex}, endIndex=${endIndex}, currentTransactions=${currentTransactions.length}, loading=${loading}`);
 
   // Fetch burn data - COMPLETE HISTORICAL DATASET (5+ years of SHIB burns)
   const fetchBurnHistory = useCallback(async (forceFresh: boolean = false) => {
@@ -440,6 +443,8 @@ export default function BurnHistoryPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
+                  {/* 🚨 DEBUG: Log table rendering state */}
+                  {console.log(`🔍 TABLE RENDER: Attempting to render ${currentTransactions.length} transactions, loading=${loading}`)}
                   {currentTransactions.map((tx) => (
                     <tr key={tx.hash} className="hover:bg-gray-750 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
