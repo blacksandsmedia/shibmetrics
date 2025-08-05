@@ -150,8 +150,28 @@ export default function BurnHistoryPage() {
       });
       
       console.log(`✅ COMPLETE HISTORY: Loaded ${validTransactions.length} transactions from ALL of SHIB history (5+ years)`);
+      
+      // 🚨 CRITICAL FIX: Force immediate filtering update after data loads
+      console.log('🔄 FORCE UPDATE: Triggering immediate state updates...');
       setAllTransactions(validTransactions);
       setLastUpdated(new Date());
+      
+      // 🚨 CRITICAL: Force filtering to run immediately with new data
+      console.log('🔄 FORCE FILTER: Manually triggering filter update...');
+      
+      // Apply the same filtering logic immediately
+      let filtered = [...validTransactions];
+      
+      // Sort by time (newest first)
+      filtered.sort((a, b) => {
+        const timeA = parseInt(a.timeStamp);
+        const timeB = parseInt(b.timeStamp);
+        return timeB - timeA; // Descending order (newest first)
+      });
+      
+      console.log(`🔄 FORCE RESULT: Setting ${filtered.length} filtered transactions immediately`);
+      setFilteredTransactions(filtered);
+      setCurrentPage(1);
       
     } catch (error) {
       console.error('❌ Error fetching burn history:', error);
@@ -466,22 +486,62 @@ export default function BurnHistoryPage() {
                     <tr key={tx.hash} className="hover:bg-gray-750 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-300 font-mono">
-                          {truncateAddress(tx.from)}
+                          {/* 🚨 SAFETY: Prevent React error #418 from invalid addresses */}
+                          {(() => {
+                            try {
+                              if (!tx.from || typeof tx.from !== 'string') return 'Unknown';
+                              const result = truncateAddress(tx.from);
+                              if (typeof result !== 'string' || result === 'undefined' || result === 'null') return 'Unknown';
+                              return result;
+                            } catch {
+                              return 'Unknown';
+                            }
+                          })()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm font-medium text-white">
-                          {formatShibAmount(tx.value)}
+                          {/* 🚨 SAFETY: Prevent React error #418 from invalid values */}
+                          {(() => {
+                            try {
+                              if (!tx.value || typeof tx.value !== 'string') return '0';
+                              const result = formatShibAmount(tx.value);
+                              if (typeof result !== 'string' || result === 'undefined' || result === 'null' || result === 'NaN') return '0';
+                              return result;
+                            } catch {
+                              return '0';
+                            }
+                          })()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-orange-400 font-medium">
-                          {getBurnDestinationName(tx.to)}
+                          {/* 🚨 SAFETY: Prevent React error #418 from invalid addresses */}
+                          {(() => {
+                            try {
+                              if (!tx.to || typeof tx.to !== 'string') return 'Unknown';
+                              const result = getBurnDestinationName(tx.to);
+                              if (typeof result !== 'string' || result === 'undefined' || result === 'null') return 'Unknown';
+                              return result;
+                            } catch {
+                              return 'Unknown';
+                            }
+                          })()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-300">
-                          {formatTimeAgo(tx.timeStamp)}
+                          {/* 🚨 SAFETY: Prevent React error #418 from invalid timestamps */}
+                          {(() => {
+                            try {
+                              if (!tx.timeStamp || typeof tx.timeStamp !== 'string') return 'Unknown time';
+                              const result = formatTimeAgo(tx.timeStamp);
+                              if (typeof result !== 'string' || result === 'undefined' || result === 'null') return 'Unknown time';
+                              return result;
+                            } catch {
+                              return 'Unknown time';
+                            }
+                          })()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
