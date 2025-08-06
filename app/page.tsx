@@ -395,23 +395,22 @@ export default function Home() {
       // Only fetch data that's missing or invalid
       const fetchPromises: Promise<void>[] = [];
 
-      // Skip initial price fetching - let RealTimeUpdater handle all price updates
+      // Let RealTimeUpdater handle ALL data fetching to avoid race conditions
+      // It will fetch immediately (no 100ms delay) to provide fast initial load
       if (!hasValidPriceData) {
-        console.log('💰 Price data missing - RealTimeUpdater will provide fresh data shortly');
+        console.log('💰 Price data missing - RealTimeUpdater will fetch immediately');
       } else {
         console.log('💰 Price data already cached - RealTimeUpdater will update when needed');
       }
 
-      // Skip initial total burned fetching - let RealTimeUpdater handle all updates
       if (!hasValidTotalBurned) {
-        console.log('🔥 Total burned data missing - RealTimeUpdater will provide fresh data shortly');
+        console.log('🔥 Total burned data missing - RealTimeUpdater will fetch immediately');
       } else {
         console.log('🔥 Total burned data already cached - RealTimeUpdater will update when needed');
       }
 
-      // Skip initial burns data fetching - let RealTimeUpdater handle all updates
       if (!hasValidBurnsData) {
-        console.log('📊 Burns data missing - RealTimeUpdater will provide fresh data shortly');
+        console.log('📊 Burns data missing - RealTimeUpdater will fetch immediately');
       } else {
         console.log('📊 Burns data already cached - RealTimeUpdater will update when needed');
       }
