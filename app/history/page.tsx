@@ -253,11 +253,10 @@ export default function BurnHistoryPage() {
     fetchBurnData();
   }, [fetchBurnData]);
 
-  // Smart auto-refresh: Only update if new transactions are detected
+  // Smart auto-refresh: Check for new transactions from server cache
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!document.hidden) {
-        console.log('🔄 Checking for new burn transactions...');
+      console.log('🔄 Checking for new burn transactions...');
         
         // Smart check: Use faster /api/burns first, then full refresh if needed
         const checkForNewData = async () => {
@@ -285,8 +284,7 @@ export default function BurnHistoryPage() {
         };
         
         checkForNewData();
-      }
-    }, 30 * 1000); // 30 seconds - optimized for faster updates
+    }, 30 * 1000); // 30 seconds - displays latest data from server (refreshed every 1min)
     
     return () => clearInterval(interval);
   }, [fetchBurnData, allTransactions]);

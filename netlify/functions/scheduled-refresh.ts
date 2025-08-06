@@ -1,6 +1,6 @@
 import type { Config } from "@netlify/functions";
 
-// Netlify scheduled function to refresh all data every 2 minutes
+// Netlify scheduled function to refresh all data every 1 minute for competitive updates
 export default async (request: Request) => {
   console.log('🕐 Scheduled refresh starting...');
   
@@ -68,5 +68,5 @@ export default async (request: Request) => {
 
 // Modern Netlify Functions scheduled configuration
 export const config: Config = {
-  schedule: "*/2 * * * *"  // Every 2 minutes
+  schedule: "*/1 * * * *"  // Every 1 minute - competitive refresh rate
 }; 
