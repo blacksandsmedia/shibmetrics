@@ -139,7 +139,7 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
       if (document.hidden) {
         setPageWasHidden(true);
       } else if (pageWasHidden) {
-        fetchFreshData(true); // Force fresh data when returning to tab
+        fetchFreshData(); // Fetch fresh data when returning to tab
         setPageWasHidden(false);
       }
     };
