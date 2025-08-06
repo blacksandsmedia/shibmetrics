@@ -402,32 +402,18 @@ export default function Home() {
         console.log('💰 Price data already cached - RealTimeUpdater will update when needed');
       }
 
+      // Skip initial total burned fetching - let RealTimeUpdater handle all updates
       if (!hasValidTotalBurned) {
-        console.log('🔥 Total burned data missing - fetching...');
-        fetchPromises.push(
-          fetchTotalBurnedClient()
-            .then(result => {
-              setTotalBurnedData(result);
-              console.log('🔥 Total burned data loaded:', result.source);
-            })
-            .catch(error => console.warn('⚠️ Total burned data unavailable:', error instanceof Error ? error.message : 'Unknown error'))
-        );
+        console.log('🔥 Total burned data missing - RealTimeUpdater will provide fresh data shortly');
       } else {
-        console.log('🔥 Total burned data already cached - skipping fetch');
+        console.log('🔥 Total burned data already cached - RealTimeUpdater will update when needed');
       }
 
+      // Skip initial burns data fetching - let RealTimeUpdater handle all updates
       if (!hasValidBurnsData) {
-        console.log('📊 Burns data missing - fetching...');
-        fetchPromises.push(
-          fetchBurnsClient()
-            .then(result => {
-              setBurnsData(result);
-              console.log('📊 Burns data loaded:', result.source, `(${result.transactions.length} transactions)`);
-            })
-            .catch(error => console.warn('⚠️ Burns data unavailable:', error instanceof Error ? error.message : 'Unknown error'))
-        );
+        console.log('📊 Burns data missing - RealTimeUpdater will provide fresh data shortly');
       } else {
-        console.log('📊 Burns data already cached - skipping fetch');
+        console.log('📊 Burns data already cached - RealTimeUpdater will update when needed');
       }
 
       // Only fetch what we need
