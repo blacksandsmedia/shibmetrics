@@ -34,9 +34,9 @@ interface BurnsData {
 
 interface RealTimeUpdaterProps {
   onDataUpdate?: (data: {
-    priceData: ShibPriceData;
-    totalBurnedData: TotalBurnedData;
-    burnsData: BurnsData;
+    priceData?: ShibPriceData;
+    totalBurnedData?: TotalBurnedData;
+    burnsData?: BurnsData;
   }) => void;
   initialData?: {
     priceData: ShibPriceData;
