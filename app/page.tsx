@@ -502,76 +502,114 @@ export default function Home() {
   // REMOVED: Complex animation logic - keeping it simple
 
   // Handle real-time updates from RealTimeUpdater - WITH FLAME EFFECT ON NEW BURNS
+  // Now supports selective updates to prevent showing zeros/empty data
   const handleDataUpdate = useCallback((data: {
-    priceData: ShibPriceData;
-    totalBurnedData: TotalBurnedData;
-    burnsData: BurnsData;
+    priceData?: ShibPriceData;
+    totalBurnedData?: TotalBurnedData;
+    burnsData?: BurnsData;
   }) => {
-    console.log('🔄 Real-time update received - SIMPLIFIED', {
-      price: data.priceData.price,
-      marketCap: data.priceData.marketCap,
-      volume: data.priceData.volume24h,
-      totalBurned: data.totalBurnedData.totalBurned
+    console.log('🔄 Real-time update received - SELECTIVE', {
+      price: data.priceData?.price || 'not updated',
+      marketCap: data.priceData?.marketCap || 'not updated',
+      volume: data.priceData?.volume24h || 'not updated',
+      totalBurned: data.totalBurnedData?.totalBurned || 'not updated',
+      transactions: data.burnsData?.transactions?.length || 'not updated'
     });
     
-    // 🔥 FLAME EFFECT: Detect GENUINELY new burn transactions  
-    const newTransactions = Array.isArray(data.burnsData.transactions) ? data.burnsData.transactions : [];
-    const newHashes = new Set(newTransactions.map(tx => tx.hash));
+    // 🔥 FLAME EFFECT: Only check for new burns if we have burn data updates
+    const newTransactions = data.burnsData && Array.isArray(data.burnsData.transactions) ? data.burnsData.transactions : [];
+    const shouldCheckForNewBurns = data.burnsData && newTransactions.length > 0;
     
-    // Use functional update to avoid dependency issues
-    setPreviousTransactionHashes(prevHashes => {
-      // CRITICAL: Skip flame effect entirely during initial data sync period
-      if (isInitialDataSync) {
-        console.log('🚫 Skipping flame effect check - in initial data sync period (preventing false triggers)');
-        return newHashes; // Update hashes but don't trigger flame
-      }
+    // Only check for flame effect if we have new burn data
+    if (shouldCheckForNewBurns) {
+      const newHashes = new Set(newTransactions.map(tx => tx.hash));
       
-      // Only check for new burns if we have previous hash data AND it's not empty
-      if (prevHashes.size > 0) {
-        // Find truly new hashes that we haven't seen before
-        const genuinelyNewHashes = Array.from(newHashes).filter(hash => !prevHashes.has(hash));
-        const newBurnCount = genuinelyNewHashes.length;
+      setPreviousTransactionHashes(prevHashes => {
+        // CRITICAL: Skip flame effect entirely during initial data sync period
+        if (isInitialDataSync) {
+          console.log('🚫 Skipping flame effect check - in initial data sync period (preventing false triggers)');
+          return newHashes; // Update hashes but don't trigger flame
+        }
         
-        console.log(`🔍 Flame effect check: ${newBurnCount} new burns detected out of ${newHashes.size} total transactions`);
-        
-        if (newBurnCount > 0) {
-          // ADDITIONAL CHECK: Only trigger flame effect if the new transactions are actually recent
-          // Check if any of the new transactions happened in the last 5 minutes (reduced from 10)
-          const fiveMinutesAgo = Math.floor(Date.now() / 1000) - (5 * 60);
-          const recentNewTransactions = newTransactions.filter(tx => 
-            genuinelyNewHashes.includes(tx.hash) && 
-            parseInt(tx.timeStamp) > fiveMinutesAgo
-          );
+        // Only check for new burns if we have previous hash data AND it's not empty
+        if (prevHashes.size > 0) {
+          // Find truly new hashes that we haven't seen before
+          const genuinelyNewHashes = Array.from(newHashes).filter(hash => !prevHashes.has(hash));
+          const newBurnCount = genuinelyNewHashes.length;
           
-          if (recentNewTransactions.length > 0) {
-            console.log('🔥 GENUINE RECENT BURN DETECTED! Triggering flame effect for', recentNewTransactions.length, 'recent burns');
-            console.log('🔥 Recent burn times:', recentNewTransactions.map(tx => new Date(parseInt(tx.timeStamp) * 1000).toLocaleTimeString()));
-            setShowFlameEffect(true);
-          } else {
-            console.log('⏰ New transactions detected, but they are old (not within last 5 minutes) - no flame effect');
-            if (genuinelyNewHashes.length > 0) {
-              const oldestNewTx = Math.min(...newTransactions.filter(tx => genuinelyNewHashes.includes(tx.hash)).map(tx => parseInt(tx.timeStamp)));
-              console.log('⏰ Oldest new transaction:', Math.floor((Date.now()/1000 - oldestNewTx) / 60), 'minutes ago');
+          console.log(`🔍 Flame effect check: ${newBurnCount} new burns detected out of ${newHashes.size} total transactions`);
+          
+          if (newBurnCount > 0) {
+            // ADDITIONAL CHECK: Only trigger flame effect if the new transactions are actually recent
+            // Check if any of the new transactions happened in the last 5 minutes (reduced from 10)
+            const fiveMinutesAgo = Math.floor(Date.now() / 1000) - (5 * 60);
+            const recentNewTransactions = newTransactions.filter(tx => 
+              genuinelyNewHashes.includes(tx.hash) && 
+              parseInt(tx.timeStamp) > fiveMinutesAgo
+            );
+            
+            if (recentNewTransactions.length > 0) {
+              console.log('🔥 GENUINE RECENT BURN DETECTED! Triggering flame effect for', recentNewTransactions.length, 'recent burns');
+              console.log('🔥 Recent burn times:', recentNewTransactions.map(tx => new Date(parseInt(tx.timeStamp) * 1000).toLocaleTimeString()));
+              setShowFlameEffect(true);
+            } else {
+              console.log('⏰ New transactions detected, but they are old (not within last 5 minutes) - no flame effect');
+              if (genuinelyNewHashes.length > 0) {
+                const oldestNewTx = Math.min(...newTransactions.filter(tx => genuinelyNewHashes.includes(tx.hash)).map(tx => parseInt(tx.timeStamp)));
+                console.log('⏰ Oldest new transaction:', Math.floor((Date.now()/1000 - oldestNewTx) / 60), 'minutes ago');
+              }
             }
+          } else {
+            console.log('✅ No new burns - same transactions as before');
           }
         } else {
-          console.log('✅ No new burns - same transactions as before');
+          console.log('📝 Skipping flame effect check - hash tracking not yet initialized');
         }
-      } else {
-        console.log('📝 Skipping flame effect check - hash tracking not yet initialized');
-      }
-      
-      // Return the new hash set
-      return newHashes;
-    });
+        
+        // Return the new hash set
+        return newHashes;
+      });
+    }
     
-    // 🎬 ANIMATION: Detect changes and trigger animations
+    // 🎬 SELECTIVE UPDATES: Only update data that's valid, keep existing data otherwise
+    // Update individual pieces of state only if new data is valid
+    if (data.priceData) {
+      setPriceData(data.priceData);
+      // Cache in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('shibmetrics_price_cache', JSON.stringify(data.priceData));
+      }
+      console.log('✅ Updated price data');
+    }
+    
+    if (data.totalBurnedData) {
+      setTotalBurnedData(data.totalBurnedData);
+      // Cache in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
+      }
+      console.log('✅ Updated total burned data');
+    }
+    
+    if (data.burnsData) {
+      setBurnsData(data.burnsData);
+      // Cache in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
+      }
+      console.log('✅ Updated burns data');
+    }
+    
+    // 🎬 ANIMATION: Only animate if we have valid new data to compare
+    const currentPriceData = data.priceData || priceData;
+    const currentTotalBurnedData = data.totalBurnedData || totalBurnedData;
+    
     const newData = {
-      price: (typeof data.priceData.price === 'number' && !isNaN(data.priceData.price)) ? data.priceData.price : 0,
-      marketCap: (typeof data.priceData.marketCap === 'number' && !isNaN(data.priceData.marketCap)) ? data.priceData.marketCap : 0,
-      volume24h: (typeof data.priceData.volume24h === 'number' && !isNaN(data.priceData.volume24h)) ? data.priceData.volume24h : 0,
-      totalBurned: (typeof data.totalBurnedData.totalBurned === 'number' && !isNaN(data.totalBurnedData.totalBurned)) ? data.totalBurnedData.totalBurned : 0,
-      priceChange: (typeof data.priceData.priceChange24h === 'number' && !isNaN(data.priceData.priceChange24h)) ? data.priceData.priceChange24h : 0
+      price: (typeof currentPriceData.price === 'number' && !isNaN(currentPriceData.price)) ? currentPriceData.price : 0,
+      marketCap: (typeof currentPriceData.marketCap === 'number' && !isNaN(currentPriceData.marketCap)) ? currentPriceData.marketCap : 0,
+      volume24h: (typeof currentPriceData.volume24h === 'number' && !isNaN(currentPriceData.volume24h)) ? currentPriceData.volume24h : 0,
+      totalBurned: (typeof currentTotalBurnedData.totalBurned === 'number' && !isNaN(currentTotalBurnedData.totalBurned)) ? currentTotalBurnedData.totalBurned : 0,
+      priceChange: (typeof currentPriceData.priceChange24h === 'number' && !isNaN(currentPriceData.priceChange24h)) ? currentPriceData.priceChange24h : 0
     };
     
     // Check for changes and trigger animations
@@ -611,18 +649,6 @@ export default function Home() {
     
     // Store current data for next comparison
     previousDataRef.current = newData;
-    
-    // Update React state
-    setPriceData(data.priceData);
-    setTotalBurnedData(data.totalBurnedData);
-    setBurnsData(data.burnsData);
-    
-    // Cache the fresh data in localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('shibmetrics_price_cache', JSON.stringify(data.priceData));
-      localStorage.setItem('shibmetrics_totalburned_cache', JSON.stringify(data.totalBurnedData));
-      localStorage.setItem('shibmetrics_burns_cache', JSON.stringify(data.burnsData));
-    }
   }, [isInitialDataSync]); // Include isInitialDataSync dependency
   
   // 🚨 CRITICAL FIX: Add transition state protection to prevent React error #418

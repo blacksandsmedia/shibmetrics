@@ -71,27 +71,44 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
         burnsResponse.ok ? burnsResponse.json() : null
       ]);
       
-      // Validate data
-      const isValid = priceData && totalBurnedData && burnsData &&
-                     typeof priceData.price === 'number' && priceData.price > 0 &&
-                     typeof totalBurnedData.totalBurned === 'number' && totalBurnedData.totalBurned > 0 &&
-                     Array.isArray(burnsData.transactions);
+      // Smart validation - only update data that's actually valid to prevent showing zeros
+      const hasValidPrice = priceData && typeof priceData.price === 'number' && priceData.price > 0;
+      const hasValidTotalBurned = totalBurnedData && typeof totalBurnedData.totalBurned === 'number' && totalBurnedData.totalBurned > 0;
+      const hasValidBurns = burnsData && Array.isArray(burnsData.transactions) && burnsData.transactions.length > 0;
       
-      if (isValid && onDataUpdate) {
+      // Only update if we have at least some valid data
+      if ((hasValidPrice || hasValidTotalBurned || hasValidBurns) && onDataUpdate) {
         // Always update timestamp on successful check
         setLastUpdate(new Date());
         
-        // SIMPLIFIED: Always update with fresh data - no complex comparison needed
-        console.log('✅ Real-time update: Fresh data received', {
-          price: priceData.price,
-          marketCap: priceData.marketCap,
-          volume: priceData.volume24h,
-          totalBurned: totalBurnedData.totalBurned,
-          transactions: burnsData.transactions.length
-        });
+        // Selective update: only pass valid data, let parent component merge with existing
+        const updateData: any = {};
         
-        onDataUpdate({ priceData, totalBurnedData, burnsData });
+        if (hasValidPrice) {
+          updateData.priceData = priceData;
+          console.log('✅ Updated price data:', priceData.price);
+        } else {
+          console.log('⚠️ Skipping invalid price data to prevent zeros');
+        }
+        
+        if (hasValidTotalBurned) {
+          updateData.totalBurnedData = totalBurnedData;
+          console.log('✅ Updated total burned data:', totalBurnedData.totalBurned);
+        } else {
+          console.log('⚠️ Skipping invalid total burned data to prevent zeros');
+        }
+        
+        if (hasValidBurns) {
+          updateData.burnsData = burnsData;
+          console.log('✅ Updated burns data:', burnsData.transactions.length, 'transactions');
+        } else {
+          console.log('⚠️ Skipping invalid burns data to prevent empty table');
+        }
+        
+        onDataUpdate(updateData);
         setIsLive(true);
+      } else {
+        console.log('⚠️ No valid data received - keeping existing data to prevent zeros/empty displays');
       }
       
     } catch (error) {
