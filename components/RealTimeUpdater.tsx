@@ -106,12 +106,13 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
     // Fetch fresh data after initial SSR load
     setTimeout(() => fetchFreshData(true), 1000);
     
-    // Set up polling interval
+    // Set up polling interval - optimized for competitive refresh rates
+    // 30 seconds allows ~120 API calls/hour (well within Etherscan limits)
     const pollInterval = setInterval(() => {
       if (!document.hidden) {
         fetchFreshData(false);
       }
-    }, 45000); // 45 seconds
+    }, 30000); // 30 seconds - optimized for faster updates vs shibburn.com
     
     return () => clearInterval(pollInterval);
   }, [fetchFreshData]);

@@ -74,8 +74,8 @@ async function fetchRealTotalBurned(): Promise<number> {
       console.error(`❌ Failed to get balance for ${name} after ${retries + 1} attempts`);
     }
     
-    // Longer rate limiting delay to avoid Etherscan throttling
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Rate limiting delay - optimized for faster updates
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   console.log(`📊 API Summary: ${successfulQueries}/${Object.keys(BURN_ADDRESSES).length} addresses queried successfully, total: ${totalBurned.toLocaleString()} SHIB`);

@@ -259,20 +259,20 @@ export default function BurnHistoryPage() {
       if (!document.hidden) {
         console.log('🔄 Checking for new burn transactions...');
         
-        // Check for new data without updating UI immediately
+        // Smart check: Use faster /api/burns first, then full refresh if needed
         const checkForNewData = async () => {
           try {
-            const response = await fetch(`/api/historical/dataset?limit=25000&_t=${Date.now()}`, { cache: 'no-cache' });
+            // First check with fast /api/burns endpoint (lighter call)
+            const response = await fetch(`/api/burns?_t=${Date.now()}`, { cache: 'no-cache' });
             if (response.ok) {
               const data = await response.json();
-              const newTransactions = data.transactions || [];
+              const latestBurns = data.transactions || [];
               
-              // Compare with current data
-              const hasNewTransactions = newTransactions.length > allTransactions.length ||
-                (newTransactions.length > 0 && allTransactions.length > 0 && 
-                 newTransactions[0].hash !== allTransactions[0].hash);
+              // Quick comparison with current latest transaction
+              const hasNewBurns = latestBurns.length > 0 && allTransactions.length > 0 && 
+                latestBurns[0].hash !== allTransactions[0].hash;
               
-              if (hasNewTransactions) {
+              if (hasNewBurns || latestBurns.length > allTransactions.length) {
                 console.log('🔥 New burn transactions detected, refreshing data...');
                 fetchBurnData(true); // Force fresh fetch
               } else {
@@ -280,13 +280,13 @@ export default function BurnHistoryPage() {
               }
             }
           } catch (error) {
-            console.warn('⚠️ Error checking for new historical transactions:', error);
+            console.warn('⚠️ Error checking for new burn transactions:', error);
           }
         };
         
         checkForNewData();
       }
-    }, 60 * 1000); // 60 seconds to match burn tracker frequency
+    }, 30 * 1000); // 30 seconds - optimized for faster updates
     
     return () => clearInterval(interval);
   }, [fetchBurnData, allTransactions]);

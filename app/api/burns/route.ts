@@ -110,9 +110,9 @@ async function refreshBurnDataInBackground(): Promise<EtherscanTx[]> {
         }
       }
       
-      // Rate limiting delay between addresses (even after failure)
+      // Rate limiting delay between addresses - reduced for faster updates
       if (burnAddresses.indexOf(burnAddr) < burnAddresses.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
