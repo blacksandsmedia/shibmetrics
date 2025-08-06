@@ -156,8 +156,8 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
   useEffect(() => {
     console.log('🚀 RealTimeUpdater: Setting up real-time updates...');
     
-    // Fetch fresh data after initial SSR load
-    setTimeout(() => fetchFreshData(), 1000);
+    // Fetch fresh data immediately - we're now the primary data source
+    setTimeout(() => fetchFreshData(), 100);
     
     // Set up polling interval - server data refreshes every 1min via scheduled function
     // Client polls every 30s to display latest server data to users

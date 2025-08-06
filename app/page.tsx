@@ -395,18 +395,11 @@ export default function Home() {
       // Only fetch data that's missing or invalid
       const fetchPromises: Promise<void>[] = [];
 
+      // Skip initial price fetching - let RealTimeUpdater handle all price updates
       if (!hasValidPriceData) {
-        console.log('💰 Price data missing - fetching...');
-        fetchPromises.push(
-          fetchShibPriceClient()
-            .then(result => {
-              setPriceData(result);
-              console.log('💰 Price data loaded:', result.source);
-            })
-            .catch(error => console.warn('⚠️ Price data unavailable:', error instanceof Error ? error.message : 'Unknown error'))
-        );
+        console.log('💰 Price data missing - RealTimeUpdater will provide fresh data shortly');
       } else {
-        console.log('💰 Price data already cached - skipping fetch');
+        console.log('💰 Price data already cached - RealTimeUpdater will update when needed');
       }
 
       if (!hasValidTotalBurned) {
