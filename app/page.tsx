@@ -824,11 +824,11 @@ export default function Home() {
         {/* View Burn Tracker Button */}
         <div className="mt-8 text-center">
           <Link 
-            href="/burn-tracker"
+            href="/history"
             className="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors shadow-lg"
           >
             <Flame className="h-5 w-5 mr-2" />
-            View Burn Tracker
+            View Complete Burn History
           </Link>
         </div>
       </div>

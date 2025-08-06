@@ -21,7 +21,8 @@ async function refreshBurnDataInBackground(): Promise<EtherscanTx[]> {
     const burnAddresses = [
       { name: 'BA-1 (Vitalik Burn)', address: '0xdead000000000000000042069420694206942069' },
       { name: 'BA-2 (Dead Address)', address: '0x000000000000000000000000000000000000dead' },
-      { name: 'BA-3 (Genesis/Black Hole)', address: '0x0000000000000000000000000000000000000000' }
+      { name: 'BA-3 (Genesis/Black Hole)', address: '0x0000000000000000000000000000000000000000' },
+      { name: 'CA (Community Address)', address: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce' }
     ];
 
     const allTransactions: EtherscanTx[] = [];

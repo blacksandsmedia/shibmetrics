@@ -13,7 +13,6 @@ export default function Footer() {
   const footerLinks: Record<string, FooterLink[]> = {
     'Navigation': [
       { name: 'Home', href: '/' },
-      { name: 'Burn Tracker', href: '/burn-tracker' },
       { name: 'Burn History', href: '/history' },
       { name: 'Exchange Activity', href: '/exchanges' },
     ],

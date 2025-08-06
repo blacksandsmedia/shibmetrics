@@ -4,11 +4,12 @@ import memoryCache, { cacheKeys } from '../../../lib/memory-cache';
 
 const SHIB_CONTRACT_ADDRESS = '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce';
 
-// Burn addresses mapped by name - ONLY the 3 official burn addresses per shibburn.com
+// Burn addresses mapped by name - ALL official burn addresses per shibburn.com
 const BURN_ADDRESSES = {
   'Vitalik Burn (BA-1)': '0xdead000000000000000042069420694206942069', // Vitalik's burn address (BA-1)
   'Dead Address (BA-2)': '0x000000000000000000000000000000000000dead', // Standard dead address (BA-2)
   'Black Hole (BA-3)': '0x0000000000000000000000000000000000000000', // Genesis/null address (Black Hole - BA-3)
+  'Community Address (CA)': '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce', // Community Address (CA)
 };
 
 // Using shared cache system now - no more local cache constants needed

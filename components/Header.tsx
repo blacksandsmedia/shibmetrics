@@ -9,7 +9,6 @@ export default function Header() {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Burn Tracker', href: '/burn-tracker' },
     { name: 'Burn History', href: '/history' },
     { name: 'Exchange Activity', href: '/exchanges' },
     { name: 'Referral Codes', href: '/referrals' },

@@ -1,8 +1,9 @@
+// Unified SHIB Burn History & Tracker - Fast Loading with Complete Historical Data
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  History, 
+  Flame, 
   ExternalLink, 
   ChevronLeft, 
   ChevronRight,
@@ -26,11 +27,12 @@ interface BurnTransaction {
   tokenDecimal: string;
 }
 
-// SHIB burn destination addresses - ONLY the 3 official addresses (matches other pages)
+// SHIB burn destination addresses - ALL official addresses including CA
 const BURN_DESTINATIONS = {
   '0xdead000000000000000042069420694206942069': 'BA-1', // Vitalik Burn (BA-1)
   '0x000000000000000000000000000000000000dead': 'BA-2', // Dead Address (BA-2)
   '0x0000000000000000000000000000000000000000': 'BA-3', // Genesis/Black Hole (BA-3)
+  '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce': 'CA', // Community Address (CA)
 };
 
 // Helper functions
@@ -104,80 +106,79 @@ export default function BurnHistoryPage() {
   // 🚨 DEBUG: Log pagination state to diagnose table display issue
   console.log(`📊 PAGINATION DEBUG: filteredTransactions=${filteredTransactions.length}, currentPage=${currentPage}, startIndex=${startIndex}, endIndex=${endIndex}, currentTransactions=${currentTransactions.length}, loading=${loading}`);
 
-  // Fetch burn data - COMPLETE HISTORICAL DATASET (5+ years of SHIB burns)
-  const fetchBurnHistory = useCallback(async (forceFresh: boolean = false) => {
+  // Fast-loading burn data fetcher - prioritizes immediate display
+  const fetchBurnData = useCallback(async (forceFresh: boolean = false) => {
     setLoading(true);
     try {
-      console.log(`📚 Fetching COMPLETE SHIB burn history (5+ years of data)...`);
+      console.log(`🔥 Fetching burn data for immediate display...`);
       
-      // Use historical dataset API for COMPLETE burn history - not just recent burns
-      // This gives us ALL SHIB burns from 2020 onwards, not just recent ~300 transactions
-      // Request maximum transactions (25,000 limit) - NOT the default 100!
-      const params = forceFresh ? `?limit=25000&_t=${Date.now()}` : '?limit=25000';
-      const response = await fetch(`/api/historical/dataset${params}`, {
-        cache: forceFresh ? 'no-cache' : 'default',
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      // STEP 1: Fast loading with latest burns from /api/burns (includes CA now!)
+      const cacheParam = forceFresh ? '?force=true' : '';
+      const burnsResponse = await fetch(`/api/burns${cacheParam}`, {
+        cache: 'no-cache',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
       });
       
-      if (!response.ok) {
-        throw new Error(`Historical dataset API failed: ${response.status} ${response.statusText}`);
+      let latestBurns: BurnTransaction[] = [];
+      if (burnsResponse.ok) {
+        const burnsData = await burnsResponse.json();
+        latestBurns = burnsData.transactions || [];
+        console.log(`🔥 Got ${latestBurns.length} latest burns from /api/burns`);
       }
       
-      const data = await response.json();
-      console.log(`📚 Got ${data.transactions?.length || 0} transactions from COMPLETE historical dataset`);
+      // STEP 2: Enhance with historical data if available
+      let allBurns = [...latestBurns];
+      try {
+        console.log(`📚 Enhancing with historical data...`);
+        const historicalResponse = await fetch('/api/historical/dataset?limit=25000', {
+          cache: 'default'
+        });
+        
+        if (historicalResponse.ok) {
+          const historicalData = await historicalResponse.json();
+          const historicalBurns = historicalData.transactions || [];
+          console.log(`📚 Got ${historicalBurns.length} historical burns`);
+          
+          // Merge and deduplicate by hash
+          const burnMap = new Map();
+          [...latestBurns, ...historicalBurns].forEach(burn => {
+            if (burn.hash && !burnMap.has(burn.hash)) {
+              burnMap.set(burn.hash, burn);
+            }
+          });
+          allBurns = Array.from(burnMap.values());
+          console.log(`🔥 Merged to ${allBurns.length} unique burns`);
+        }
+      } catch (error) {
+        console.log('📚 Historical data not available, using latest burns only:', error);
+      }
       
-      const transactions = data.transactions || [];
-      
-      // Sort by timestamp descending (most recent first) - SAME as burn tracker
-      const sortedTransactions = transactions.sort((a: BurnTransaction, b: BurnTransaction) => {
+      // Sort by timestamp descending (most recent first)
+      const sortedBurns = allBurns.sort((a: BurnTransaction, b: BurnTransaction) => {
         const timeA = parseInt(a.timeStamp) || 0;
         const timeB = parseInt(b.timeStamp) || 0;
-        return timeB - timeA; // Descending order (newest first)
+        return timeB - timeA;
       });
       
-      // Validate transactions (same validation as burn tracker)
-      const validTransactions = sortedTransactions.filter((tx: BurnTransaction) => {
+      // Validate transactions
+      const validBurns = sortedBurns.filter((tx: BurnTransaction) => {
         try {
           BigInt(tx.value || '0');
-          return true;
+          return tx.hash && tx.from && tx.to && tx.timeStamp;
         } catch {
-          console.log('Invalid transaction value:', tx.value);
           return false;
         }
       });
       
-      console.log(`✅ COMPLETE HISTORY: Loaded ${validTransactions.length} transactions from ALL of SHIB history (5+ years)`);
+      console.log(`✅ Final dataset: ${validBurns.length} valid burn transactions`);
       
-      // 🚨 CRITICAL FIX: Force immediate filtering update after data loads
-      console.log('🔄 FORCE UPDATE: Triggering immediate state updates...');
-      setAllTransactions(validTransactions);
+      setAllTransactions(validBurns);
       setLastUpdated(new Date());
       
-      // 🚨 CRITICAL: Force filtering to run immediately with new data
-      console.log('🔄 FORCE FILTER: Manually triggering filter update...');
-      
-      // Apply the same filtering logic immediately
-      let filtered = [...validTransactions];
-      
-      // Sort by time (newest first)
-      filtered.sort((a, b) => {
-        const timeA = parseInt(a.timeStamp);
-        const timeB = parseInt(b.timeStamp);
-        return timeB - timeA; // Descending order (newest first)
-      });
-      
-      console.log(`🔄 FORCE RESULT: Setting ${filtered.length} filtered transactions immediately`);
-      setFilteredTransactions(filtered);
-      setCurrentPage(1);
-      
     } catch (error) {
-      console.error('❌ Error fetching burn history:', error);
+      console.error('❌ Error fetching burn data:', error);
       setAllTransactions([]);
     } finally {
-      console.log('🔄 LOADING DEBUG: Setting loading to false');
       setLoading(false);
     }
   }, []);
@@ -248,9 +249,9 @@ export default function BurnHistoryPage() {
 
   // Load data on component mount
   useEffect(() => {
-    console.log('🔄 History page mounting, fetching data...');
-    fetchBurnHistory();
-  }, [fetchBurnHistory]);
+    console.log('🔥 Unified burn page mounting, fetching data...');
+    fetchBurnData();
+  }, [fetchBurnData]);
 
   // Smart auto-refresh: Only update if new transactions are detected
   useEffect(() => {
@@ -272,10 +273,10 @@ export default function BurnHistoryPage() {
                  newTransactions[0].hash !== allTransactions[0].hash);
               
               if (hasNewTransactions) {
-                console.log('📚 New historical burn transactions detected, updating complete history...');
-                fetchBurnHistory(true); // Force fresh fetch
+                console.log('🔥 New burn transactions detected, refreshing data...');
+                fetchBurnData(true); // Force fresh fetch
               } else {
-                console.log('📊 No new transactions in historical dataset, keeping current display');
+                console.log('📊 No new transactions detected, keeping current display');
               }
             }
           } catch (error) {
@@ -288,7 +289,7 @@ export default function BurnHistoryPage() {
     }, 60 * 1000); // 60 seconds to match burn tracker frequency
     
     return () => clearInterval(interval);
-  }, [fetchBurnHistory, allTransactions]);
+  }, [fetchBurnData, allTransactions]);
 
   // Update time display every minute to refresh "time ago" calculations without animation
   useEffect(() => {
@@ -380,11 +381,11 @@ export default function BurnHistoryPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white flex items-center">
-                <History className="h-8 w-8 text-orange-500 mr-3" />
-                SHIB Burn History
+                <Flame className="h-8 w-8 text-orange-500 mr-3" />
+                SHIB Burn History & Tracker
               </h1>
               <p className="text-gray-400 mt-2">
-                Complete 5+ year history of ALL Shiba Inu token burn transactions (2020-present)
+                Live tracking and complete history of ALL Shiba Inu token burns from all addresses
               </p>
             </div>
 
@@ -418,6 +419,7 @@ export default function BurnHistoryPage() {
                   <option value="0xdead000000000000000042069420694206942069">Vitalik Burn (BA-1)</option>
                   <option value="0x000000000000000000000000000000000000dead">Dead Address (BA-2)</option>
                   <option value="0x0000000000000000000000000000000000000000">Genesis/Black Hole (BA-3)</option>
+                  <option value="0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce">Community Address (CA)</option>
                 </select>
             </div>
             
@@ -480,8 +482,6 @@ export default function BurnHistoryPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {/* 🚨 DEBUG: Log table rendering state */}
-                  {console.log(`🔍 TABLE RENDER: Attempting to render ${currentTransactions.length} transactions, loading=${loading}`)}
                   {currentTransactions.map((tx) => (
                     <tr key={tx.hash} className="hover:bg-gray-750 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -570,7 +570,7 @@ export default function BurnHistoryPage() {
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <History className="h-8 w-8 text-orange-500" />
+                <Flame className="h-8 w-8 text-orange-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Total Transactions</p>
