@@ -96,9 +96,9 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
           transactionCount: hasValidBurns ? burnsData.transactions.length : previousData.transactionCount
         };
         
-        // Check for actual changes
+        // Check for actual changes with appropriate thresholds
         const hasChanges = 
-          (currentData.price !== previousData.price) ||
+          (Math.abs((currentData.price || 0) - (previousData.price || 0)) > 0.000000001) ||
           (Math.abs((currentData.marketCap || 0) - (previousData.marketCap || 0)) > 1000) ||
           (Math.abs((currentData.volume24h || 0) - (previousData.volume24h || 0)) > 1000) ||
           (Math.abs((currentData.totalBurned || 0) - (previousData.totalBurned || 0)) > 1) ||
@@ -107,7 +107,8 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
         
         if (hasChanges || Object.keys(previousData).length === 0) {
           console.log('🔄 Data changes detected, triggering update:', {
-            priceChanged: currentData.price !== previousData.price,
+            priceChanged: Math.abs((currentData.price || 0) - (previousData.price || 0)) > 0.000000001,
+            priceDiff: Math.abs((currentData.price || 0) - (previousData.price || 0)),
             marketCapChanged: Math.abs((currentData.marketCap || 0) - (previousData.marketCap || 0)) > 1000,
             volumeChanged: Math.abs((currentData.volume24h || 0) - (previousData.volume24h || 0)) > 1000,
             totalBurnedChanged: Math.abs((currentData.totalBurned || 0) - (previousData.totalBurned || 0)) > 1,
