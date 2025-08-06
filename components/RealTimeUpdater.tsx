@@ -154,9 +154,9 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
       {/* Live Status Indicator - only show when updates are active */}
       {isLive && (
         <div className="ml-4 flex items-center gap-2 bg-green-900/20 border border-green-500/30 rounded-full px-3 py-1">
-          <div className={`w-2 h-2 rounded-full ${isUpdating ? 'bg-orange-400 animate-pulse' : 'bg-green-400 animate-pulse'}`}></div>
-          <span className={`text-xs font-medium ${isUpdating ? 'text-orange-400' : 'text-green-400'}`}>
-            {isUpdating ? 'UPDATING...' : 'LIVE'}
+          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+          <span className="text-xs font-medium text-green-400">
+            LIVE
           </span>
         </div>
       )}
