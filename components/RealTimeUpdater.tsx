@@ -49,6 +49,16 @@ interface RealTimeUpdaterProps {
 export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) {
   const [isLive, setIsLive] = useState(false);
   const [pageWasHidden, setPageWasHidden] = useState(false);
+  
+  // Track previous data to detect actual changes
+  const [previousData, setPreviousData] = useState<{
+    price?: number;
+    marketCap?: number;
+    volume24h?: number;
+    totalBurned?: number;
+    priceChange?: number;
+    transactionCount?: number;
+  }>({});
 
 
 
@@ -76,38 +86,62 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
       
       // Only update if we have at least some valid data
       if ((hasValidPrice || hasValidTotalBurned || hasValidBurns) && onDataUpdate) {
-        // Data is valid - proceed with update
+        // Extract current data for comparison
+        const currentData = {
+          price: hasValidPrice ? priceData.price : previousData.price,
+          marketCap: hasValidPrice ? priceData.marketCap : previousData.marketCap,
+          volume24h: hasValidPrice ? priceData.volume24h : previousData.volume24h,
+          totalBurned: hasValidTotalBurned ? totalBurnedData.totalBurned : previousData.totalBurned,
+          priceChange: hasValidPrice ? priceData.priceChange24h : previousData.priceChange,
+          transactionCount: hasValidBurns ? burnsData.transactions.length : previousData.transactionCount
+        };
         
-        // Selective update: only pass valid data, let parent component merge with existing
-        const updateData: {
-          priceData?: ShibPriceData;
-          totalBurnedData?: TotalBurnedData;
-          burnsData?: BurnsData;
-        } = {};
+        // Check for actual changes
+        const hasChanges = 
+          (currentData.price !== previousData.price) ||
+          (Math.abs((currentData.marketCap || 0) - (previousData.marketCap || 0)) > 1000) ||
+          (Math.abs((currentData.volume24h || 0) - (previousData.volume24h || 0)) > 1000) ||
+          (Math.abs((currentData.totalBurned || 0) - (previousData.totalBurned || 0)) > 1) ||
+          (Math.abs((currentData.priceChange || 0) - (previousData.priceChange || 0)) > 0.01) ||
+          (currentData.transactionCount !== previousData.transactionCount);
         
-        if (hasValidPrice) {
-          updateData.priceData = priceData;
-          console.log('✅ Updated price data:', priceData.price);
+        if (hasChanges || Object.keys(previousData).length === 0) {
+          console.log('🔄 Data changes detected, triggering update:', {
+            priceChanged: currentData.price !== previousData.price,
+            marketCapChanged: Math.abs((currentData.marketCap || 0) - (previousData.marketCap || 0)) > 1000,
+            volumeChanged: Math.abs((currentData.volume24h || 0) - (previousData.volume24h || 0)) > 1000,
+            totalBurnedChanged: Math.abs((currentData.totalBurned || 0) - (previousData.totalBurned || 0)) > 1,
+            priceChangeChanged: Math.abs((currentData.priceChange || 0) - (previousData.priceChange || 0)) > 0.01,
+            transactionCountChanged: currentData.transactionCount !== previousData.transactionCount
+          });
+          
+          // Build update data only for changed/valid data
+          const updateData: {
+            priceData?: ShibPriceData;
+            totalBurnedData?: TotalBurnedData;
+            burnsData?: BurnsData;
+          } = {};
+          
+          if (hasValidPrice) {
+            updateData.priceData = priceData;
+          }
+          
+          if (hasValidTotalBurned) {
+            updateData.totalBurnedData = totalBurnedData;
+          }
+          
+          if (hasValidBurns) {
+            updateData.burnsData = burnsData;
+          }
+          
+          // Update previous data and trigger parent update
+          setPreviousData(currentData);
+          onDataUpdate(updateData);
+          setIsLive(true);
         } else {
-          console.log('⚠️ Skipping invalid price data to prevent zeros');
+          console.log('📊 Data fetched but no changes detected - skipping animation triggers');
+          setIsLive(true); // Still mark as live, just don't trigger updates
         }
-        
-        if (hasValidTotalBurned) {
-          updateData.totalBurnedData = totalBurnedData;
-          console.log('✅ Updated total burned data:', totalBurnedData.totalBurned);
-        } else {
-          console.log('⚠️ Skipping invalid total burned data to prevent zeros');
-        }
-        
-        if (hasValidBurns) {
-          updateData.burnsData = burnsData;
-          console.log('✅ Updated burns data:', burnsData.transactions.length, 'transactions');
-        } else {
-          console.log('⚠️ Skipping invalid burns data to prevent empty table');
-        }
-        
-        onDataUpdate(updateData);
-        setIsLive(true);
       } else {
         console.log('⚠️ No valid data received - keeping existing data to prevent zeros/empty displays');
       }
@@ -115,7 +149,7 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
     } catch (error) {
       console.warn('⚠️ Real-time update failed:', error);
     }
-  }, [onDataUpdate]); // Simplified dependencies
+  }, [onDataUpdate, previousData]); // Include previousData for change detection
 
   // Initial setup and polling
   useEffect(() => {
