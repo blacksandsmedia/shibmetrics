@@ -364,7 +364,7 @@ export function validateDatasetIntegrity(dataset: HistoricalDataset): {
   // Check for duplicate transactions
   const hashes = new Set<string>();
   const duplicates: string[] = [];
-  for (const [hash, _tx] of dataset.transactions) {
+  for (const [hash] of dataset.transactions) {
     if (hashes.has(hash)) {
       duplicates.push(hash);
     }
@@ -380,7 +380,7 @@ export function validateDatasetIntegrity(dataset: HistoricalDataset): {
   let futureTimestamps = 0;
   const now = Math.floor(Date.now() / 1000);
   
-  for (const [_hash, tx] of dataset.transactions) {
+  for (const [, tx] of dataset.transactions) {
     const timestamp = parseInt(tx.timeStamp);
     
     if (isNaN(timestamp) || timestamp < SHIB_LAUNCH_TIMESTAMP) {

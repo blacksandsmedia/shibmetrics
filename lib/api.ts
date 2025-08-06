@@ -441,7 +441,7 @@ function safeToFixed(num: number, decimals: number): string {
   }
   try {
     return num.toFixed(decimals);
-  } catch (e) {
+  } catch {
     return '0.' + '0'.repeat(decimals);
   }
 }
@@ -522,7 +522,7 @@ export function formatTimeAgo(timestamp: string): string {
     try {
       const date = new Date(txTime);
       return date.toLocaleDateString() || 'Unknown date';
-    } catch (e) {
+    } catch {
       return 'Unknown date';
     }
   }

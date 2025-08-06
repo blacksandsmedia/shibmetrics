@@ -22,7 +22,7 @@ export default function FlameEffect({ isActive, onComplete }: FlameEffectProps) 
 
       return () => clearTimeout(timer);
     }
-  }, [isActive]); // Remove onComplete dependency to prevent loops
+  }, [isActive, onComplete]); // Include onComplete dependency
 
   if (!show) return null;
 

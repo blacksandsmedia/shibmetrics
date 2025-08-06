@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface ShibPriceData {
   price: number;
@@ -47,15 +47,13 @@ interface RealTimeUpdaterProps {
 
 // Client-side component that handles real-time updates
 export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) {
-  const [isUpdating, setIsUpdating] = useState(false);
   const [isLive, setIsLive] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [pageWasHidden, setPageWasHidden] = useState(false);
 
 
 
   // Fetch data from server cache (refreshed every 2 minutes by scheduled function)
-  const fetchFreshData = useCallback(async (forceFresh: boolean = false) => {
+  const fetchFreshData = useCallback(async () => {
     console.log('🔄 Fetching data from server cache (updated every 2 minutes by scheduled function)');
     
     try {
@@ -78,11 +76,14 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
       
       // Only update if we have at least some valid data
       if ((hasValidPrice || hasValidTotalBurned || hasValidBurns) && onDataUpdate) {
-        // Always update timestamp on successful check
-        setLastUpdate(new Date());
+        // Data is valid - proceed with update
         
         // Selective update: only pass valid data, let parent component merge with existing
-        const updateData: any = {};
+        const updateData: {
+          priceData?: ShibPriceData;
+          totalBurnedData?: TotalBurnedData;
+          burnsData?: BurnsData;
+        } = {};
         
         if (hasValidPrice) {
           updateData.priceData = priceData;
@@ -121,12 +122,12 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
     console.log('🚀 RealTimeUpdater: Setting up real-time updates...');
     
     // Fetch fresh data after initial SSR load
-    setTimeout(() => fetchFreshData(true), 1000);
+    setTimeout(() => fetchFreshData(), 1000);
     
     // Set up polling interval - server data refreshes every 1min via scheduled function
     // Client polls every 30s to display latest server data to users
     const pollInterval = setInterval(() => {
-      fetchFreshData(false); // Always fetch - server data stays current via scheduled refresh
+        fetchFreshData(); // Always fetch - server data stays current via scheduled refresh
     }, 30000); // 30 seconds - displays latest data from server cache
     
     return () => clearInterval(pollInterval);

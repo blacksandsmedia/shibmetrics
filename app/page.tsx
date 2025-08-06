@@ -344,7 +344,7 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
   const [showFlameEffect, setShowFlameEffect] = useState(false);
-  const [_previousTransactionHashes, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
+  const [, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
   
   // Track if we're in initial data sync to prevent false flame effects
   const [isInitialDataSync, setIsInitialDataSync] = useState(() => {
@@ -649,7 +649,7 @@ export default function Home() {
     
     // Store current data for next comparison
     previousDataRef.current = newData;
-  }, [isInitialDataSync]); // Include isInitialDataSync dependency
+  }, [isInitialDataSync, priceData, totalBurnedData]); // Include all dependencies
   
   // 🚨 CRITICAL FIX: Add transition state protection to prevent React error #418
   // During state updates, ensure we never pass undefined/NaN to React rendering
