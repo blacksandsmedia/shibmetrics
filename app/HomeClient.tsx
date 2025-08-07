@@ -254,6 +254,20 @@ export default function HomeClient({
       transactions: data.burnsData?.transactions?.length || 'not updated'
     });
     
+    // Only animate if we actually received new data (RealTimeUpdater detected changes)
+    const hasActualUpdates = !!(data.priceData || data.totalBurnedData || data.burnsData);
+    
+    if (!hasActualUpdates) {
+      console.log('📊 No data updates received - skipping all processing');
+      return;
+    }
+
+    console.log('🔄 Processing actual data updates:', {
+      priceUpdated: !!data.priceData,
+      totalBurnedUpdated: !!data.totalBurnedData, 
+      burnsUpdated: !!data.burnsData
+    });
+
     // Selective updates - only update data that's provided
     if (data.priceData) {
       setPriceData(data.priceData);
@@ -276,53 +290,34 @@ export default function HomeClient({
       }
     }
 
-    // Animation logic for data changes
-    const currentPriceData = data.priceData || priceData;
-    const currentTotalBurnedData = data.totalBurnedData || totalBurnedData;
+    // Animation logic - only for the specific cards that were updated
+    const changedCards = new Set<string>();
     
-    const newData = {
-      price: (typeof currentPriceData.price === 'number' && !isNaN(currentPriceData.price)) ? currentPriceData.price : 0,
-      marketCap: (typeof currentPriceData.marketCap === 'number' && !isNaN(currentPriceData.marketCap)) ? currentPriceData.marketCap : 0,
-      volume24h: (typeof currentPriceData.volume24h === 'number' && !isNaN(currentPriceData.volume24h)) ? currentPriceData.volume24h : 0,
-      totalBurned: (typeof currentTotalBurnedData.totalBurned === 'number' && !isNaN(currentTotalBurnedData.totalBurned)) ? currentTotalBurnedData.totalBurned : 0,
-      priceChange: (typeof currentPriceData.priceChange24h === 'number' && !isNaN(currentPriceData.priceChange24h)) ? currentPriceData.priceChange24h : 0
-    };
-    
-    // Check for changes and trigger animations
-    if (previousDataRef.current) {
-      const changedCards = new Set<string>();
-      
-      if (Math.abs(newData.price - previousDataRef.current.price) > 0.000000001) {
-        changedCards.add('price');
-      }
-      if (Math.abs(newData.marketCap - previousDataRef.current.marketCap) > 1000) {
-        changedCards.add('marketCap');
-      }
-      if (Math.abs(newData.volume24h - previousDataRef.current.volume24h) > 1000) {
-        changedCards.add('volume24h');
-      }
-      if (Math.abs(newData.totalBurned - previousDataRef.current.totalBurned) > 1) {
-        changedCards.add('totalBurned');
-      }
-      if (Math.abs(newData.priceChange - previousDataRef.current.priceChange) > 0.01) {
-        changedCards.add('priceChange');  
-      }
-      
-      if (changedCards.size > 0) {
-        console.log('🎬 Data changes detected:', Array.from(changedCards));
-        setAnimatingCards(changedCards);
-        
-        if (animationTimeoutRef.current) {
-          clearTimeout(animationTimeoutRef.current);
-        }
-        animationTimeoutRef.current = setTimeout(() => {
-          setAnimatingCards(new Set());
-          animationTimeoutRef.current = null;
-        }, 2000);
-      }
+    // Only animate cards that actually received new data
+    if (data.priceData) {
+      changedCards.add('price');
+      changedCards.add('marketCap');
+      changedCards.add('volume24h');
+      changedCards.add('priceChange');
     }
     
-    previousDataRef.current = newData;
+    if (data.totalBurnedData) {
+      changedCards.add('totalBurned');
+    }
+    
+    // Only trigger animations if we have actual changes
+    if (changedCards.size > 0) {
+      console.log('🎬 Animating updated cards:', Array.from(changedCards));
+      setAnimatingCards(changedCards);
+      
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+      animationTimeoutRef.current = setTimeout(() => {
+        setAnimatingCards(new Set());
+        animationTimeoutRef.current = null;
+      }, 2000);
+    }
   }, [isInitialDataSync, priceData, totalBurnedData]);
 
   // Calculate metrics from data
