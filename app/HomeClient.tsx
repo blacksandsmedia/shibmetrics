@@ -241,6 +241,7 @@ export default function HomeClient({
   }, [burnsData.transactions]);
 
   // Handle real-time updates from RealTimeUpdater
+  // STABLE CALLBACK - no dependencies to prevent RealTimeUpdater re-renders
   const handleDataUpdate = useCallback((data: {
     priceData?: ShibPriceData;
     totalBurnedData?: TotalBurnedData;
@@ -318,7 +319,7 @@ export default function HomeClient({
         animationTimeoutRef.current = null;
       }, 2000);
     }
-  }, [isInitialDataSync, priceData, totalBurnedData]);
+  }, []); // NO DEPENDENCIES - prevents RealTimeUpdater re-creation
 
   // Calculate metrics from data
   const burns = Array.isArray(burnsData?.transactions) ? burnsData.transactions : [];

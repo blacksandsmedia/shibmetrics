@@ -50,6 +50,9 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
   const [isLive, setIsLive] = useState(false);
   const [pageWasHidden, setPageWasHidden] = useState(false);
   
+  // Generate unique ID to track instances
+  const instanceId = useState(() => Math.random().toString(36).substr(2, 9))[0];
+  
   // Track previous data to detect actual changes
   const [previousData, setPreviousData] = useState<{
     price?: number;
@@ -78,6 +81,14 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
         totalBurnedResponse.ok ? totalBurnedResponse.json() : null,
         burnsResponse.ok ? burnsResponse.json() : null
       ]);
+      
+      console.log('📊 Raw API data:', {
+        price: priceData?.price,
+        marketCap: priceData?.marketCap,
+        volume: priceData?.volume24h,
+        totalBurned: totalBurnedData?.totalBurned,
+        transactionCount: burnsData?.transactions?.length
+      });
       
       // Smart validation - only update data that's actually valid to prevent showing zeros
       const hasValidPrice = priceData && typeof priceData.price === 'number' && priceData.price > 0;
@@ -150,11 +161,11 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
     } catch (error) {
       console.warn('⚠️ Real-time update failed:', error);
     }
-  }, [onDataUpdate, previousData]); // Include previousData for change detection
+  }, [onDataUpdate]); // Stable dependencies only - previousData accessed via closure
 
   // Initial setup and polling
   useEffect(() => {
-    console.log('🚀 RealTimeUpdater: Setting up real-time updates...');
+    console.log(`🚀 RealTimeUpdater [${instanceId}]: Setting up real-time updates...`);
     
     // Fetch fresh data immediately - no delay for fast initial load
     fetchFreshData();
@@ -165,8 +176,11 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
         fetchFreshData(); // Always fetch - server data stays current via scheduled refresh
     }, 30000); // 30 seconds - displays latest data from server cache
     
-    return () => clearInterval(pollInterval);
-  }, [fetchFreshData]);
+    return () => {
+      console.log(`🛑 RealTimeUpdater [${instanceId}]: Cleaning up...`);
+      clearInterval(pollInterval);
+    };
+  }, [fetchFreshData, instanceId]);
   
   // Page visibility handling
   useEffect(() => {
