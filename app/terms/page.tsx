@@ -1,3 +1,22 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Terms of Service | Usage Agreement & Legal Terms - SHIBMETRICS",
+  description: "SHIBMETRICS terms of service and usage agreement. Understand your rights and responsibilities when using our SHIB burn tracking platform and API services.",
+  keywords: "SHIBMETRICS terms of service, usage agreement, legal terms, API terms, service conditions, user agreement",
+  openGraph: {
+    title: "SHIBMETRICS Terms of Service",
+    description: "Terms and conditions for using SHIBMETRICS SHIB burn tracking platform and services",
+    type: "website",
+    url: "https://shibmetrics.com/terms",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SHIBMETRICS Terms of Service",
+    description: "Terms and conditions for using SHIBMETRICS SHIB burn tracking platform and services",
+  },
+};
+
 export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">

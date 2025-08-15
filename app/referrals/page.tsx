@@ -1,5 +1,23 @@
 import { Star, Gift, ExternalLink, Shield, TrendingUp, Percent } from 'lucide-react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Best Crypto Exchange Referral Codes 2024 | Trading Bonuses - SHIBMETRICS",
+  description: "Exclusive crypto exchange referral codes and bonuses. Get up to $30,000 USDT bonuses from MEXC, WEEX, Blofin, LBank and Bybit. Start trading SHIB with massive discounts.",
+  keywords: "crypto exchange referral codes, trading bonuses, MEXC referral, WEEX bonus, Blofin code, LBank referral, Bybit bonus, cryptocurrency trading discounts",
+  openGraph: {
+    title: "Best Crypto Exchange Referral Codes & Trading Bonuses",
+    description: "Exclusive referral codes for top crypto exchanges with massive bonuses up to $30,000 USDT",
+    type: "website",
+    url: "https://shibmetrics.com/referrals",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Best Crypto Exchange Referral Codes & Trading Bonuses",
+    description: "Exclusive referral codes for top crypto exchanges with massive bonuses up to $30,000 USDT",
+  },
+};
 
 interface ReferralOffer {
   exchange: string;
@@ -20,9 +38,25 @@ interface ReferralOffer {
 
 const referralOffers: ReferralOffer[] = [
   {
+    exchange: "Bybit",
+    logo: "🟡",
+    code: "BYBONUS",
+    bonus: "Exclusive Bonuses",
+    features: ["World's Leading Exchange", "Advanced Tools", "Institutional Grade"],
+    description: "Bybit is one of the world's leading cryptocurrency derivatives exchanges, serving over 15 million users globally. Known for its advanced trading tools, high liquidity, and institutional-grade security.",
+    tradingFeeDiscount: "Competitive maker/taker fees",
+    signUpBonus: "Exclusive bonuses with BYBONUS",
+    leverage: "Up to 50x on SHIB",
+    kyc: true,
+    rating: 4.7,
+    pros: ["Market leader", "Advanced tools", "High liquidity", "Institutional security"],
+    cons: ["KYC required", "Complex for beginners"],
+    link: "https://www.bybit.com/en/register?ref=BYBONUS"
+  },
+  {
     exchange: "MEXC",
     logo: "🟡",
-    code: "shibmetrics-MEXC",
+    code: "13sJU",
     bonus: "Up to $28,100 USDT",
     features: ["500x Leverage", "2,104+ Coins", "50% Fee Discount"],
     description: "MEXC is one of the world's leading cryptocurrency exchanges, offering an extensive selection of over 2,100 cryptocurrencies including SHIB. Known for its competitive trading fees, advanced trading features, and high leverage options.",
@@ -33,7 +67,7 @@ const referralOffers: ReferralOffer[] = [
     rating: 4.8,
     pros: ["Huge coin selection", "Very low fees", "High leverage", "Strong security"],
     cons: ["KYC required", "Complex interface for beginners"],
-    link: "https://mexc.com/register?inviteCode=shibmetrics-MEXC"
+    link: "https://www.mexc.com/register?inviteCode=13sJU"
   },
   {
     exchange: "WEEX",
@@ -70,7 +104,7 @@ const referralOffers: ReferralOffer[] = [
   {
     exchange: "LBank",
     logo: "🟠",
-    code: "shibmetrics-LBANK",
+    code: "1MY7E",
     bonus: "Up to $6,000 USDT",
     features: ["No KYC", "125x Leverage", "20% Fee Discount"],
     description: "LBank is a global cryptocurrency exchange providing professional digital asset trading services. Known for its user-friendly interface and comprehensive trading features.",
@@ -81,7 +115,183 @@ const referralOffers: ReferralOffer[] = [
     rating: 4.4,
     pros: ["No KYC required", "Good selection of altcoins", "User-friendly", "Regular promotions"],
     cons: ["Lower liquidity on some pairs", "Limited fiat options"],
-    link: "https://lbank.com/register?code=shibmetrics-LBANK"
+    link: "https://www.lbank.com/invitevip?icode=1MY7E"
+  },
+  {
+    exchange: "KuCoin",
+    logo: "🟢",
+    code: "QBSSSY97",
+    bonus: "Up to $500 USDT",
+    features: ["200+ Coins", "Futures Trading", "Low Fees"],
+    description: "KuCoin is a leading global cryptocurrency exchange with advanced trading features, a wide variety of cryptocurrencies, and competitive fees. Known for its innovative products and strong security.",
+    tradingFeeDiscount: "20% discount on trading fees",
+    signUpBonus: "Up to $500 USDT bonus",
+    leverage: "Up to 100x",
+    kyc: true,
+    rating: 4.5,
+    pros: ["Wide coin selection", "Advanced features", "Good liquidity", "Competitive fees"],
+    cons: ["KYC required", "Complex interface"],
+    link: "https://www.kucoin.com/ucenter/signup?rcode=QBSSSY97"
+  },
+  {
+    exchange: "Bitget",
+    logo: "🔵",
+    code: "92pt",
+    bonus: "Up to $1,000 USDT",
+    features: ["Copy Trading", "Futures", "Spot Trading"],
+    description: "Bitget is a leading crypto derivatives exchange offering copy trading, futures, and spot trading. Known for its innovative copy trading features and professional trading tools.",
+    tradingFeeDiscount: "Up to 50% fee discount",
+    signUpBonus: "Up to $1,000 USDT bonus",
+    leverage: "Up to 125x",
+    kyc: true,
+    rating: 4.3,
+    pros: ["Copy trading features", "Good liquidity", "Professional tools", "Mobile app"],
+    cons: ["KYC required", "Limited in some regions"],
+    link: "https://www.bitget.com/expressly?channelCode=qgog&vipCode=92pt&languageType=0"
+  },
+  {
+    exchange: "Margex",
+    logo: "🟣",
+    code: "20657931",
+    bonus: "Up to $200 USDT",
+    features: ["Bitcoin Trading", "No KYC", "Low Spreads"],
+    description: "Margex specializes in Bitcoin trading with leverage up to 100x. No KYC required for trading, making it perfect for privacy-focused traders.",
+    tradingFeeDiscount: "Reduced trading fees",
+    signUpBonus: "Up to $200 USDT bonus",
+    leverage: "Up to 100x",
+    kyc: false,
+    rating: 4.2,
+    pros: ["No KYC required", "Bitcoin focused", "Low spreads", "Simple interface"],
+    cons: ["Limited coin selection", "Bitcoin focus only"],
+    link: "https://margex.com/app/signup?rid=20657931"
+  },
+  {
+    exchange: "Binance",
+    logo: "🟡",
+    code: "37646719",
+    bonus: "Up to $100 USDT",
+    features: ["World's Largest", "Spot & Futures", "NFT Marketplace"],
+    description: "Binance is the world's largest cryptocurrency exchange by trading volume. Offers comprehensive trading features, NFT marketplace, and extensive cryptocurrency selection.",
+    tradingFeeDiscount: "20% discount on trading fees",
+    signUpBonus: "Up to $100 USDT bonus",
+    leverage: "Up to 125x",
+    kyc: true,
+    rating: 4.6,
+    pros: ["Largest exchange", "Comprehensive features", "High liquidity", "Global presence"],
+    cons: ["KYC required", "Complex for beginners"],
+    link: "https://accounts.binance.com/en-GB/register?ref=37646719"
+  },
+  {
+    exchange: "Phemex",
+    logo: "🔶",
+    code: "GNFLL",
+    bonus: "Up to $4,000 USDT",
+    features: ["Zero Fees Spot", "Derivatives", "Web3 Features"],
+    description: "Phemex offers zero-fee spot trading and advanced derivatives trading. Known for its high-performance trading engine and Web3 integration features.",
+    tradingFeeDiscount: "Zero fees on spot trading",
+    signUpBonus: "Up to $4,000 USDT bonus",
+    leverage: "Up to 100x",
+    kyc: true,
+    rating: 4.4,
+    pros: ["Zero spot trading fees", "High performance", "Web3 features", "Good security"],
+    cons: ["KYC required", "Smaller user base"],
+    link: "https://phemex.com/register?group=970&referralCode=GNFLL"
+  },
+  {
+    exchange: "Poloniex",
+    logo: "⚫",
+    code: "VTTJQPXY",
+    bonus: "Trading Bonuses",
+    features: ["Established Exchange", "Margin Trading", "Lending"],
+    description: "Poloniex is one of the oldest cryptocurrency exchanges, offering spot trading, margin trading, and lending services. Known for its reliability and extensive trading history.",
+    tradingFeeDiscount: "Competitive trading fees",
+    signUpBonus: "Various trading bonuses",
+    leverage: "Up to 2.5x margin",
+    kyc: true,
+    rating: 4.1,
+    pros: ["Established reputation", "Margin trading", "Lending features", "Reliable"],
+    cons: ["KYC required", "Limited modern features"],
+    link: "https://poloniex.com/signup"
+  },
+  {
+    exchange: "BitMart",
+    logo: "🔷",
+    code: "BONUS",
+    bonus: "Up to $1,000 USDT",
+    features: ["Altcoin Focus", "Futures", "Staking"],
+    description: "BitMart is a global digital asset trading platform with a focus on altcoins and emerging cryptocurrencies. Offers futures trading and staking services.",
+    tradingFeeDiscount: "Fee discounts available",
+    signUpBonus: "Up to $1,000 USDT bonus",
+    leverage: "Up to 100x",
+    kyc: true,
+    rating: 4.0,
+    pros: ["Good altcoin selection", "Staking services", "User-friendly", "Mobile app"],
+    cons: ["KYC required", "Lower liquidity on some pairs"],
+    link: "https://www.bitmart.com/register/en-US?r=BONUS"
+  },
+  {
+    exchange: "Bitfinex",
+    logo: "🟢",
+    code: "95ML4NVra",
+    bonus: "Trading Fee Discounts",
+    features: ["Professional Trading", "Lending", "Margin Trading"],
+    description: "Bitfinex is a professional trading platform offering advanced trading features, lending, and margin trading. Popular among institutional and professional traders.",
+    tradingFeeDiscount: "Progressive fee discounts",
+    signUpBonus: "Fee discounts and bonuses",
+    leverage: "Up to 10x",
+    kyc: true,
+    rating: 4.2,
+    pros: ["Professional platform", "Advanced features", "Lending options", "High liquidity"],
+    cons: ["KYC required", "Complex for beginners"],
+    link: "https://bitfinex.com/sign-up/?refcode=95ML4NVra"
+  },
+  {
+    exchange: "Bitrue",
+    logo: "🔴",
+    code: "EQAVGVH",
+    bonus: "Up to $300 USDT",
+    features: ["XRP Focus", "Yield Farming", "Staking"],
+    description: "Bitrue is known for its strong focus on XRP and Ripple ecosystem tokens. Offers yield farming, staking, and various earning opportunities for crypto holders.",
+    tradingFeeDiscount: "Reduced trading fees",
+    signUpBonus: "Up to $300 USDT bonus",
+    leverage: "Up to 5x",
+    kyc: true,
+    rating: 4.1,
+    pros: ["XRP ecosystem focus", "Yield farming", "Staking rewards", "Earning opportunities"],
+    cons: ["KYC required", "Limited coin selection"],
+    link: "https://www.bitrue.com/user/register?cn=900000&inviteCode=EQAVGVH"
+  },
+  {
+    exchange: "Pionex",
+    logo: "🤖",
+    code: "4HIobJkL",
+    bonus: "Trading Bot Access",
+    features: ["Trading Bots", "Grid Trading", "DCA Bots"],
+    description: "Pionex offers built-in trading bots including grid trading, DCA bots, and other automated trading strategies. Perfect for algorithmic and automated trading.",
+    tradingFeeDiscount: "Low trading fees",
+    signUpBonus: "Free trading bot access",
+    leverage: "Up to 3x",
+    kyc: true,
+    rating: 4.3,
+    pros: ["Built-in trading bots", "Automated strategies", "Grid trading", "User-friendly bots"],
+    cons: ["KYC required", "Limited manual trading features"],
+    link: "https://www.pionex.com/en/sign/ref/4HIobJkL"
+  },
+  {
+    exchange: "BingX",
+    logo: "🟠",
+    code: "XBONUS",
+    bonus: "Up to $5,000 USDT",
+    features: ["Copy Trading", "Social Trading", "Futures"],
+    description: "BingX is a social trading platform offering copy trading, social trading features, and futures trading. Known for its innovative social trading approach.",
+    tradingFeeDiscount: "Fee discounts available",
+    signUpBonus: "Up to $5,000 USDT bonus",
+    leverage: "Up to 125x",
+    kyc: true,
+    rating: 4.2,
+    pros: ["Social trading features", "Copy trading", "Good mobile app", "Community features"],
+    cons: ["KYC required", "Newer platform"],
+    link: "https://bingx.com/partner/XBONUS"
   }
 ];
 

@@ -1,5 +1,23 @@
 import { ExternalLink, Percent, Star, Gift, AlertTriangle, CheckCircle, UserX } from 'lucide-react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "WEEX Exchange Referral Code 2024 | $30,000 USDT No KYC - SHIBMETRICS",
+  description: "WEEX referral code: shibmetrics-WEEX. Get $30,000 USDT bonus with no KYC required. Anonymous trading, 200x leverage, 20% cashback on all deposits.",
+  keywords: "WEEX referral code, WEEX bonus, shibmetrics-WEEX, no KYC exchange, anonymous trading, WEEX SHIB trading, crypto trading without verification",
+  openGraph: {
+    title: "WEEX Exchange - $30,000 USDT Bonus | No KYC Trading",
+    description: "Anonymous crypto trading with no verification required. Get massive bonuses with referral code",
+    type: "website",
+    url: "https://shibmetrics.com/referrals/weex",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WEEX Exchange - $30,000 USDT Bonus | No KYC Trading",
+    description: "Anonymous crypto trading with no verification required. Get massive bonuses with referral code",
+  },
+};
 
 export default function WEEXReferralPage() {
   return (

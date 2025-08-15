@@ -1,5 +1,23 @@
 import { ExternalLink, Percent, Star, Gift, AlertTriangle, CheckCircle, Smile } from 'lucide-react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "LBank Exchange Referral Code 2024 | Get $6,000 USDT Bonus - SHIBMETRICS",
+  description: "LBank referral code: 1MY7E. Get up to $6,000 USDT bonus, 20% fee discount, 125x leverage. User-friendly platform perfect for beginners and SHIB trading.",
+  keywords: "LBank referral code, LBank bonus, 1MY7E, LBank trading discount, LBank SHIB trading, beginner crypto exchange",
+  openGraph: {
+    title: "LBank Exchange - $6,000 USDT Bonus | User-Friendly Trading",
+    description: "Join LBank with exclusive referral code for beginner-friendly trading and great bonuses",
+    type: "website",
+    url: "https://shibmetrics.com/referrals/lbank",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LBank Exchange - $6,000 USDT Bonus | User-Friendly Trading",
+    description: "Join LBank with exclusive referral code for beginner-friendly trading and great bonuses",
+  },
+};
 
 export default function LBankReferralPage() {
   return (
@@ -20,10 +38,10 @@ export default function LBankReferralPage() {
             <div className="text-white text-center">
               <h2 className="text-2xl font-bold mb-2">User-Friendly Trading</h2>
               <div className="text-lg mb-4">
-                <span className="bg-black/20 px-4 py-2 rounded-lg font-mono">shibmetrics-LBANK</span>
+                <span className="bg-black/20 px-4 py-2 rounded-lg font-mono">1MY7E</span>
               </div>
               <a
-                href="https://lbank.com/register?code=shibmetrics-LBANK"
+                href="https://www.lbank.com/invitevip?icode=1MY7E"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-8 py-4 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition-colors text-lg"
@@ -176,12 +194,12 @@ export default function LBankReferralPage() {
           
           <div className="bg-gray-900 rounded-lg p-4 mb-6 inline-block">
             <span className="text-gray-400 text-sm">Referral Code:</span>
-            <div className="text-xl font-mono text-orange-400 font-bold">shibmetrics-LBANK</div>
+            <div className="text-xl font-mono text-orange-400 font-bold">1MY7E</div>
           </div>
           
           <div className="space-y-4">
             <a
-              href="https://lbank.com/register?code=shibmetrics-LBANK"
+              href="https://www.lbank.com/invitevip?icode=1MY7E"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors text-lg"

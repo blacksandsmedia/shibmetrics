@@ -1,5 +1,23 @@
 import { ExternalLink, TrendingUp, Star, AlertTriangle, CheckCircle, BarChart3, UserX } from 'lucide-react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Blofin Exchange Referral Code 2024 | $8,500 USDT Professional Trading - SHIBMETRICS",
+  description: "Blofin referral code: shibmetrics-BLOFIN. Get $8,500 USDT bonus with professional derivatives trading tools. 125x leverage, no KYC, advanced trading features.",
+  keywords: "Blofin referral code, Blofin bonus, shibmetrics-BLOFIN, derivatives trading, professional trading tools, Blofin SHIB futures",
+  openGraph: {
+    title: "Blofin Exchange - $8,500 USDT | Professional Derivatives Trading",
+    description: "Professional derivatives trading platform with advanced tools and no KYC requirements",
+    type: "website",
+    url: "https://shibmetrics.com/referrals/blofin",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blofin Exchange - $8,500 USDT | Professional Derivatives Trading",
+    description: "Professional derivatives trading platform with advanced tools and no KYC requirements",
+  },
+};
 
 export default function BlofinReferralPage() {
   return (

@@ -1,3 +1,22 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | Data Protection & User Privacy - SHIBMETRICS",
+  description: "SHIBMETRICS privacy policy. Learn how we collect, use, and protect your data while providing SHIB burn tracking services. Transparent data practices and user rights.",
+  keywords: "SHIBMETRICS privacy policy, data protection, user privacy, GDPR compliance, data collection, privacy rights",
+  openGraph: {
+    title: "SHIBMETRICS Privacy Policy",
+    description: "Our commitment to protecting your privacy and data while using SHIB burn tracking services",
+    type: "website",
+    url: "https://shibmetrics.com/privacy",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SHIBMETRICS Privacy Policy",
+    description: "Our commitment to protecting your privacy and data while using SHIB burn tracking services",
+  },
+};
+
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">

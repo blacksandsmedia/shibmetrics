@@ -17,10 +17,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SHIBMETRICS - SHIB Burn Tracker & Analytics",
-  description: "Real-time Shiba Inu burn tracking, statistics, and ecosystem data. Track SHIB burns, exchange activity, and get the latest metrics.",
-  keywords: "SHIB, Shiba Inu, burn tracker, crypto analytics, token burns, SHIB statistics",
+  title: "SHIBMETRICS - Real-time SHIB Burn Tracker & Analytics Platform",
+  description: "Track Shiba Inu token burns in real-time with comprehensive analytics. Monitor SHIB burn transactions, historical data, exchange activity, and get exclusive trading bonuses from top crypto exchanges.",
+  keywords: "SHIB burn tracker, Shiba Inu burns, SHIB analytics, cryptocurrency burn data, SHIB statistics, token burns, crypto exchange bonuses, SHIB trading",
   authors: [{ name: "SHIBMETRICS" }],
+  creator: "SHIBMETRICS",
+  publisher: "SHIBMETRICS",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -30,16 +43,23 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
   },
   openGraph: {
-    title: "SHIBMETRICS - SHIB Burn Tracker",
-    description: "Real-time Shiba Inu burn tracking and analytics", 
+    title: "SHIBMETRICS - Real-time SHIB Burn Tracker & Analytics",
+    description: "Track Shiba Inu token burns in real-time with comprehensive analytics and exclusive crypto exchange bonuses", 
     type: "website",
     url: "https://shibmetrics.com",
+    siteName: "SHIBMETRICS",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SHIBMETRICS - SHIB Burn Tracker",
-    description: "Real-time Shiba Inu burn tracking and analytics",
+    title: "SHIBMETRICS - Real-time SHIB Burn Tracker & Analytics",
+    description: "Track Shiba Inu token burns in real-time with comprehensive analytics and exclusive crypto exchange bonuses",
+    creator: "@shibmetrics",
   },
+  alternates: {
+    canonical: "https://shibmetrics.com",
+  },
+  category: "Cryptocurrency Analytics",
 };
 
 export default function RootLayout({

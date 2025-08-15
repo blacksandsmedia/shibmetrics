@@ -1,5 +1,23 @@
 import { ExternalLink, Shield, TrendingUp, Percent, Star, Gift, AlertTriangle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "MEXC Exchange Referral Code 2024 | Get $28,100 USDT Bonus - SHIBMETRICS",
+  description: "Exclusive MEXC referral code: 13sJU. Get up to $28,100 USDT bonus, 50% fee discount, 500x leverage. Trade SHIB and 2,100+ cryptocurrencies.",
+  keywords: "MEXC referral code, MEXC bonus, 13sJU, MEXC trading discount, MEXC SHIB trading, crypto exchange bonus",
+  openGraph: {
+    title: "MEXC Exchange - $28,100 USDT Bonus with Referral Code",
+    description: "Join MEXC with exclusive referral code and get massive bonuses plus 50% trading fee discount",
+    type: "website",
+    url: "https://shibmetrics.com/referrals/mexc",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MEXC Exchange - $28,100 USDT Bonus with Referral Code",
+    description: "Join MEXC with exclusive referral code and get massive bonuses plus 50% trading fee discount",
+  },
+};
 
 export default function MEXCReferralPage() {
   return (
@@ -20,10 +38,10 @@ export default function MEXCReferralPage() {
             <div className="text-white text-center">
               <h2 className="text-2xl font-bold mb-2">Exclusive ShibMetrics Offer</h2>
               <div className="text-lg mb-4">
-                <span className="bg-black/20 px-4 py-2 rounded-lg font-mono">shibmetrics-MEXC</span>
+                <span className="bg-black/20 px-4 py-2 rounded-lg font-mono">13sJU</span>
               </div>
               <a
-                href="https://mexc.com/register?inviteCode=shibmetrics-MEXC"
+                href="https://www.mexc.com/register?inviteCode=13sJU"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-8 py-4 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition-colors text-lg"
@@ -146,12 +164,12 @@ export default function MEXCReferralPage() {
           
           <div className="bg-gray-900 rounded-lg p-4 mb-6 inline-block">
             <span className="text-gray-400 text-sm">Referral Code:</span>
-            <div className="text-xl font-mono text-orange-400 font-bold">shibmetrics-MEXC</div>
+            <div className="text-xl font-mono text-orange-400 font-bold">13sJU</div>
           </div>
           
           <div className="space-y-4">
             <a
-              href="https://mexc.com/register?inviteCode=shibmetrics-MEXC"
+              href="https://www.mexc.com/register?inviteCode=13sJU"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors text-lg"

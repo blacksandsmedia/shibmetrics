@@ -1,6 +1,24 @@
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "API Status Monitor | Real-time Service Health - SHIBMETRICS",
+  description: "Monitor the real-time status of SHIBMETRICS data provider APIs. Check Etherscan API, CoinGecko API health, response times, and service uptime.",
+  keywords: "API status, service monitor, SHIBMETRICS uptime, API health check, Etherscan status, CoinGecko status, system monitoring",
+  openGraph: {
+    title: "SHIBMETRICS API Status Monitor",
+    description: "Real-time monitoring of data provider APIs and service health status",
+    type: "website",
+    url: "https://shibmetrics.com/api-status",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SHIBMETRICS API Status Monitor",
+    description: "Real-time monitoring of data provider APIs and service health status",
+  },
+};
+
+'use client';
 import { 
   Server, 
   CheckCircle, 

@@ -1,6 +1,24 @@
-'use client';
-
 import { useState } from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Contact SHIBMETRICS | Support & Business Inquiries",
+  description: "Get in touch with the SHIBMETRICS team. Technical support, API questions, business partnerships, and general inquiries. Multiple contact channels available.",
+  keywords: "SHIBMETRICS contact, SHIB burn tracker support, API support, technical help, business inquiries, customer service",
+  openGraph: {
+    title: "Contact SHIBMETRICS - Support & Inquiries",
+    description: "Connect with our team for technical support, API questions, partnerships and general inquiries",
+    type: "website",
+    url: "https://shibmetrics.com/contact",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact SHIBMETRICS - Support & Inquiries", 
+    description: "Connect with our team for technical support, API questions, partnerships and general inquiries",
+  },
+};
+
+'use client';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
