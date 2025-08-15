@@ -365,36 +365,36 @@ export default function HomeClient({
           <StatCard
             title="SHIB Price"
             value={`$${safeToFixed(currentPrice, 10)}`}
-            icon={<DollarSign className="h-6 w-6" />}
-            trend={priceChange > 0 ? 'up' : priceChange < 0 ? 'down' : 'neutral'}
-            trendValue={`${priceChange > 0 ? '+' : ''}${safeToFixed(priceChange, 2)}%`}
+            icon={DollarSign}
+            change={`${priceChange > 0 ? '+' : ''}${safeToFixed(priceChange, 2)}%`}
+            changeType={priceChange > 0 ? 'positive' : priceChange < 0 ? 'negative' : 'neutral'}
             isAnimating={animatingCards.has('price')}
           />
           
           <StatCard
             title="Market Cap"
             value={`$${(marketCap / 1_000_000_000).toFixed(2)}B`}
-            icon={<TrendingUp className="h-6 w-6" />}
-            trend="neutral"
-            trendValue="Live"
+            icon={TrendingUp}
+            change="Live"
+            changeType="neutral"
             isAnimating={animatingCards.has('marketCap')}
           />
           
           <StatCard
             title="24H Volume"
             value={formatVolume24h(volume24h)}
-            icon={<Clock className="h-6 w-6" />}
-            trend="neutral"
-            trendValue="Trading"
+            icon={Clock}
+            change="Trading"
+            changeType="neutral"
             isAnimating={animatingCards.has('volume24h')}
           />
           
           <StatCard
             title="Total Burned"
             value={`${formatBurnAmount(totalBurned)}M SHIB`}
-            icon={<Flame className="h-6 w-6" />}
-            trend="up"
-            trendValue="Deflationary"
+            icon={Flame}
+            change="Deflationary"
+            changeType="positive"
             isAnimating={animatingCards.has('totalBurned')}
           />
         </div>

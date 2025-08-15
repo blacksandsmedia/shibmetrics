@@ -30,13 +30,13 @@ export default function BinanceReferralPage() {
             <h1 className="text-4xl font-bold text-white">Binance Exchange</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
-            World's largest cryptocurrency exchange by trading volume with comprehensive features
+            World&apos;s largest cryptocurrency exchange by trading volume with comprehensive features
           </p>
           
           {/* Main CTA */}
           <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl p-6 mb-8">
             <div className="text-white text-center">
-              <h2 className="text-2xl font-bold mb-2">World's Largest Exchange</h2>
+              <h2 className="text-2xl font-bold mb-2">World&apos;s Largest Exchange</h2>
               <div className="text-lg mb-4">
                 <span className="bg-black/20 px-4 py-2 rounded-lg font-mono">37646719</span>
               </div>
@@ -61,7 +61,7 @@ export default function BinanceReferralPage() {
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
             <Crown className="h-8 w-8 text-yellow-400 mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Market Leader</h3>
-            <p className="text-gray-300">World's largest exchange by trading volume</p>
+            <p className="text-gray-300">World&apos;s largest exchange by trading volume</p>
           </div>
           
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
@@ -105,7 +105,7 @@ export default function BinanceReferralPage() {
 
         {/* Final CTA */}
         <div className="text-center bg-gray-800 rounded-lg p-8 border border-gray-700">
-          <h3 className="text-2xl font-bold text-white mb-4">Join the World's Largest Exchange</h3>
+          <h3 className="text-2xl font-bold text-white mb-4">Join the World&apos;s Largest Exchange</h3>
           <p className="text-gray-300 mb-6">
             Trade on Binance with the most comprehensive features and deepest liquidity
           </p>

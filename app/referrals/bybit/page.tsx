@@ -30,7 +30,7 @@ export default function BybitReferralPage() {
             <h1 className="text-4xl font-bold text-white">Bybit Exchange</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
-            World's leading crypto derivatives exchange - join with exclusive BYBONUS referral code
+            World&apos;s leading crypto derivatives exchange - join with exclusive BYBONUS referral code
           </p>
           
           {/* Main CTA */}
@@ -73,7 +73,7 @@ export default function BybitReferralPage() {
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
             <TrendingUp className="h-8 w-8 text-green-400 mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Market Leader</h3>
-            <p className="text-gray-300">One of the world's largest crypto derivatives exchanges</p>
+            <p className="text-gray-300">One of the world&apos;s largest crypto derivatives exchanges</p>
           </div>
         </div>
 
@@ -83,7 +83,7 @@ export default function BybitReferralPage() {
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
             <h3 className="text-xl font-semibold text-white mb-4">About Bybit</h3>
             <p className="text-gray-300 mb-4">
-              Bybit is one of the world's leading cryptocurrency derivatives exchanges, serving over 15 million users globally. 
+              Bybit is one of the world&apos;s leading cryptocurrency derivatives exchanges, serving over 15 million users globally. 
               Known for its advanced trading tools, high liquidity, and institutional-grade security.
             </p>
             

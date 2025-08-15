@@ -1,24 +1,6 @@
-import { useState, useEffect } from 'react';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: "SHIB Exchange Activity & Trading Data | Live Market Prices - SHIBMETRICS",
-  description: "Track SHIB trading activity across major exchanges. Real-time prices, 24h volume, market data from Binance, Coinbase, KuCoin, Crypto.com and more.",
-  keywords: "SHIB exchange prices, Shiba Inu trading volume, SHIB market data, cryptocurrency exchange rankings, SHIB price comparison, trading platforms",
-  openGraph: {
-    title: "SHIB Exchange Activity & Trading Data",
-    description: "Real-time SHIB trading data across major cryptocurrency exchanges with live prices and volume",
-    type: "website",
-    url: "https://shibmetrics.com/exchanges",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SHIB Exchange Activity & Trading Data",
-    description: "Real-time SHIB trading data across major cryptocurrency exchanges with live prices and volume",
-  },
-};
-
 'use client';
+
+import { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   DollarSign, 
