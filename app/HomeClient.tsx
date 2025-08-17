@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { TrendingUp, TrendingDown, Flame, DollarSign, Clock } from 'lucide-react';
+import { TrendingUp, Flame, DollarSign, Clock } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import BurnTransactionTable from '../components/BurnTransactionTable';
 import FlameEffect from '../components/FlameEffect';
@@ -181,12 +181,12 @@ export default function HomeClient({
     return { transactions: [], source: 'default', cached: false };
   });
 
-  const [loading, setLoading] = useState(false); // No loading needed with server data
+  // Loading state removed as not needed with server-side data
   const [showFlameEffect, setShowFlameEffect] = useState(false);
   const [, setPreviousTransactionHashes] = useState<Set<string>>(new Set());
   
   // Track if we're in initial data sync to prevent false flame effects
-  const [isInitialDataSync, setIsInitialDataSync] = useState(() => {
+  const [, setIsInitialDataSync] = useState(() => {
     console.log('🚫 Initial data sync period started - flame effects disabled for 30 seconds');
     return true;
   });
@@ -194,13 +194,7 @@ export default function HomeClient({
   
   // Animation state for number changes
   const [animatingCards, setAnimatingCards] = useState<Set<string>>(new Set());
-  const previousDataRef = useRef<{
-    price: number;
-    marketCap: number;
-    volume24h: number;
-    totalBurned: number;
-    priceChange: number;
-  } | null>(null);
+  // Previous data ref removed as not currently used
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeouts on unmount

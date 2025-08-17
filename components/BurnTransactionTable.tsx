@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { BurnTransaction, formatBurnAmount, formatTimeAgo } from '@/lib/api';
 import { ExternalLink } from 'lucide-react';
 

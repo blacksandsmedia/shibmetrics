@@ -1,4 +1,4 @@
-import { ExternalLink, Shield, TrendingUp, Star, Gift, AlertTriangle, CheckCircle, Crown } from 'lucide-react';
+import { ExternalLink, Shield, TrendingUp, AlertTriangle, Crown } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -30,7 +30,7 @@ export default function BinanceReferralPage() {
             <h1 className="text-4xl font-bold text-white">37646719 - Binance Referral Code</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
-            Use referral code <span className="text-yellow-400 font-bold">37646719</span> to join the world's largest crypto exchange with 20% fee discount
+            Use referral code <span className="text-yellow-400 font-bold">37646719</span> to join the world&apos;s largest crypto exchange with 20% fee discount
           </p>
           
           {/* Main CTA */}

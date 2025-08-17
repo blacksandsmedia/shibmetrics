@@ -161,7 +161,7 @@ export default function RealTimeUpdater({ onDataUpdate }: RealTimeUpdaterProps) 
     } catch (error) {
       console.warn('⚠️ Real-time update failed:', error);
     }
-  }, [onDataUpdate]); // Stable dependencies only - previousData accessed via closure
+  }, [onDataUpdate, previousData]); // Include previousData dependency
 
   // Initial setup and polling
   useEffect(() => {

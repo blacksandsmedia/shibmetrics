@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Flame, Filter, Calendar, Search, TrendingUp } from 'lucide-react';
+import { Flame, Filter, Search, TrendingUp } from 'lucide-react';
 import BurnTransactionTable from '../../components/BurnTransactionTable';
 import RefreshButton from '../../components/RefreshButton';
+import Link from 'next/link';
 
 interface BurnTransaction {
   hash: string;
@@ -157,7 +158,7 @@ export default function BurnHistoryClient() {
   // Initial load
   useEffect(() => {
     fetchBurnHistory(currentPage, pageSize, selectedAddress, startDate, endDate);
-  }, []);
+  }, [currentPage, pageSize, selectedAddress, startDate, endDate]);
 
   // Handle filter changes
   const handleFilterChange = () => {
@@ -355,7 +356,6 @@ export default function BurnHistoryClient() {
             
             <RefreshButton
               onRefresh={() => fetchBurnHistory(currentPage, pageSize, selectedAddress, startDate, endDate)}
-              loading={loading}
             />
           </div>
         </div>
@@ -439,13 +439,13 @@ export default function BurnHistoryClient() {
 
         {/* Back to Homepage */}
         <div className="text-center">
-          <a
-            href="/"
-            className="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors shadow-lg"
-          >
-            <Flame className="h-5 w-5 mr-2" />
-            Back to SHIB Metrics
-          </a>
+                      <Link
+              href="/"
+              className="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors shadow-lg"
+            >
+              <Flame className="h-5 w-5 mr-2" />
+              Back to SHIB Metrics
+            </Link>
         </div>
       </div>
     </div>

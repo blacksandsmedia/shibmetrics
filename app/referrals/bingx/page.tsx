@@ -1,4 +1,4 @@
-import { ExternalLink, Shield, TrendingUp, Star, Gift, AlertTriangle, CheckCircle, Users } from 'lucide-react';
+import { ExternalLink, Shield, TrendingUp, AlertTriangle, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
