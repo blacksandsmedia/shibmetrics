@@ -59,13 +59,13 @@ export default function BurnHistoryClient() {
   // Filter states
   const [selectedAddress, setSelectedAddress] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(100); // Default to 100 per page as requested
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
   // Fetch historical burn data
-  const fetchBurnHistory = async (page = 1, limit = 50, address = 'all', start = '', end = '') => {
+  const fetchBurnHistory = async (page = 1, limit = 100, address = 'all', start = '', end = '') => {
     try {
       setLoading(true);
       setError(null);
@@ -88,31 +88,27 @@ export default function BurnHistoryClient() {
         params.append('endDate', end);
       }
 
-      console.log('🔍 Fetching burn history:', params.toString());
+      console.log('🔍 Fetching historical burn data:', params.toString());
       
-      // For recent data (first page, no filters), use the same API as homepage for consistency
-      const isRecentDataRequest = page === 1 && address === 'all' && !start && !end;
+      // Always use the comprehensive historical dataset API first
+      let response = await fetch(`/api/historical/dataset?${params}`);
       
-      let response;
-      if (isRecentDataRequest) {
-        console.log('📊 Fetching recent data using homepage API for consistency...');
+      // Fallback to historical burns API if dataset not available
+      if (!response.ok) {
+        console.log('📚 Historical dataset not available, trying historical burns API...');
+        response = await fetch(`/api/historical/burns?${params}`);
+      }
+      
+      // Final fallback to burns-history API
+      if (!response.ok) {
+        console.log('📊 Trying burns-history API...');
+        response = await fetch(`/api/burns-history?${params}`);
+      }
+      
+      // Last resort fallback to recent burns API (but this should be rare)
+      if (!response.ok) {
+        console.log('⚠️ Using recent burns API as last resort...');
         response = await fetch('/api/burns');
-      } else {
-        // For historical/filtered data, try comprehensive APIs
-        console.log('📚 Fetching historical/filtered data...');
-        response = await fetch(`/api/historical/dataset?${params}`);
-        
-        // Fallback to burns-history API if dataset not available
-        if (!response.ok) {
-          console.log('📚 Historical dataset not available, trying burns-history API...');
-          response = await fetch(`/api/burns-history?${params}`);
-        }
-        
-        // Final fallback to main burns API
-        if (!response.ok) {
-          console.log('📊 Falling back to main burns API...');
-          response = await fetch('/api/burns');
-        }
       }
 
       if (!response.ok) {
@@ -306,10 +302,11 @@ export default function BurnHistoryClient() {
                 onChange={(e) => setPageSize(parseInt(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
                 <option value={200}>200</option>
+                <option value={500}>500</option>
+                <option value={1000}>1000</option>
               </select>
             </div>
           </div>
@@ -384,9 +381,7 @@ export default function BurnHistoryClient() {
               <span>Data Source: {data.metadata.dataSource}</span>
               <span>Last Updated: {new Date(data.timestamp).toLocaleString()}</span>
               {data.cached && <span className="text-green-400">✓ Cached</span>}
-              {currentPage === 1 && selectedAddress === 'all' && !startDate && !endDate && (
-                <span className="text-orange-400">🏠 Same as Homepage</span>
-              )}
+              <span className="text-blue-400">📚 Complete Historical Dataset</span>
             </div>
           </div>
         )}
