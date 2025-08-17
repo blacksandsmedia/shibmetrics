@@ -3,19 +3,19 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Bybit Exchange Referral Code 2024 | BYBONUS Exclusive Bonus - SHIBMETRICS",
-  description: "Bybit referral code: BYBONUS. Join the world's leading crypto derivatives exchange with exclusive bonuses. Trade SHIB futures, spot, and options with advanced tools.",
-  keywords: "Bybit referral code, BYBONUS, Bybit bonus, Bybit SHIB trading, crypto derivatives, Bybit futures trading, crypto exchange bonus",
+  title: "BYBONUS - Bybit Referral Code 2024 | Exclusive Trading Bonuses - SHIBMETRICS",
+  description: "Use Bybit referral code BYBONUS for exclusive bonuses and advanced trading features. Get the best rates on SHIB futures, spot trading, and derivatives with code BYBONUS.",
+  keywords: "BYBONUS, Bybit referral code BYBONUS, BYBONUS Bybit, Bybit promo code BYBONUS, BYBONUS trading bonus, Bybit SHIB trading BYBONUS",
   openGraph: {
-    title: "Bybit Exchange - BYBONUS Referral Code | Leading Derivatives Exchange",
-    description: "Join Bybit with exclusive BYBONUS referral code for advanced crypto derivatives trading",
+    title: "BYBONUS - Official Bybit Referral Code | Exclusive Trading Bonuses",
+    description: "Use referral code BYBONUS to join Bybit with exclusive bonuses and advanced trading features",
     type: "website",
     url: "https://shibmetrics.com/referrals/bybit",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bybit Exchange - BYBONUS Referral Code | Leading Derivatives Exchange",
-    description: "Join Bybit with exclusive BYBONUS referral code for advanced crypto derivatives trading",
+    title: "BYBONUS - Official Bybit Referral Code | Exclusive Trading Bonuses",
+    description: "Use referral code BYBONUS to join Bybit with exclusive bonuses and advanced trading features",
   },
 };
 
@@ -27,31 +27,58 @@ export default function BybitReferralPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="text-6xl mr-4">🟡</div>
-            <h1 className="text-4xl font-bold text-white">Bybit Exchange</h1>
+            <h1 className="text-4xl font-bold text-white">BYBONUS - Bybit Referral Code</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
-            World&apos;s leading crypto derivatives exchange - join with exclusive BYBONUS referral code
+            Use referral code <span className="text-yellow-400 font-bold">BYBONUS</span> to join Bybit with exclusive bonuses and advanced trading features
           </p>
           
-          {/* Main CTA */}
+          {/* Main CTA - Referral Code Focus */}
           <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl p-6 mb-8">
             <div className="text-white text-center">
-              <h2 className="text-2xl font-bold mb-2">Leading Derivatives Exchange</h2>
-              <div className="text-lg mb-4">
-                <span className="bg-black/20 px-4 py-2 rounded-lg font-mono">BYBONUS</span>
+              <h2 className="text-2xl font-bold mb-2">Official Bybit Referral Code</h2>
+              <div className="text-2xl mb-4 font-bold">
+                <span className="bg-black/30 px-6 py-3 rounded-lg font-mono text-yellow-200 border-2 border-yellow-300">BYBONUS</span>
               </div>
+              <p className="text-lg mb-4 opacity-95">
+                Use code <strong>BYBONUS</strong> to unlock exclusive bonuses and advanced trading features
+              </p>
               <a
                 href="https://www.bybit.com/en/register?ref=BYBONUS"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-8 py-4 bg-white text-yellow-600 font-bold rounded-lg hover:bg-gray-100 transition-colors text-lg"
               >
-                Join Bybit with BYBONUS
+                Join Bybit with BYBONUS Code
                 <ExternalLink className="h-5 w-5 ml-2" />
               </a>
               <p className="text-sm mt-3 opacity-90">
-                Advanced trading tools • Institutional grade • Global leader
+                Click to automatically apply referral code BYBONUS
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* BYBONUS Code Benefits */}
+        <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/50 rounded-xl p-8 mb-12">
+          <h2 className="text-3xl font-bold text-center text-yellow-400 mb-6">
+            Why Use Referral Code BYBONUS?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-4xl mb-3">🎁</div>
+              <h3 className="text-xl font-bold text-white mb-2">Exclusive Bonuses</h3>
+              <p className="text-gray-300">Get special bonuses only available with code BYBONUS</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl mb-3">⚡</div>
+              <h3 className="text-xl font-bold text-white mb-2">Instant Activation</h3>
+              <p className="text-gray-300">BYBONUS code automatically applied when you click our links</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl mb-3">🚀</div>
+              <h3 className="text-xl font-bold text-white mb-2">Premium Features</h3>
+              <p className="text-gray-300">Access advanced tools and priority support with BYBONUS</p>
             </div>
           </div>
         </div>
@@ -186,16 +213,17 @@ export default function BybitReferralPage() {
           </div>
         </div>
 
-        {/* Final CTA */}
+        {/* Final CTA - Referral Code Focus */}
         <div className="text-center bg-gray-800 rounded-lg p-8 border border-gray-700">
-          <h3 className="text-2xl font-bold text-white mb-4">Ready to Trade with the Best?</h3>
+          <h3 className="text-2xl font-bold text-white mb-4">Start Trading with BYBONUS Code</h3>
           <p className="text-gray-300 mb-6">
-            Join Bybit today with the exclusive BYBONUS referral code and experience world-class crypto trading
+            Use our exclusive Bybit referral code <strong>BYBONUS</strong> to unlock premium bonuses and trading benefits
           </p>
           
-          <div className="bg-gray-900 rounded-lg p-4 mb-6 inline-block">
-            <span className="text-gray-400 text-sm">Referral Code:</span>
-            <div className="text-xl font-mono text-yellow-400 font-bold">BYBONUS</div>
+          <div className="bg-gradient-to-r from-yellow-900/50 to-orange-900/50 border border-yellow-500/50 rounded-lg p-6 mb-6 inline-block">
+            <span className="text-yellow-300 text-sm font-semibold block mb-2">🔥 EXCLUSIVE BYBIT REFERRAL CODE 🔥</span>
+            <div className="text-3xl font-mono text-yellow-400 font-bold mb-2">BYBONUS</div>
+            <span className="text-gray-300 text-sm">Click below to automatically apply this code</span>
           </div>
           
           <div className="space-y-4">
@@ -203,15 +231,18 @@ export default function BybitReferralPage() {
               href="https://www.bybit.com/en/register?ref=BYBONUS"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-8 py-4 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg transition-colors text-lg"
+              className="inline-flex items-center px-8 py-4 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg transition-colors text-lg shadow-lg"
             >
-              Join Bybit Now
+              Join Bybit with BYBONUS Code
               <ExternalLink className="h-5 w-5 ml-2" />
             </a>
+            <p className="text-xs text-gray-400">
+              ✅ Code BYBONUS will be automatically applied • ✅ Exclusive bonuses activated • ✅ No manual entry required
+            </p>
             
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-400 mt-6">
               <Link href="/referrals" className="text-yellow-400 hover:text-yellow-300">
-                ← Back to all exchanges
+                ← Back to all exchange referral codes
               </Link>
             </div>
           </div>

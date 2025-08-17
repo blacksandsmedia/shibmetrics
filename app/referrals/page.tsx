@@ -3,9 +3,9 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Best Crypto Exchange Referral Codes 2024 | Trading Bonuses - SHIBMETRICS",
-  description: "Exclusive crypto exchange referral codes and bonuses. Get up to $30,000 USDT bonuses from MEXC, WEEX, Blofin, LBank and Bybit. Start trading SHIB with massive discounts.",
-  keywords: "crypto exchange referral codes, trading bonuses, MEXC referral, WEEX bonus, Blofin code, LBank referral, Bybit bonus, cryptocurrency trading discounts",
+  title: "Best Crypto Exchange Referral Codes 2024 | BYBONUS, 13sJU, 37646719 - SHIBMETRICS",
+  description: "Exclusive crypto exchange referral codes: BYBONUS (Bybit), 13sJU (MEXC), 37646719 (Binance), shibmetrics-WEEX (WEEX). Get up to $30,000 USDT bonuses and massive trading discounts.",
+  keywords: "BYBONUS, 13sJU, 37646719, shibmetrics-WEEX, QBSSSY97, 92pt, crypto exchange referral codes, trading bonuses, MEXC referral, WEEX bonus, Bybit bonus",
   openGraph: {
     title: "Best Crypto Exchange Referral Codes & Trading Bonuses",
     description: "Exclusive referral codes for top crypto exchanges with massive bonuses up to $30,000 USDT",
@@ -307,11 +307,11 @@ export default function ReferralsPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">
-            Best SHIB Trading Platforms
+            Best Crypto Exchange Referral Codes 2024
           </h1>
           <p className="text-xl text-gray-400 mb-6 max-w-3xl mx-auto">
-            Trade Shiba Inu with exclusive bonuses and discounts using our verified referral codes. 
-            Get the best deals from top cryptocurrency exchanges.
+            Exclusive referral codes for top crypto exchanges: <span className="text-yellow-400 font-bold">BYBONUS</span>, <span className="text-orange-400 font-bold">13sJU</span>, <span className="text-yellow-400 font-bold">37646719</span>, and more. 
+            Get massive bonuses and trade SHIB with the best rates.
           </p>
           <div className="flex justify-center items-center space-x-6 text-sm text-gray-500">
             <div className="flex items-center">

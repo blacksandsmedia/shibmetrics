@@ -3,9 +3,9 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Bitget Exchange Referral Code 2024 | 92pt Copy Trading Bonus - SHIBMETRICS",
-  description: "Bitget referral code: 92pt. Join Bitget for copy trading, futures, and spot trading with up to $1,000 USDT bonus and 50% fee discount.",
-  keywords: "Bitget referral code, Bitget bonus, 92pt, copy trading, Bitget SHIB trading, crypto exchange bonus",
+  title: "92pt - Bitget Referral Code 2024 | $1,000 USDT Copy Trading Bonus - SHIBMETRICS",
+  description: "Use Bitget referral code 92pt for $1,000 USDT bonus and copy trading features. Trade SHIB with code 92pt on Bitget's innovative platform with 50% fee discount.",
+  keywords: "92pt, Bitget referral code 92pt, 92pt Bitget, Bitget promo code 92pt, 92pt copy trading, Bitget SHIB trading 92pt",
   openGraph: {
     title: "Bitget Exchange - 92pt Referral Code | Copy Trading Leader",
     description: "Join Bitget with exclusive referral code for innovative copy trading and professional features",
@@ -27,7 +27,7 @@ export default function BitgetReferralPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="text-6xl mr-4">🔵</div>
-            <h1 className="text-4xl font-bold text-white">Bitget Exchange</h1>
+            <h1 className="text-4xl font-bold text-white">92pt - Bitget Referral Code</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
             Leading crypto derivatives exchange with innovative copy trading features

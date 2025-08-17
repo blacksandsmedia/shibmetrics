@@ -3,19 +3,19 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "WEEX Exchange Referral Code 2024 | $30,000 USDT No KYC - SHIBMETRICS",
-  description: "WEEX referral code: shibmetrics-WEEX. Get $30,000 USDT bonus with no KYC required. Anonymous trading, 200x leverage, 20% cashback on all deposits.",
-  keywords: "WEEX referral code, WEEX bonus, shibmetrics-WEEX, no KYC exchange, anonymous trading, WEEX SHIB trading, crypto trading without verification",
+  title: "shibmetrics-WEEX - WEEX Referral Code 2024 | $30,000 USDT No KYC - SHIBMETRICS",
+  description: "Use WEEX referral code shibmetrics-WEEX for $30,000 USDT bonus with no KYC required. Anonymous trading with code shibmetrics-WEEX, 200x leverage, 20% cashback.",
+  keywords: "shibmetrics-WEEX, WEEX referral code shibmetrics-WEEX, shibmetrics-WEEX WEEX, WEEX promo code shibmetrics-WEEX, no KYC exchange shibmetrics-WEEX",
   openGraph: {
-    title: "WEEX Exchange - $30,000 USDT Bonus | No KYC Trading",
-    description: "Anonymous crypto trading with no verification required. Get massive bonuses with referral code",
+    title: "shibmetrics-WEEX - Official WEEX Referral Code | $30,000 USDT No KYC",
+    description: "Use referral code shibmetrics-WEEX for anonymous crypto trading with $30,000 USDT bonus and no verification",
     type: "website",
     url: "https://shibmetrics.com/referrals/weex",
   },
   twitter: {
     card: "summary_large_image",
-    title: "WEEX Exchange - $30,000 USDT Bonus | No KYC Trading",
-    description: "Anonymous crypto trading with no verification required. Get massive bonuses with referral code",
+    title: "shibmetrics-WEEX - Official WEEX Referral Code | $30,000 USDT No KYC",
+    description: "Use referral code shibmetrics-WEEX for anonymous crypto trading with $30,000 USDT bonus and no verification",
   },
 };
 
@@ -27,10 +27,10 @@ export default function WEEXReferralPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="text-6xl mr-4">🔵</div>
-            <h1 className="text-4xl font-bold text-white">WEEX Exchange</h1>
+            <h1 className="text-4xl font-bold text-white">shibmetrics-WEEX - WEEX Referral Code</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
-            Anonymous trading with no KYC - get up to $30,000 USDT in bonuses
+            Use referral code <span className="text-blue-400 font-bold">shibmetrics-WEEX</span> for $30,000 USDT bonus with no KYC required
           </p>
           
           {/* Main CTA */}

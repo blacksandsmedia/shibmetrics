@@ -3,19 +3,19 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Binance Exchange Referral Code 2024 | 37646719 Bonus - SHIBMETRICS",
-  description: "Binance referral code: 37646719. Join the world's largest crypto exchange with exclusive bonuses, 20% fee discount. Trade SHIB and 350+ cryptocurrencies.",
-  keywords: "Binance referral code, Binance bonus, 37646719, Binance SHIB trading, crypto exchange bonus, world largest exchange",
+  title: "37646719 - Binance Referral Code 2024 | 20% Fee Discount - SHIBMETRICS",
+  description: "Use Binance referral code 37646719 for 20% fee discount and exclusive bonuses. Trade SHIB and 350+ cryptocurrencies with code 37646719 on the world's largest exchange.",
+  keywords: "37646719, Binance referral code 37646719, 37646719 Binance, Binance promo code 37646719, 37646719 bonus, Binance SHIB trading 37646719",
   openGraph: {
-    title: "Binance Exchange - 37646719 Referral Code | World's Largest",
-    description: "Join Binance, the world's largest crypto exchange, with exclusive referral code and bonuses",
+    title: "37646719 - Official Binance Referral Code | World's Largest Exchange",
+    description: "Use referral code 37646719 to join Binance with 20% fee discount and exclusive bonuses",
     type: "website",
     url: "https://shibmetrics.com/referrals/binance",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Binance Exchange - 37646719 Referral Code | World's Largest",
-    description: "Join Binance, the world's largest crypto exchange, with exclusive referral code and bonuses",
+    title: "37646719 - Official Binance Referral Code | World's Largest Exchange",
+    description: "Use referral code 37646719 to join Binance with 20% fee discount and exclusive bonuses",
   },
 };
 
@@ -27,10 +27,10 @@ export default function BinanceReferralPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="text-6xl mr-4">🟡</div>
-            <h1 className="text-4xl font-bold text-white">Binance Exchange</h1>
+            <h1 className="text-4xl font-bold text-white">37646719 - Binance Referral Code</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
-            World&apos;s largest cryptocurrency exchange by trading volume with comprehensive features
+            Use referral code <span className="text-yellow-400 font-bold">37646719</span> to join the world's largest crypto exchange with 20% fee discount
           </p>
           
           {/* Main CTA */}

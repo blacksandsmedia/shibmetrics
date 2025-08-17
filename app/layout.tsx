@@ -17,9 +17,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SHIBMETRICS - Real-time SHIB Burn Tracker & Analytics Platform",
+  title: {
+    template: '%s | SHIBMETRICS',
+    default: 'SHIBMETRICS - Real-time SHIB Burn Tracker & Analytics Platform'
+  },
   description: "Track Shiba Inu token burns in real-time with comprehensive analytics. Monitor SHIB burn transactions, historical data, exchange activity, and get exclusive trading bonuses from top crypto exchanges.",
-  keywords: "SHIB burn tracker, Shiba Inu burns, SHIB analytics, cryptocurrency burn data, SHIB statistics, token burns, crypto exchange bonuses, SHIB trading",
+  keywords: "SHIB burn tracker, Shiba Inu burns, SHIB analytics, cryptocurrency burn data, SHIB statistics, token burns, crypto exchange bonuses, SHIB trading, SHIB burn history, SHIB exchange activity, API status monitor, contact SHIBMETRICS",
   authors: [{ name: "SHIBMETRICS" }],
   creator: "SHIBMETRICS",
   publisher: "SHIBMETRICS",
@@ -44,7 +47,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "SHIBMETRICS - Real-time SHIB Burn Tracker & Analytics",
-    description: "Track Shiba Inu token burns in real-time with comprehensive analytics and exclusive crypto exchange bonuses", 
+    description: "Track Shiba Inu token burns in real-time with comprehensive analytics and exclusive crypto exchange bonuses",
     type: "website",
     url: "https://shibmetrics.com",
     siteName: "SHIBMETRICS",

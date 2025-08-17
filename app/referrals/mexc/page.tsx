@@ -3,19 +3,19 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "MEXC Exchange Referral Code 2024 | Get $28,100 USDT Bonus - SHIBMETRICS",
-  description: "Exclusive MEXC referral code: 13sJU. Get up to $28,100 USDT bonus, 50% fee discount, 500x leverage. Trade SHIB and 2,100+ cryptocurrencies.",
-  keywords: "MEXC referral code, MEXC bonus, 13sJU, MEXC trading discount, MEXC SHIB trading, crypto exchange bonus",
+  title: "13sJU - MEXC Referral Code 2024 | $28,100 USDT Bonus - SHIBMETRICS",
+  description: "Use MEXC referral code 13sJU for $28,100 USDT bonus and 50% fee discount. Trade SHIB and 2,100+ cryptocurrencies with code 13sJU for maximum benefits.",
+  keywords: "13sJU, MEXC referral code 13sJU, 13sJU MEXC, MEXC promo code 13sJU, 13sJU bonus, MEXC SHIB trading 13sJU",
   openGraph: {
-    title: "MEXC Exchange - $28,100 USDT Bonus with Referral Code",
-    description: "Join MEXC with exclusive referral code and get massive bonuses plus 50% trading fee discount",
+    title: "13sJU - Official MEXC Referral Code | $28,100 USDT Bonus",
+    description: "Use referral code 13sJU to join MEXC with $28,100 USDT bonus and 50% trading fee discount",
     type: "website",
     url: "https://shibmetrics.com/referrals/mexc",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MEXC Exchange - $28,100 USDT Bonus with Referral Code",
-    description: "Join MEXC with exclusive referral code and get massive bonuses plus 50% trading fee discount",
+    title: "13sJU - Official MEXC Referral Code | $28,100 USDT Bonus",
+    description: "Use referral code 13sJU to join MEXC with $28,100 USDT bonus and 50% trading fee discount",
   },
 };
 
@@ -27,30 +27,33 @@ export default function MEXCReferralPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="text-6xl mr-4">🟡</div>
-            <h1 className="text-4xl font-bold text-white">MEXC Exchange</h1>
+            <h1 className="text-4xl font-bold text-white">13sJU - MEXC Referral Code</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
-            Join MEXC with our exclusive referral code and get up to $28,100 USDT in bonuses
+            Use referral code <span className="text-orange-400 font-bold">13sJU</span> to get $28,100 USDT bonus and 50% fee discount on MEXC
           </p>
           
-          {/* Main CTA */}
+          {/* Main CTA - Referral Code Focus */}
           <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 mb-8">
             <div className="text-white text-center">
-              <h2 className="text-2xl font-bold mb-2">Exclusive ShibMetrics Offer</h2>
-              <div className="text-lg mb-4">
-                <span className="bg-black/20 px-4 py-2 rounded-lg font-mono">13sJU</span>
+              <h2 className="text-2xl font-bold mb-2">Official MEXC Referral Code</h2>
+              <div className="text-2xl mb-4 font-bold">
+                <span className="bg-black/30 px-6 py-3 rounded-lg font-mono text-orange-200 border-2 border-orange-300">13sJU</span>
               </div>
+              <p className="text-lg mb-4 opacity-95">
+                Use code <strong>13sJU</strong> to unlock $28,100 USDT bonus and 50% fee discount
+              </p>
               <a
                 href="https://www.mexc.com/register?inviteCode=13sJU"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-8 py-4 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition-colors text-lg"
               >
-                Sign Up Now & Get $28,100 USDT
+                Join MEXC with 13sJU Code
                 <ExternalLink className="h-5 w-5 ml-2" />
               </a>
               <p className="text-sm mt-3 opacity-90">
-                50% off trading fees • 500x leverage • 2,100+ cryptocurrencies
+                Click to automatically apply referral code 13sJU
               </p>
             </div>
           </div>
@@ -155,16 +158,17 @@ export default function MEXCReferralPage() {
           </div>
         </div>
 
-        {/* Final CTA */}
+        {/* Final CTA - Referral Code Focus */}
         <div className="text-center bg-gray-800 rounded-lg p-8 border border-gray-700">
-          <h3 className="text-2xl font-bold text-white mb-4">Ready to Start Trading SHIB?</h3>
+          <h3 className="text-2xl font-bold text-white mb-4">Start Trading with 13sJU Code</h3>
           <p className="text-gray-300 mb-6">
-            Use our exclusive referral code to unlock the best bonuses and trading conditions on MEXC
+            Use our exclusive MEXC referral code <strong>13sJU</strong> to unlock $28,100 USDT bonus and premium trading benefits
           </p>
           
-          <div className="bg-gray-900 rounded-lg p-4 mb-6 inline-block">
-            <span className="text-gray-400 text-sm">Referral Code:</span>
-            <div className="text-xl font-mono text-orange-400 font-bold">13sJU</div>
+          <div className="bg-gradient-to-r from-orange-900/50 to-red-900/50 border border-orange-500/50 rounded-lg p-6 mb-6 inline-block">
+            <span className="text-orange-300 text-sm font-semibold block mb-2">🔥 EXCLUSIVE MEXC REFERRAL CODE 🔥</span>
+            <div className="text-3xl font-mono text-orange-400 font-bold mb-2">13sJU</div>
+            <span className="text-gray-300 text-sm">Click below to automatically apply this code</span>
           </div>
           
           <div className="space-y-4">
@@ -172,15 +176,18 @@ export default function MEXCReferralPage() {
               href="https://www.mexc.com/register?inviteCode=13sJU"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors text-lg"
+              className="inline-flex items-center px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors text-lg shadow-lg"
             >
-              Create MEXC Account
+              Join MEXC with 13sJU Code
               <ExternalLink className="h-5 w-5 ml-2" />
             </a>
+            <p className="text-xs text-gray-400">
+              ✅ Code 13sJU will be automatically applied • ✅ $28,100 USDT bonus activated • ✅ 50% fee discount enabled
+            </p>
             
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-400 mt-6">
               <Link href="/referrals" className="text-orange-400 hover:text-orange-300">
-                ← Back to all exchanges
+                ← Back to all exchange referral codes
               </Link>
             </div>
           </div>

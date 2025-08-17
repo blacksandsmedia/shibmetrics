@@ -3,9 +3,9 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "KuCoin Exchange Referral Code 2024 | QBSSSY97 Bonus - SHIBMETRICS",
-  description: "KuCoin referral code: QBSSSY97. Join KuCoin with exclusive bonuses, 20% fee discount, 100x leverage. Trade SHIB and 200+ cryptocurrencies with advanced features.",
-  keywords: "KuCoin referral code, KuCoin bonus, QBSSSY97, KuCoin SHIB trading, crypto exchange bonus, KuCoin futures",
+  title: "QBSSSY97 - KuCoin Referral Code 2024 | $500 USDT Bonus - SHIBMETRICS",
+  description: "Use KuCoin referral code QBSSSY97 for $500 USDT bonus and 20% fee discount. Trade SHIB and 200+ cryptocurrencies with code QBSSSY97 on KuCoin's advanced platform.",
+  keywords: "QBSSSY97, KuCoin referral code QBSSSY97, QBSSSY97 KuCoin, KuCoin promo code QBSSSY97, QBSSSY97 bonus, KuCoin SHIB trading QBSSSY97",
   openGraph: {
     title: "KuCoin Exchange - QBSSSY97 Referral Code | Advanced Trading",
     description: "Join KuCoin with exclusive referral code for advanced crypto trading features and bonuses",
@@ -27,7 +27,7 @@ export default function KuCoinReferralPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="text-6xl mr-4">🟢</div>
-            <h1 className="text-4xl font-bold text-white">KuCoin Exchange</h1>
+            <h1 className="text-4xl font-bold text-white">QBSSSY97 - KuCoin Referral Code</h1>
           </div>
           <p className="text-xl text-gray-400 mb-6">
             Leading global crypto exchange with advanced trading features and 200+ cryptocurrencies
